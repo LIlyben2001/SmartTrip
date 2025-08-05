@@ -90,7 +90,7 @@ export default function LandingPage() {
         </form>
       </section>
 
-      <footer className="bg-white py-6 border-t mt-12">
+     <footer className="bg-white py-6 border-t mt-12">
         <div className="max-w-6xl mx-auto px-4 text-center text-gray-600 text-sm">
           © {new Date().getFullYear()} SmartTrip. All rights reserved.
         </div>
