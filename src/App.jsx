@@ -68,6 +68,37 @@ function App() {
             {itinerary}
           </div>
         )}
+      
+        <section className="mt-16">
+          <h2 className="text-3xl font-bold text-center text-orange-700 mb-6">Core Features</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold text-lg text-gray-800">AI Trip Builder</h3>
+              <p className="text-gray-600">Build multi-city trips with smart time & cost estimates.</p>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold text-lg text-gray-800">Real-Time Budget</h3>
+              <p className="text-gray-600">Know how much your trip will cost as you plan.</p>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold text-lg text-gray-800">Ticketing Alerts</h3>
+              <p className="text-gray-600">Get notified of places that need advance booking or permits.</p>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold text-lg text-gray-800">Custom Itineraries</h3>
+              <p className="text-gray-600">Save, share or download your personalized trip plan.</p>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold text-lg text-gray-800">Offline Access</h3>
+              <p className="text-gray-600">Export your itinerary as PDF for travel use.</p>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold text-lg text-gray-800">China Ready</h3>
+              <p className="text-gray-600">Handles real-name bookings, permits & local transit.</p>
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   );
