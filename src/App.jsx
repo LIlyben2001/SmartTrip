@@ -62,21 +62,22 @@ export default function LandingPage() {
       <section id="features" className="py-20 px-4 max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-12">Core Features</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            { title: "AI Trip Builder", desc: "Build multi-city trips with smart time & cost estimates." },
-            { title: "Real-Time Budget", desc: "Know how much your trip will cost as you plan." },
-            { title: "Ticketing Alerts", desc: "Get notified of places that need advance booking or permits." },
-            { title: "Custom Itineraries", desc: "Save, share or download your personalized trip plan." },
-            { title: "Offline Access", desc: "Export your itinerary as PDF for travel use." },
-            { title: "China Ready", desc: "Handles real-name bookings, permits & local transit." },
-          ].map((f, i) => (
-            <Card key={i} className="shadow-md">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold text-primary">{f.title}</h3>
-                <p className="text-text mt-2">{f.desc}</p>
-              </CardContent>
-            </Card>
-          ))}
+         {[
+          { icon: '🧠', title: "AI Trip Builder", desc: "Build multi-city trips with smart time & cost estimates." },
+          { icon: '💰', title: "Real-Time Budget", desc: "Know how much your trip will cost as you plan." },
+          { icon: '🎟️', title: "Ticketing Alerts", desc: "Get notified of places that need advance booking or permits." },
+          { icon: '📋', title: "Custom Itineraries", desc: "Save, share or download your personalized trip plan." },
+          { icon: '📶', title: "Offline Access", desc: "Export your itinerary as PDF for travel use." },
+          { icon: '🇨🇳', title: "China Ready", desc: "Handles real-name bookings, permits & local transit." },
+        ].map((f, i) => (
+          <Card key={i} className="shadow-md text-center">
+            <CardContent className="p-6">
+              <div className="text-4xl mb-3">{f.icon}</div>
+              <h3 className="text-xl font-semibold text-primary">{f.title}</h3>
+              <p className="text-text mt-2">{f.desc}</p>
+            </CardContent>
+          </Card>
+        ))}
         </div>
       </section>
 
