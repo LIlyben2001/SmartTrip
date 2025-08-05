@@ -1,6 +1,7 @@
 {
-  "name": "smarttrip-branded",
+  "name": "smarttrip-landing",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,10 +12,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "vite": "^5.0.0",
     "@vitejs/plugin-react": "^4.0.0",
-    "tailwindcss": "^3.3.0",
-    "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0"
+    "vite": "^4.3.9"
   }
 }
