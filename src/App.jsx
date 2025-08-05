@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 function App() {
@@ -31,13 +30,15 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 text-gray-900">
-      <header className="bg-white shadow p-6 text-center">
-        <h1 className="text-4xl font-bold text-blue-700">SmartTrip</h1>
-        <p className="mt-2 text-gray-600">
+    <div>
+      <section className="bg-white shadow-md text-center py-10 px-4">
+        <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-4 h-20" />
+        <h1 className="text-4xl font-extrabold text-blue-700">SmartTrip</h1>
+        <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
           Plan Smarter, Travel Better. Your AI-powered travel assistant for China and beyond – build itineraries, estimate time and budget, and simplify complex travel planning.
         </p>
-      </header>
+      </section>
+
       <main className="p-6 max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="grid gap-4 bg-white p-6 rounded shadow">
           <input name="destination" onChange={handleChange} placeholder="Destination" className="border p-2 rounded" />
@@ -62,6 +63,7 @@ function App() {
             {loading ? "Generating..." : "Generate My Trip"}
           </button>
         </form>
+
         {itinerary && (
           <div className="mt-8 p-4 bg-white shadow rounded whitespace-pre-line">
             <h2 className="text-xl font-semibold mb-2 text-blue-700">Your Itinerary</h2>
