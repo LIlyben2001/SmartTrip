@@ -30,15 +30,14 @@ function App() {
   };
 
   return (
-    <div>
-      <section className="bg-white shadow-md text-center py-10 px-4">
+    <div className="min-h-screen bg-orange-50 text-gray-900">
+      <header className="bg-white shadow p-6 text-center">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-4 h-20" />
-        <h1 className="text-4xl font-extrabold text-blue-700">SmartTrip</h1>
-        <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold text-orange-700">SmartTrip</h1>
+        <p className="mt-2 text-gray-600 max-w-2xl mx-auto">
           Plan Smarter, Travel Better. Your AI-powered travel assistant for China and beyond – build itineraries, estimate time and budget, and simplify complex travel planning.
         </p>
-      </section>
-
+      </header>
       <main className="p-6 max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="grid gap-4 bg-white p-6 rounded shadow">
           <input name="destination" onChange={handleChange} placeholder="Destination" className="border p-2 rounded" />
@@ -59,14 +58,13 @@ function App() {
           </select>
           <input name="travelers" onChange={handleChange} placeholder="Number of Travelers" type="number" className="border p-2 rounded" />
           <input name="email" onChange={(e) => setEmail(e.target.value)} placeholder="Email (optional)" type="email" className="border p-2 rounded" />
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+          <button type="submit" className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition">
             {loading ? "Generating..." : "Generate My Trip"}
           </button>
         </form>
-
         {itinerary && (
           <div className="mt-8 p-4 bg-white shadow rounded whitespace-pre-line">
-            <h2 className="text-xl font-semibold mb-2 text-blue-700">Your Itinerary</h2>
+            <h2 className="text-xl font-semibold mb-2 text-orange-700">Your Itinerary</h2>
             {itinerary}
           </div>
         )}
