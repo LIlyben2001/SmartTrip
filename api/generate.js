@@ -6,9 +6,7 @@ export default async function handler(req, res) {
 
   const { destination, days, style, budget, travelers } = req.body;
   const prompt = `
-You're a smart travel assistant. Generate a ${days}-day travel itinerary for ${travelers} traveler(s) going to ${destination}, with a travel style of "${style}" and a budget of "${budget}". Include daily activities, major landmarks, cultural experiences, and local dining recommendations. Keep it concise but helpful.
-
-Respond with only the itinerary.
+You're a smart travel assistant. Generate a ${days}-day travel itinerary for ${travelers} traveler(s) going to ${destination}, with a travel style of "${style}" and a budget of "${budget}". Include daily activities, major landmarks, cultural experiences, and local dining recommendations. Respond only with the itinerary.
   `;
 
   try {
