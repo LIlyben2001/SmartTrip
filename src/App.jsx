@@ -1,16 +1,26 @@
 
-<header className="flex items-center justify-between py-4 px-6 bg-white shadow-sm sticky top-0 z-50">
+<header className="flex justify-between items-center px-6 py-4 shadow-md bg-white sticky top-0 z-50">
   <div className="flex items-center space-x-2">
-    <img src="/logo.png" alt="SmartTrip logo" className="w-8 h-8" />
-    <span className="font-bold text-lg text-gray-800">SmartTrip</span>
+    <img src="/logo.png" alt="SmartTrip Logo" className="w-8 h-8" />
+    <span className="text-lg font-bold text-gray-800">SmartTrip</span>
   </div>
-  <nav className="space-x-6 text-sm font-medium text-gray-700">
-    <a href="#features" className="hover:text-orange-500">Features</a>
-    <a href="#demo" className="hover:text-orange-500">Demo</a>
-    <a href="#get-started" className="hover:text-orange-500">Get Started</a>
+  <nav className="space-x-6 text-sm font-medium">
+    <a href="#features" className="text-gray-700 hover:text-orange-500">Features</a>
+    <a href="#demo" className="text-gray-700 hover:text-orange-500">Demo</a>
+    <a href="#get-started" className="text-orange-500 font-semibold hover:text-orange-600">Get Started</a>
   </nav>
 </header>
 
+<section className="text-center mt-12 px-6">
+  <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto w-20 mb-4" />
+  <h1 className="text-4xl font-bold text-gray-800 mb-2">Plan. Pack. Explore.</h1>
+  <p className="text-lg text-gray-600 mb-6">
+    Plan Smarter. Travel Better. Your AI-powered travel assistant for China and beyond – build itineraries, estimate time and budget, and simplify complex travel planning.
+  </p>
+  <a href="#trip-planner" className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-full transition">
+    Plan My Trip Now
+  </a>
+</section>
 import { useState } from "react";
 
 function App() {
