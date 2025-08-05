@@ -93,5 +93,6 @@ export default function LandingPage() {
   <footer className="bg-primary text-white text-center p-6 text-sm">
         © 2025 SmartTrip. All rights reserved.
       </footer>
+        </div>
   );
 }
