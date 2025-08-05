@@ -90,9 +90,11 @@ export default function LandingPage() {
         </form>
       </section>
 
-  <footer className="bg-primary text-white text-center p-6 text-sm">
-        © 2025 SmartTrip. All rights reserved.
-      </footer>
+    <footer className="bg-orange-100 py-6 border-t border-orange-200 mt-16">
+      <div className="max-w-6xl mx-auto px-4 text-center text-orange-700 text-sm">
+        © {new Date().getFullYear()} SmartTrip. All rights reserved.
+      </div>
+    </footer>
         </div>
   );
 }
