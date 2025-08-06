@@ -90,11 +90,11 @@ export default function LandingPage() {
         </form>
       </section>
 
-    <footer className="bg-orange-100 py-6 border-t border-orange-200 mt-16">
-      <div className="max-w-6xl mx-auto px-4 text-center text-orange-700 text-sm">
-        © {new Date().getFullYear()} SmartTrip. All rights reserved.
-      </div>
-    </footer>
+  <footer style={{ backgroundColor: '#fef3c7', borderTop: '1px solid #fde68a' }} className="py-6 mt-16">
+  <div className="max-w-6xl mx-auto px-4 text-center text-sm" style={{ color: '#b45309' }}>
+    © {new Date().getFullYear()} SmartTrip. All rights reserved.
+  </div>
+</footer>
         </div>
   );
 }
