@@ -1,4 +1,4 @@
-// api/generateItinerary.js
+// /api/generate-itinerary.js
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -7,8 +7,8 @@ export default async function handler(req, res) {
 
   const { prompt } = req.body;
 
-  if (!prompt) {
-    return res.status(400).json({ error: "Prompt is required" });
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: "Missing OpenAI API key" });
   }
 
   try {
@@ -26,10 +26,13 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    const message = data.choices?.[0]?.message?.content;
-    res.status(200).json({ result: message });
+
+    if (!data.choices || !data.choices[0]) {
+      return res.status(500).json({ error: "No response from AI" });
+    }
+
+    res.status(200).json({ result: data.choices[0].message.content });
   } catch (error) {
-    console.error("Error generating itinerary:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ error: "AI generation failed" });
   }
 }
