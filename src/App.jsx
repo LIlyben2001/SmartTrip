@@ -34,11 +34,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="planner" className="py-20 px-4 bg-white max-w-4xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-8">Plan Your Trip</h2>
-        <TripPlanner />
-      </section>
-
       <section id="features" className="py-20 px-4 max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-12">Core Features</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
