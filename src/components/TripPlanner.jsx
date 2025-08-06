@@ -1,60 +1,124 @@
+import React, { useState } from "react";
 
-import { useState } from "react";
-
-export default function TripPlanner() {
+const TripPlanner = () => {
   const [destination, setDestination] = useState("");
-  const [travelers, setTravelers] = useState("");
-  const [style, setStyle] = useState("");
-  const [duration, setDuration] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [numDays, setNumDays] = useState("");
+  const [travelStyle, setTravelStyle] = useState("");
   const [budget, setBudget] = useState("");
+  const [numTravelers, setNumTravelers] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [aiResponse, setAiResponse] = useState("");
+  const [itinerary, setItinerary] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setAiResponse("");
+    setItinerary("");
 
-    const prompt = `Plan a ${duration}-day trip for ${travelers} traveler(s) to ${destination}.
-    Travel style: ${style}.
-    Budget: ${budget}.
-    Include itinerary, costs, booking suggestions, and travel tips.`;
+    const prompt = `Create a ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. Budget: ${budget}.`;
 
     try {
-      const res = await fetch("/api/ai", {
+      const response = await fetch("/api/generate-itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
 
-      const data = await res.json();
-      setAiResponse(data.result || "No itinerary returned.");
+      const data = await response.json();
+      setItinerary(data.result || "No itinerary generated.");
     } catch (error) {
-      setAiResponse("There was an error generating your trip.");
-      console.error(error);
+      setItinerary("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <section className="py-12 px-4 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6">Plan Your Trip</h2>
-      <form onSubmit={handleSubmit} className="grid gap-4">
-        <input type="text" placeholder="Destination(s)" value={destination} onChange={(e) => setDestination(e.target.value)} className="p-2 border rounded" />
-        <input type="number" placeholder="Number of Travelers" value={travelers} onChange={(e) => setTravelers(e.target.value)} className="p-2 border rounded" />
-        <input type="text" placeholder="Travel Style (e.g. Foodie, Explorer)" value={style} onChange={(e) => setStyle(e.target.value)} className="p-2 border rounded" />
-        <input type="text" placeholder="Trip Length or Dates" value={duration} onChange={(e) => setDuration(e.target.value)} className="p-2 border rounded" />
-        <input type="text" placeholder="Budget (USD)" value={budget} onChange={(e) => setBudget(e.target.value)} className="p-2 border rounded" />
-        <button type="submit" className="bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600">
-          {loading ? "Planning..." : "Plan My Trip"}
+    <section id="planner" className="py-20 px-4 bg-white max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold text-center text-primary mb-10">Plan Your Trip</h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input
+          type="text"
+          placeholder="Destination (e.g., Beijing)"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <input
+          type="number"
+          placeholder="Number of Days"
+          value={numDays}
+          onChange={(e) => setNumDays(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <select
+          value={travelStyle}
+          onChange={(e) => setTravelStyle(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        >
+          <option value="">Travel Style</option>
+          <option>Cultural</option>
+          <option>Adventure</option>
+          <option>Relaxed</option>
+          <option>Luxury</option>
+          <option>Foodies</option>
+        </select>
+        <select
+          value={budget}
+          onChange={(e) => setBudget(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        >
+          <option value="">Budget Range</option>
+          <option>Under $1,000</option>
+          <option>$1,000–$2,000</option>
+          <option>Over $2,000</option>
+        </select>
+        <input
+          type="number"
+          placeholder="Number of Travelers"
+          value={numTravelers}
+          onChange={(e) => setNumTravelers(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <input
+          type="email"
+          placeholder="Email (optional)"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded md:col-span-2"
+        />
+        <button
+          type="submit"
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded col-span-full"
+        >
+          {loading ? "Generating..." : "Generate My Trip"}
         </button>
       </form>
-      {aiResponse && (
-        <div className="bg-gray-100 p-4 mt-4 rounded whitespace-pre-wrap">
-          {aiResponse}
+
+      {!itinerary && (
+        <div className="bg-gray-100 rounded-md p-4 mt-6 text-center">
+          <h3 className="text-lg font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
+          <p className="text-text">
+            Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!
+          </p>
+        </div>
+      )}
+
+      {itinerary && (
+        <div className="bg-white mt-8 p-6 rounded shadow border">
+          <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
+          <p className="whitespace-pre-line text-text">{itinerary}</p>
         </div>
       )}
     </section>
   );
-}
+};
+
+export default TripPlanner;
