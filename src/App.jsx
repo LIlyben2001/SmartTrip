@@ -57,10 +57,12 @@ export default function LandingPage() {
           <input type="email" placeholder="Email (optional)" className="border border-gray-300 px-4 py-2 rounded" />
           <button type="submit" className="bg-accent hover:bg-hover text-white font-semibold px-6 py-2 rounded col-span-full">Generate My Trip</button>
         </form>
-        <div className="mt-10 bg-background border border-gray-200 rounded p-6 text-center text-text">
-          <h3 className="text-xl font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
-          <p>Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!</p>
-        </div>
+      <div className="bg-gray-100 rounded-md p-4 mt-6 text-center">
+        <h3 className="text-lg font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
+        <p className="text-text">
+          Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!
+        </p>
+      </div>
       </section>
 
 
