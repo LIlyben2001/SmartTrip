@@ -11,7 +11,9 @@ export default function LandingPage() {
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#demo" className="text-[#1F2F46] font-medium">Demo</a>
-          <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
+         <a href="#signup" className="text-orange-500 font-semibold hover:text-orange-600 transition-colors">
+            Get Started
+          </a>
         </nav>
       </header>
 
