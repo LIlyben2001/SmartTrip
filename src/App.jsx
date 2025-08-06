@@ -16,6 +16,7 @@ export default function LandingPage() {
         </nav>
       </header>
 
+      {/*HERO SECTION */}
       <section className="text-center py-8 px-4 bg-white">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
         <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
@@ -33,8 +34,10 @@ export default function LandingPage() {
           </a>
         </div>
       </section>
+      <TripPlanner />
 
-      <section id="features" className="py-20 px-4 max-w-6xl mx-auto">
+      {/* FEATURE SECTION */}
+      <section id= "features" className="py-20 px-4 max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-12">Core Features</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
