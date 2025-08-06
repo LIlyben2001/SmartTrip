@@ -100,12 +100,14 @@ function TripPlanner() {
         </button>
       </form>
 
-      {itinerary && (
-        <div className="mt-8 bg-gray-100 p-6 rounded shadow-md whitespace-pre-wrap">
-          <h3 className="text-xl font-bold mb-2 text-primary">Sample Itinerary</h3>
-          <p>{itinerary}</p>
-        </div>
-      )}
+   {!itinerary && (
+  <div className="bg-gray-100 rounded-md p-4 mt-6 text-center">
+    <h3 className="text-lg font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
+    <p className="text-text">
+      Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!
+    </p>
+  </div>
+)}
     </div>
   );
 }
