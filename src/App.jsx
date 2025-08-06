@@ -6,14 +6,16 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function LandingPage() {
   return (
     <div className="bg-background text-text min-h-screen">
-     <header className="bg-gray-50 flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
+       <header className="bg-gray-50">
+      <div className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
         <div className="text-2xl font-bold text-primary">SmartTrip</div>
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-primary font-medium">Features</a>
           <a href="#demo" className="text-primary font-medium">Demo</a>
           <a href="#signup" className="text-accent font-semibold">Get Started</a>
         </nav>
-      </header>
+      </div>
+    </header>
 
       <section className="text-center py-8 px-4 bg-white">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
