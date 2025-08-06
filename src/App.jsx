@@ -24,7 +24,12 @@ export default function LandingPage() {
           Plan Smarter, Travel Better. Your AI-powered travel assistant for China and beyond — build itineraries, estimate time and budget, and simplify complex travel planning.
         </p>
         <div className="mt-4">
-          <Button className="text-lg px-6 py-3 rounded-full">Plan My Trip Now</Button>
+         <a
+          href="#trip-form"
+          className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full transition"
+        >
+          Plan My Trip Now
+        </a>
         </div>
       </section>
 
