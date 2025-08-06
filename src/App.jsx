@@ -12,7 +12,7 @@ export default function LandingPage() {
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-primary font-medium">Features</a>
           <a href="#demo" className="text-primary font-medium">Demo</a>
-           <a
+         <a
             href="#signup"
             className="bg-orange-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-orange-600 transition-colors"
           >
