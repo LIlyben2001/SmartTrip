@@ -81,15 +81,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="signup" className="bg-primary py-16 text-white text-center px-4">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">Join Our Beta List</h2>
-        <p className="mb-6 text-base md:text-lg">Be the first to access the app and get travel-ready perks.</p>
-        <form className="flex flex-col sm:flex-row justify-center gap-4 max-w-xl mx-auto">
-          <Input placeholder="Enter your email" className="text-black px-4 py-2 rounded-full" />
-          <Button className="px-6 py-2 rounded-full">Notify Me</Button>
-        </form>
-      </section>
-
 <footer className="bg-[#1f2a44] text-white py-10 text-center">
   <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
   <p className="mb-4">Be the first to access the app and get travel-ready perks.</p>
