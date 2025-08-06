@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import TripPlanner from './components/TripPlanner';
 
 export default function LandingPage() {
   return (
@@ -14,7 +15,8 @@ export default function LandingPage() {
         <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
         </nav>
       </header>
-
+  <TripPlanner />
+   
       <section className="text-center py-8 px-4 bg-white">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
         <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
@@ -107,16 +109,8 @@ function TripPlanner() {
     </div>
   );
 }
-
 export default TripPlanner;
-      <div className="bg-gray-100 rounded-md p-4 mt-6 text-center">
-        <h3 className="text-lg font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
-        <p className="text-text">
-          Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!
-        </p>
-      </div>
       </section>
-
 
       <section id="features" className="py-20 px-4 max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-12">Core Features</h2>
