@@ -17,6 +17,10 @@ export default function LandingPage() {
         </nav>
       </header>
 
+       <section id="trip-planner" className="...">
+      <!-- Your trip planner form or content -->
+        </section>
+
       <section className="text-center py-8 px-4 bg-white">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
         <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
