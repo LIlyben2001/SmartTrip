@@ -35,28 +35,80 @@ export default function LandingPage() {
 
       <section id="planner" className="py-20 px-4 bg-white max-w-4xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-8">Plan Your Trip</h2>
-        <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="text" placeholder="Destination (e.g., Beijing)" className="border border-gray-300 px-4 py-2 rounded" />
-          <input type="date" placeholder="Start Date" className="border border-gray-300 px-4 py-2 rounded" />
-          <input type="number" min="1" placeholder="Number of Days" className="border border-gray-300 px-4 py-2 rounded" />
-          <select className="border border-gray-300 px-4 py-2 rounded">
-            <option>Travel Style</option>
-            <option>Cultural</option>
-            <option>Adventure</option>
-            <option>Relaxed</option>
-            <option>Luxury</option>
-            <option>Foodies</option>
-          </select>
-          <select className="border border-gray-300 px-4 py-2 rounded">
-            <option>Budget Range</option>
-            <option>Under $1,000</option>
-            <option>$1,000–$2,000</option>
-            <option>Over $2,000</option>
-          </select>
-          <input type="number" min="1" placeholder="Number of Travelers" className="border border-gray-300 px-4 py-2 rounded" />
-          <input type="email" placeholder="Email (optional)" className="border border-gray-300 px-4 py-2 rounded" />
-          <button type="submit" className="bg-accent hover:bg-hover text-white font-semibold px-6 py-2 rounded col-span-full">Generate My Trip</button>
-        </form>
+       import { useState } from "react";
+
+function TripPlanner() {
+  const [destination, setDestination] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [numDays, setNumDays] = useState("");
+  const [travelStyle, setTravelStyle] = useState("");
+  const [budget, setBudget] = useState("");
+  const [numTravelers, setNumTravelers] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [itinerary, setItinerary] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setItinerary("");
+
+    const prompt = `Create a ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. Budget: ${budget}.`;
+
+    try {
+      const response = await fetch("/api/generate-itinerary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+      setItinerary(data.result || "No itinerary generated.");
+    } catch (error) {
+      setItinerary("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto mt-12 px-4">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="text" placeholder="Destination (e.g., Beijing)" value={destination} onChange={(e) => setDestination(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
+        <input type="date" placeholder="Start Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
+        <input type="number" min="1" placeholder="Number of Days" value={numDays} onChange={(e) => setNumDays(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
+        <select value={travelStyle} onChange={(e) => setTravelStyle(e.target.value)} className="border border-gray-300 px-4 py-2 rounded">
+          <option value="">Travel Style</option>
+          <option>Cultural</option>
+          <option>Adventure</option>
+          <option>Relaxed</option>
+          <option>Luxury</option>
+          <option>Foodies</option>
+        </select>
+        <select value={budget} onChange={(e) => setBudget(e.target.value)} className="border border-gray-300 px-4 py-2 rounded">
+          <option value="">Budget Range</option>
+          <option>Under $1,000</option>
+          <option>$1,000–$2,000</option>
+          <option>Over $2,000</option>
+        </select>
+        <input type="number" min="1" placeholder="Number of Travelers" value={numTravelers} onChange={(e) => setNumTravelers(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
+        <input type="email" placeholder="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
+        <button type="submit" className="bg-accent hover:bg-hover text-white font-semibold px-6 py-2 rounded col-span-full">
+          {loading ? "Generating..." : "Generate My Trip"}
+        </button>
+      </form>
+
+      {itinerary && (
+        <div className="mt-8 bg-gray-100 p-6 rounded shadow-md whitespace-pre-wrap">
+          <h3 className="text-xl font-bold mb-2 text-primary">Sample Itinerary</h3>
+          <p>{itinerary}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default TripPlanner;
       <div className="bg-gray-100 rounded-md p-4 mt-6 text-center">
         <h3 className="text-lg font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
         <p className="text-text">
