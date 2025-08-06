@@ -15,7 +15,7 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <section className="text-center py-12 px-4 bg-white">
+      <section className="text-center py-8 px-4 bg-white">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
         <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
           Plan. Pack. Explore.
