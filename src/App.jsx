@@ -90,10 +90,20 @@ export default function LandingPage() {
         </form>
       </section>
 
-  <footer style={{ backgroundColor: '#fef3c7', borderTop: '1px solid #fde68a' }} className="py-6 mt-16">
-  <div className="max-w-6xl mx-auto px-4 text-center text-sm" style={{ color: '#b45309' }}>
-    © {new Date().getFullYear()} SmartTrip. All rights reserved.
+<footer className="bg-[#1f2a44] text-white py-10 text-center">
+  <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
+  <p className="mb-4">Be the first to access the app and get travel-ready perks.</p>
+  <div className="flex justify-center gap-2">
+    <input
+      type="email"
+      placeholder="Enter your email"
+      className="px-4 py-2 rounded-full border border-gray-300 text-black"
+    />
+    <button className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full">
+      Notify Me
+    </button>
   </div>
+  <p className="text-xs text-white mt-6">© 2025 SmartTrip. All rights reserved.</p>
 </footer>
         </div>
   );
