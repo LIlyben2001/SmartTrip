@@ -5,13 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function LandingPage() {
   return (
-  <div className="bg-background text-text min-h-screen">
+ <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
-        <div className="text-2xl font-bold text-primary">SmartTrip</div>
+        <div className="text-2xl font-bold text-[#1F2F46]">SmartTrip</div>
         <nav className="flex flex-wrap justify-center gap-4">
-          <a href="#features" className="text-primary font-medium">Features</a>
-          <a href="#demo" className="text-primary font-medium">Demo</a>
-          <a href="#signup" className="text-accent font-semibold">Get Started</a>
+          <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
+          <a href="#demo" className="text-[#1F2F46] font-medium">Demo</a>
+          <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
         </nav>
       </header>
 
