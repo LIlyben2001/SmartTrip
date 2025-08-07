@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { downloadPDF } from "../utils/downloadPDF";
+
 
 const TripPlanner = () => {
   const [destination, setDestination] = useState("");
