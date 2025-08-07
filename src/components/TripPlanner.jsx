@@ -1,5 +1,27 @@
 import React, { useState } from "react";
 
+// ⬅️ Move this to the top
+const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="mb-4 border rounded">
+      <button
+        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {title}
+      </button>
+      {isOpen && (
+        <div className="p-4 whitespace-pre-line text-text">
+          {content}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ⬇️ Then define TripPlanner
 const TripPlanner = () => {
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -16,7 +38,7 @@ const TripPlanner = () => {
     setLoading(true);
     setItinerary("");
 
-  const prompt = `Create a detailed day-by-day ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. Budget: ${budget}. Include daily highlights, cultural or food experiences, and local tips. At the end, provide a budget breakdown by category (accommodation, food, transportation, attractions, and miscellaneous). Format clearly with headings.`;
+    const prompt = `Create a detailed day-by-day ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. Budget: ${budget}. Include daily highlights, cultural or food experiences, and local tips. At the end, provide a budget breakdown by category (accommodation, food, transportation, attractions, and miscellaneous). Format clearly with headings.`;
 
     try {
       const response = await fetch("/api/generate-itinerary", {
@@ -111,7 +133,6 @@ const TripPlanner = () => {
         </div>
       )}
 
-     {/* Collapsible Day Section */}
       {itinerary && (
         <div className="bg-white mt-8 p-6 rounded shadow border">
           <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
@@ -120,7 +141,12 @@ const TripPlanner = () => {
             .map((section, index) => {
               const title = section.match(/^Day\s[\d\-]+:/)?.[0] || `Day ${index + 1}`;
               return (
-                <CollapsibleDaySection key={index} title={title} content={section} defaultOpen={true} />
+                <CollapsibleDaySection
+                  key={index}
+                  title={title}
+                  content={section}
+                  defaultOpen={true} // ⬅️ make sure this is here
+                />
               );
             })}
         </div>
@@ -130,24 +156,3 @@ const TripPlanner = () => {
 };
 
 export default TripPlanner;
-
-const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="mb-4 border rounded">
-      <button
-        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {title}
-      </button>
-      {isOpen && (
-        <div className="p-4 whitespace-pre-line text-text">
-          {content}
-        </div>
-      )}
-    </div>
-  );
-};
-
