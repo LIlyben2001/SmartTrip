@@ -126,7 +126,7 @@ const TripPlanner = () => {
         <div className="bg-white mt-8 p-6 rounded shadow border">
           <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
           {itinerary
-            .split(/\n(?=Day\s[\d\-]+:)/g)
+            .split(/\n(?=Day\s\d+:)/g)
             .map((section, index) => {
               const title = section.match(/^Day\s[\d\-]+:/)?.[0] || `Day ${index + 1}`;
               return (
