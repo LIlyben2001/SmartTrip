@@ -1,5 +1,26 @@
 import React, { useState } from "react";
-import { jsPDF } from "jspdf"; // ✅ required for PDF
+import { jsPDF } from "jspdf";
+
+// ✅ Define this BEFORE TripPlanner
+const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="mb-4 border rounded">
+      <button
+        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {title}
+      </button>
+      {isOpen && (
+        <div className="p-4 whitespace-pre-line text-text">
+          {content}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TripPlanner = () => {
   const [destination, setDestination] = useState("");
@@ -74,14 +95,13 @@ const TripPlanner = () => {
         <div className="bg-white mt-8 p-6 rounded shadow border">
           <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
           {itinerary
-            .split(/\n(?=Day\s\d+:)/g) // Matches each "Day 1:" separately
+            .split(/\n(?=Day\s\d+:)/g)
             .map((section, index) => {
-              const titleMatch = section.match(/^Day\s\d+:/);
-              const title = titleMatch ? titleMatch[0] : `Day ${index + 1}`;
-              return <CollapsibleDaySection key={index} title={title} content={section} defaultOpen={true} />;
+              const title = section.match(/^Day\s\d+:/)?.[0] || `Day ${index + 1}`;
+              return (
+                <CollapsibleDaySection key={index} title={title} content={section} defaultOpen={true} />
+              );
             })}
-
-          {/* Download PDF Button */}
           <div className="mt-6 text-center">
             <button
               onClick={() => {
@@ -103,24 +123,3 @@ const TripPlanner = () => {
 };
 
 export default TripPlanner;
-
-// 👇 CollapsibleDaySection component
-const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="mb-4 border rounded">
-      <button
-        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {title}
-      </button>
-      {isOpen && (
-        <div className="p-4 whitespace-pre-line text-text">
-          {content}
-        </div>
-      )}
-    </div>
-  );
-};
