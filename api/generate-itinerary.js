@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt - 3.5 - turbo",
+        model: "gpt-3.5-turbo", // ✅ fixed model ID
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       }),
@@ -27,15 +27,12 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    console.log("OpenAI response:", JSON.stringify(data, null, 2)); // <---- 👈 ADD THIS LINE
-
     if (!data.choices || !data.choices[0]) {
       return res.status(500).json({ error: "No response from AI" });
     }
 
     res.status(200).json({ result: data.choices[0].message.content });
   } catch (error) {
-    console.error("API error:", error); // <---- 👈 ADD THIS TOO
     res.status(500).json({ error: "AI generation failed" });
   }
 }
