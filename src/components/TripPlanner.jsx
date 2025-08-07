@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { jsPDF } from "jspdf";
 
 // ✅ Define this BEFORE TripPlanner
 const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
