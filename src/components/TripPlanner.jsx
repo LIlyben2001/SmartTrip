@@ -131,11 +131,15 @@ const TripPlanner = () => {
 
           {/* ✅ PDF Button with dynamic import */}
           <div className="mt-6 text-center">
-            <button
-              onClick={async () => {
-                const { downloadPDF } = await import("../utils/downloadPDF.js");
-                downloadPDF(itinerary);
-              }}
+     <button
+          onClick={async () => {
+            const { downloadPDF } = await import("../utils/downloadPDF.js");
+            downloadPDF(itinerary);
+          }}
+          className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded"
+        >
+          Download Itinerary as PDF
+        </button>
             </button>
           </div>
         </div>
