@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo", // ✅ fixed model ID
+      model: "gpt-3.5-turbo", // ✅ fixed model ID
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       }),
