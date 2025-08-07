@@ -133,15 +133,9 @@ const TripPlanner = () => {
           <div className="mt-6 text-center">
             <button
               onClick={async () => {
-                const { jsPDF } = await import("jspdf");
-                const doc = new jsPDF();
-                const lines = doc.splitTextToSize(itinerary, 180);
-                doc.text(lines, 10, 10);
-                doc.save("itinerary.pdf");
+                const { downloadPDF } = await import("../utils/downloadPDF.js");
+                downloadPDF(itinerary);
               }}
-              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded"
-            >
-              Download Itinerary as PDF
             </button>
           </div>
         </div>
