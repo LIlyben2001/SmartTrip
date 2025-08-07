@@ -1,6 +1,5 @@
-import jsPDF from "jspdf";
-
-export function downloadPDF(itinerary) {
+export async function downloadPDF(itinerary) {
+  const jsPDF = (await import("jspdf")).default;
   const doc = new jsPDF();
   const lines = itinerary.split("\n");
   let y = 10;
