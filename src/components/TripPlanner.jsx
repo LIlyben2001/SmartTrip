@@ -127,3 +127,23 @@ const TripPlanner = () => {
 };
 
 export default TripPlanner;
+
+const CollapsibleDaySection = ({ title, content }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="mb-4 border rounded">
+      <button
+        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {title}
+      </button>
+      {isOpen && (
+        <div className="p-4 whitespace-pre-line text-text">
+          {content}
+        </div>
+      )}
+    </div>
+  );
+};
