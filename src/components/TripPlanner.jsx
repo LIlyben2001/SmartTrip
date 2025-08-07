@@ -125,19 +125,15 @@ const TripPlanner = () => {
     {itinerary && (
   <div className="bg-white mt-8 p-6 rounded shadow border">
     <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
-    {itinerary
-      .split(/\n(?=Day\s\d+:)/g)
-      .map((section, index) => {
-        const title = section.match(/^Day\s\d+:/)?.[0] || `Day ${index + 1}`;
-        return (
-          <CollapsibleDaySection
-            key={index}
-            title={title}
-            content={section}
-            defaultOpen={true}
-          />
-        );
-      })}
+ {itinerary
+  .split(/\n(?=Day\s\d+:)/g) // This only matches exact days like "Day 1:"
+  .map((section, index) => {
+    const titleMatch = section.match(/^Day\s\d+:/);
+    const title = titleMatch ? titleMatch[0] : `Day ${index + 1}`;
+    return (
+      <CollapsibleDaySection key={index} title={title} content={section} defaultOpen={true} />
+    );
+  })}
 
     {/* Download Button */}
     <div className="mt-6 text-center">
