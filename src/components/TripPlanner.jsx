@@ -122,30 +122,40 @@ const TripPlanner = () => {
       )}
 
       {/* Collapsible Day Section */}
-      {itinerary && (
-        <div className="bg-white mt-8 p-6 rounded shadow border">
-          <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
-          {itinerary
-            .split(/\n(?=Day\s\d+:)/g)
-            .map((section, index) => {
-              const title = section.match(/^Day\s[\d\-]+:/)?.[0] || `Day ${index + 1}`;
-              return (
-                <CollapsibleDaySection key={index} title={title} content={section} defaultOpen={true} />
-              );
-            })}
+    {itinerary && (
+  <div className="bg-white mt-8 p-6 rounded shadow border">
+    <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
+    {itinerary
+      .split(/\n(?=Day\s\d+:)/g)
+      .map((section, index) => {
+        const title = section.match(/^Day\s\d+:/)?.[0] || `Day ${index + 1}`;
+        return (
+          <CollapsibleDaySection
+            key={index}
+            title={title}
+            content={section}
+            defaultOpen={true}
+          />
+        );
+      })}
 
-          {/* ✅ Download Button */}
-          <button
-            onClick={downloadItinerary}
-            className="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded"
-          >
-            Download Itinerary
-          </button>
-        </div>
-      )}
-    </section>
-  );
-};
+    {/* Download Button */}
+    <div className="mt-6 text-center">
+      <button
+        onClick={() => {
+          const doc = new jsPDF();
+          doc.setFontSize(12);
+          doc.text(itinerary, 10, 10);
+          doc.save("itinerary.pdf");
+        }}
+        className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded"
+      >
+        Download Itinerary as PDF
+      </button>
+    </div>
+  </div>
+)}
+
 
 export default TripPlanner;
 
