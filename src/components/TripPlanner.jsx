@@ -16,7 +16,7 @@ const TripPlanner = () => {
     setLoading(true);
     setItinerary("");
 
-    const prompt = `Create a ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. Budget: ${budget}.`;
+  const prompt = `Create a detailed day-by-day ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. Budget: ${budget}. Include daily highlights, cultural or food experiences, and local tips. At the end, provide a budget breakdown by category (accommodation, food, transportation, attractions, and miscellaneous). Format clearly with headings.`;
 
     try {
       const response = await fetch("/api/generate-itinerary", {
