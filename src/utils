@@ -1,0 +1,9 @@
+// src/utils/downloadPDF.js
+
+export async function downloadPDF(itineraryText) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF();
+  const lines = doc.splitTextToSize(itineraryText, 180);
+  doc.text(lines, 10, 10);
+  doc.save("itinerary.pdf");
+}
