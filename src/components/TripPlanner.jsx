@@ -140,7 +140,6 @@ const TripPlanner = () => {
         >
           Download Itinerary as PDF
         </button>
-            </button>
           </div>
         </div>
       )}
