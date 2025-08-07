@@ -1,26 +1,4 @@
 import React, { useState } from "react";
-const { jsPDF } = await import("jspdf");
-
-// ✅ Define this BEFORE TripPlanner
-const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="mb-4 border rounded">
-      <button
-        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {title}
-      </button>
-      {isOpen && (
-        <div className="p-4 whitespace-pre-line text-text">
-          {content}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const TripPlanner = () => {
   const [destination, setDestination] = useState("");
@@ -60,10 +38,31 @@ const TripPlanner = () => {
     <section id="planner" className="py-20 px-4 bg-white max-w-4xl mx-auto">
       <h2 className="text-3xl font-bold text-center text-primary mb-10">Plan Your Trip</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" placeholder="Destination (e.g., Beijing)" value={destination} onChange={(e) => setDestination(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
-        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
-        <input type="number" placeholder="Number of Days" value={numDays} onChange={(e) => setNumDays(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
-        <select value={travelStyle} onChange={(e) => setTravelStyle(e.target.value)} className="border border-gray-300 px-4 py-2 rounded">
+        <input
+          type="text"
+          placeholder="Destination (e.g., Beijing)"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <input
+          type="number"
+          placeholder="Number of Days"
+          value={numDays}
+          onChange={(e) => setNumDays(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <select
+          value={travelStyle}
+          onChange={(e) => setTravelStyle(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        >
           <option value="">Travel Style</option>
           <option>Cultural</option>
           <option>Adventure</option>
@@ -71,15 +70,34 @@ const TripPlanner = () => {
           <option>Luxury</option>
           <option>Foodies</option>
         </select>
-        <select value={budget} onChange={(e) => setBudget(e.target.value)} className="border border-gray-300 px-4 py-2 rounded">
+        <select
+          value={budget}
+          onChange={(e) => setBudget(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        >
           <option value="">Budget Range</option>
           <option>Under $1,000</option>
           <option>$1,000–$2,000</option>
           <option>Over $2,000</option>
         </select>
-        <input type="number" placeholder="Number of Travelers" value={numTravelers} onChange={(e) => setNumTravelers(e.target.value)} className="border border-gray-300 px-4 py-2 rounded" />
-        <input type="email" placeholder="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} className="border border-gray-300 px-4 py-2 rounded md:col-span-2" />
-        <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded col-span-full">
+        <input
+          type="number"
+          placeholder="Number of Travelers"
+          value={numTravelers}
+          onChange={(e) => setNumTravelers(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded"
+        />
+        <input
+          type="email"
+          placeholder="Email (optional)"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded md:col-span-2"
+        />
+        <button
+          type="submit"
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded col-span-full"
+        >
           {loading ? "Generating..." : "Generate My Trip"}
         </button>
       </form>
@@ -87,7 +105,9 @@ const TripPlanner = () => {
       {!itinerary && (
         <div className="bg-gray-100 rounded-md p-4 mt-6 text-center">
           <h3 className="text-lg font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
-          <p className="text-text">Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!</p>
+          <p className="text-text">
+            Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!
+          </p>
         </div>
       )}
 
@@ -97,27 +117,32 @@ const TripPlanner = () => {
           {itinerary
             .split(/\n(?=Day\s\d+:)/g)
             .map((section, index) => {
-              const title = section.match(/^Day\s\d+:/)?.[0] || `Day ${index + 1}`;
+              const titleMatch = section.match(/^Day\s\d+:/);
+              const title = titleMatch ? titleMatch[0] : `Day ${index + 1}`;
               return (
-                <CollapsibleDaySection key={index} title={title} content={section} defaultOpen={true} />
+                <CollapsibleDaySection
+                  key={index}
+                  title={title}
+                  content={section}
+                  defaultOpen={true}
+                />
               );
             })}
+
+          {/* ✅ PDF Button with dynamic import */}
           <div className="mt-6 text-center">
-        <button
-            onClick={async () => {
-              const { jsPDF } = await import("jspdf");
-              const doc = new jsPDF();
-              doc.setFontSize(12);
-              doc.text(itinerary, 10, 10);
-              doc.save("itinerary.pdf");
-            }}
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded"
-          >
-            Download Itinerary as PDF
-          </button>
-
-
-
+            <button
+              onClick={async () => {
+                const { jsPDF } = await import("jspdf");
+                const doc = new jsPDF();
+                const lines = doc.splitTextToSize(itinerary, 180);
+                doc.text(lines, 10, 10);
+                doc.save("itinerary.pdf");
+              }}
+              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded"
+            >
+              Download Itinerary as PDF
+            </button>
           </div>
         </div>
       )}
@@ -126,3 +151,23 @@ const TripPlanner = () => {
 };
 
 export default TripPlanner;
+
+const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="mb-4 border rounded">
+      <button
+        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {title}
+      </button>
+      {isOpen && (
+        <div className="p-4 whitespace-pre-line text-text">
+          {content}
+        </div>
+      )}
+    </div>
+  );
+};
