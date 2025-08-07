@@ -111,6 +111,7 @@ const TripPlanner = () => {
         </div>
       )}
 
+      /*Clppasible Day Section */
      {itinerary && (
         <div className="bg-white mt-8 p-6 rounded shadow border">
           <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
