@@ -120,7 +120,7 @@ const TripPlanner = () => {
             .map((section, index) => {
               const title = section.match(/^Day\s[\d\-]+:/)?.[0] || `Day ${index + 1}`;
               return (
-                <CollapsibleDaySection key={index} title={title} content={section} />
+                <CollapsibleDaySection key={index} title={title} content={section} defaultOpen={true} />
               );
             })}
         </div>
@@ -131,8 +131,8 @@ const TripPlanner = () => {
 
 export default TripPlanner;
 
-const CollapsibleDaySection = ({ title, content }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <div className="mb-4 border rounded">
@@ -150,3 +150,4 @@ const CollapsibleDaySection = ({ title, content }) => {
     </div>
   );
 };
+
