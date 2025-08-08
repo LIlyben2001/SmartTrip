@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { downloadText } from "../utils/downloadText";
+import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
+import { downloadTextFile } from "../utils/downloadText"; // keep your TXT fallback
+
 
 const TripPlanner = () => {
   const [destination, setDestination] = useState("");
@@ -131,20 +133,33 @@ const TripPlanner = () => {
             })}
 
           {/* ✅ PDF Button with dynamic import */}
-             <div className="mt-6 flex items-center justify-center gap-3">
-            <button
-              onClick={() => downloadText("SmartTrip_Itinerary.txt", itinerary)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded"
-            >
-              Download Itinerary (.txt)
-            </button>
-            <button
-              onClick={() => navigator.clipboard.writeText(itinerary)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 py-2 rounded"
-            >
-              Copy to Clipboard
-            </button>
-          </div>
+         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <button
+          onClick={() => {
+            const html = itineraryTextToHtml(itinerary, "SmartTrip Itinerary");
+            downloadHtml("SmartTrip_Itinerary.html", html);
+          }}
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded"
+          title="Pretty export with headings & page breaks"
+        >
+          Download Pretty HTML
+        </button>
+      
+        <button
+          onClick={() => downloadTextFile("SmartTrip_Itinerary.txt", itinerary)}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded"
+        >
+          Download .TXT
+        </button>
+      
+        <button
+          onClick={() => navigator.clipboard.writeText(itinerary)}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 py-2 rounded"
+        >
+          Copy to Clipboard
+        </button>
+      </div>
+
           </div>
       )}
     </section>
