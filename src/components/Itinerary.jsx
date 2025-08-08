@@ -1,4 +1,3 @@
-// src/components/Itinerary.jsx
 import DaySection from "./DaySection";
 import BudgetCard from "./BudgetCard";
 
@@ -24,7 +23,9 @@ export default function Itinerary({ tripTitle, days = [], budgetRows }) {
           <DaySection
             key={idx}
             index={idx}
-            title={day.title}          // pass through raw title
+            // pass through the raw title from API (e.g., "Day 1: Exploring Hong Kong")
+            title={day.title}
+            // still pass location/bullets for fallbacks
             location={day.location}
             bullets={day.bullets || []}
           />
