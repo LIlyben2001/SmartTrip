@@ -243,3 +243,4 @@ const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
     </div>
   );
 };
+
