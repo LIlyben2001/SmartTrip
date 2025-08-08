@@ -77,3 +77,22 @@ export default function LandingPage() {
     </div>
   );
 }
+
+import Itinerary from "./components/Itinerary";
+
+const mockDays = [
+  { title: "Day 1", location: "Shanghai", bullets: ["Yu Garden", "Nanjing Rd walk", "Soup dumplings"] },
+  { title: "Day 2", location: "Suzhou",   bullets: ["Humble Administrator’s Garden", "Canal ride"] },
+];
+
+const mockBudget = [
+  { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
+  { category: "Food",          budget: 150, mid: 250, luxury: 400 },
+  { category: "Transportation",budget:  50, mid: 100, luxury: 200 },
+  { category: "Activities",    budget: 100, mid: 200, luxury: 300 },
+  { category: "Souvenirs",     budget:  50, mid: 100, luxury: 200 },
+];
+
+function Preview() {
+  return <Itinerary tripTitle="Shanghai Weekend" days={mockDays} budgetRows={mockBudget} />;
+}
