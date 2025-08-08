@@ -1,4 +1,3 @@
-// src/components/TripPlanner.jsx
 import { useRef, useState, useEffect } from "react";
 import Itinerary from "./Itinerary";
 import { Card, CardContent } from "./ui/card";
@@ -60,11 +59,13 @@ export default function TripPlanner() {
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
       const data = await res.json();
+
       const days = (data?.days || []).map((d, i) => ({
         title: d.title || `Day ${i + 1}`,
-        location: d.location || d.city || form.destination || "",
+        location: d.location || form.destination || "",
         bullets: Array.isArray(d.items) ? d.items : (d.bullets || []),
       }));
+
       const budgetRows =
         data?.budget?.rows && Array.isArray(data.budget.rows)
           ? data.budget.rows
@@ -73,14 +74,21 @@ export default function TripPlanner() {
       setItinerary({
         tripTitle:
           data?.title ||
-          `${form.destination || "Your Trip"}${
-            form.days ? ` — ${form.days} days` : ""
-          }${form.style ? ` • ${form.style}` : ""}${
-            form.budgetLevel ? ` • ${form.budgetLevel}` : ""
-          }${form.pace ? ` • ${form.pace}` : ""}`,
+          [
+            form.destination || "Your Trip",
+            form.days ? `${form.days} days` : "",
+            form.style,
+            form.budgetLevel,
+            form.pace,
+          ]
+            .filter(Boolean)
+            .join(" — "),
         days,
         budgetRows,
       });
+
+      // 🔒 Clear the form so fields don't “remember”
+      setForm({ ...defaultForm });
     } catch (err) {
       console.error(err);
       setError(
@@ -112,10 +120,14 @@ export default function TripPlanner() {
         </div>
 
         <CardContent className="p-6 md:p-8">
-          <form onSubmit={handleGenerate} className="grid grid-cols-12 gap-4">
-            {/* Row 1 */}
+          <form
+            onSubmit={handleGenerate}
+            autoComplete="off"                                   // stop browser autofill
+            className="grid grid-cols-12 gap-4"
+          >
             <div className="col-span-12 md:col-span-6">
               <input
+                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="destination"
                 value={form.destination}
@@ -127,6 +139,7 @@ export default function TripPlanner() {
             <div className="col-span-12 md:col-span-6">
               <input
                 type="date"
+                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="startDate"
                 value={form.startDate}
@@ -135,9 +148,9 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* Row 2 */}
             <div className="col-span-12 md:col-span-6">
               <input
+                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="days"
                 value={form.days}
@@ -148,6 +161,7 @@ export default function TripPlanner() {
             </div>
             <div className="col-span-12 md:col-span-6">
               <select
+                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="style"
                 value={form.style}
@@ -165,9 +179,9 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* Row 3 */}
             <div className="col-span-12 md:col-span-6">
               <select
+                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="budgetLevel"
                 value={form.budgetLevel}
@@ -183,6 +197,7 @@ export default function TripPlanner() {
             </div>
             <div className="col-span-12 md:col-span-6">
               <input
+                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="travelers"
                 value={form.travelers}
@@ -192,9 +207,9 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* Row 4 */}
             <div className="col-span-12 md:col-span-6">
               <select
+                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="pace"
                 value={form.pace}
@@ -210,6 +225,7 @@ export default function TripPlanner() {
             </div>
             <div className="col-span-12 md:col-span-6">
               <input
+                autoComplete="new-password"                      {/* extra-stubborn autofill */}
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="email"
                 value={form.email}
@@ -219,7 +235,6 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* CTA */}
             <div className="col-span-12">
               <button
                 type="submit"
@@ -231,7 +246,6 @@ export default function TripPlanner() {
               </button>
             </div>
 
-            {/* Sample Itinerary Preview */}
             <div className="col-span-12">
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
                 <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
