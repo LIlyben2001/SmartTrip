@@ -134,22 +134,51 @@ Keep formatting clean and skimmable.
         <div className="bg-white mt-8 p-6 rounded shadow border">
           <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
 
-          {itinerary
-            // handle "Day" with or without surrounding ** and extra spaces
-            .split(/\n(?=\*{0,2}\s*Day\s+\d+\s*:)/g)
-            .map((section, index) => {
-              const titleMatch = section.match(/^\*{0,2}\s*Day\s+\d+\s*:/);
-              const raw = titleMatch ? titleMatch[0] : `Day ${index + 1}:`;
-              const title = raw.replace(/^\*{0,2}\s*/, ""); // strip leading ** if present
-              return (
-                <CollapsibleDaySection
-                  key={index}
-                  title={title}
-                  content={section}
-                  defaultOpen={true}
-                />
-              );
-            })}
+          {(() => {
+            // 1) Remove anything from "Budget ..." onward for the on-page UI
+            let uiText = itinerary;
+            const budgetHdr = uiText.match(/^\s*Budget(?:\s+Breakdown|\s+Estimate)?\s*:?\s*$/im);
+            if (budgetHdr) uiText = uiText.slice(0, budgetHdr.index).trim();
+
+            // 2) Find all "Day X:" headings
+            const headingRe = /^\s*\*{0,2}\s*Day\s+(\d+)\s*:\s*.*$/gm;
+            const matches = [...uiText.matchAll(headingRe)];
+
+            // 3) Slice each section between this heading and the next
+            const sections = [];
+            for (let i = 0; i < matches.length; i++) {
+              const m = matches[i];
+              const next = matches[i + 1];
+
+              const fullHeading = m[0].replace(/^\s*\*{0,2}\s*/, "").trim(); // "Day N: Title"
+              const dayNo = parseInt(m[1], 10);
+
+              const start = m.index + m[0].length;
+              const end = next ? next.index : uiText.length;
+              const body = uiText.slice(start, end).trim();
+
+              if (!body) continue; // skip empty
+              sections.push({ dayNo, title: fullHeading, body });
+            }
+
+            // 4) Deduplicate duplicated day numbers: keep the one with longer content
+            const deduped = sections.reduce((acc, cur) => {
+              const idx = acc.findIndex(x => x.dayNo === cur.dayNo);
+              if (idx === -1) return acc.concat(cur);
+              if (cur.body.length > acc[idx].body.length) acc[idx] = cur;
+              return acc;
+            }, []);
+
+            // 5) Render
+            return deduped.map((sec) => (
+              <CollapsibleDaySection
+                key={sec.dayNo}
+                title={sec.title.replace(/^(\s*\*{0,2}\s*)?/, "").trim()}
+                content={sec.body}
+                defaultOpen={true}
+              />
+            ));
+          })()}
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
@@ -173,7 +202,6 @@ Keep formatting clean and skimmable.
             <button
               onClick={() => navigator.clipboard.writeText(itinerary)}
               className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 py-2 rounded"
-              title="Copy itinerary to clipboard"
             >
               Copy to Clipboard
             </button>
