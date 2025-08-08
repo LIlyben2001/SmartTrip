@@ -1,42 +1,79 @@
-// src/components/Itinerary.jsx
-import DaySection from "./DaySection";
-import BudgetCard from "./BudgetCard";
+// /api/generate-itinerary.js
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-const DEFAULT_BUDGET_ROWS = [
-  { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
-  { category: "Food",          budget: 150, mid: 250, luxury: 400 },
-  { category: "Transportation",budget:  50, mid: 100, luxury: 200 },
-  { category: "Activities",    budget: 100, mid: 200, luxury: 300 },
-  { category: "Souvenirs",     budget:  50, mid: 100, luxury: 200 },
-];
+  try {
+    const {
+      destination = "Your Destination",
+      startDate,
+      endDate,
+      days,
+      travelers = 2,
+      style = "",
+      budgetLevel = "",
+      pace = "",
+    } = req.body || {};
 
-export default function Itinerary({ tripTitle, days = [], budgetRows }) {
-  if (!days?.length) return null;
+    // derive # of days
+    let n = Number(days) || 0;
+    if (!n && startDate && endDate) {
+      const sd = new Date(startDate), ed = new Date(endDate);
+      if (!isNaN(sd) && !isNaN(ed)) n = Math.max(1, Math.round((ed - sd) / 86400000) + 1);
+    }
+    if (!n) n = 5;
 
-  const rows = Array.isArray(budgetRows) && budgetRows.length
-    ? budgetRows
-    : DEFAULT_BUDGET_ROWS;
+    // descriptive mock titles
+    const themes = [
+      "Arrival & Orientation",
+      "Historic Core",
+      "Museums & Culture",
+      "Nature & Views",
+      "Food Crawl",
+      "Neighborhoods",
+      "Day Trip",
+      "Hidden Gems",
+      "Waterfront & Markets",
+      "Farewell Day",
+    ];
 
-  return (
-    <div className="max-w-4xl mx-auto px-2 md:px-0">
-      {tripTitle && <h2 className="text-2xl font-semibold mb-3">{tripTitle}</h2>}
-      <h3 className="text-xl font-semibold mb-3">Your AI-Generated Itinerary</h3>
+    const dayList = Array.from({ length: n }).map((_, i) => ({
+      title: `Day ${i + 1}: ${themes[i % themes.length]} in ${destination}`,
+      location: destination,
+      items: [
+        "Morning: Visit top landmark",
+        "Afternoon: Explore local market",
+        "Evening: Enjoy traditional dinner",
+      ],
+    }));
 
-      <div className="space-y-4">
-        {days.map((day, idx) => (
-          <DaySection
-            key={idx}
-            index={idx}
-            title={day.title}                        // keep descriptive titles
-            location={day.location}
-            bullets={day.bullets ?? day.items ?? []} // support either key
-          />
-        ))}
-      </div>
+    const budget = {
+      rows: [
+        { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
+        { category: "Food",          budget: 150, mid: 250, luxury: 400 },
+        { category: "Transportation",budget:  50, mid: 100, luxury: 200 },
+        { category: "Activities",    budget: 100, mid: 200, luxury: 300 },
+        { category: "Souvenirs",     budget:  50, mid: 100, luxury: 200 },
+      ],
+    };
 
-      <div className="mt-4">
-        <BudgetCard title="Budget — Trip Overview" rows={rows} />
-      </div>
-    </div>
-  );
+    const tripTitle = [
+      `${destination} Trip`,
+      `${n} days`,
+      style,
+      budgetLevel,
+      pace,
+    ].filter(Boolean).join(" — ");
+
+    return res.status(200).json({
+      title: tripTitle,
+      days: dayList,
+      budget,
+      travelers,
+      startDate: startDate || null,
+      endDate: endDate || null,
+    });
+  } catch (err) {
+    console.error("API error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 }
