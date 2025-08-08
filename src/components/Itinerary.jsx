@@ -1,3 +1,4 @@
+// src/components/Itinerary.jsx
 import DaySection from "./DaySection";
 import BudgetCard from "./BudgetCard";
 
@@ -11,7 +12,10 @@ const DEFAULT_BUDGET_ROWS = [
 
 export default function Itinerary({ tripTitle, days = [], budgetRows }) {
   if (!days?.length) return null;
-  const rows = (Array.isArray(budgetRows) && budgetRows.length) ? budgetRows : DEFAULT_BUDGET_ROWS;
+
+  const rows = Array.isArray(budgetRows) && budgetRows.length
+    ? budgetRows
+    : DEFAULT_BUDGET_ROWS;
 
   return (
     <div className="max-w-4xl mx-auto px-2 md:px-0">
@@ -23,11 +27,9 @@ export default function Itinerary({ tripTitle, days = [], budgetRows }) {
           <DaySection
             key={idx}
             index={idx}
-            // pass through the raw title from API (e.g., "Day 1: Exploring Hong Kong")
-            title={day.title}
-            // still pass location/bullets for fallbacks
+            title={day.title}                        // keep descriptive titles
             location={day.location}
-            bullets={day.bullets || []}
+            bullets={day.bullets ?? day.items ?? []} // support either key
           />
         ))}
       </div>
