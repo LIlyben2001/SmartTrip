@@ -1,7 +1,6 @@
-// src/components/BudgetCard.jsx
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 
-const titleClass = "text-lg font-bold"; // match your day header style
+const titleClass = "text-lg font-bold";
 
 const currency = (n) =>
   typeof n === "number"
@@ -34,9 +33,9 @@ export default function BudgetCard({
 
   return (
     <Card className="mt-4">
-      <CardHeader>
-        <CardTitle className={titleClass}>{title}</CardTitle>
-      </CardHeader>
+      <div className="px-4 pt-4">
+        <h3 className={titleClass}>{title}</h3>
+      </div>
       <CardContent>
         <div style={{ overflowX: "auto" }}>
           <table className={tableClass}>
