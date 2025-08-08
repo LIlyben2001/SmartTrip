@@ -145,6 +145,7 @@ const TripPlanner = () => {
               Copy to Clipboard
             </button>
           </div>
+          </div>
       )}
     </section>
   );
