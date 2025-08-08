@@ -274,18 +274,14 @@ Keep formatting clean and skimmable.
           {days.map((sec, idx) => (
             <div key={sec.key ?? idx} className="mb-4 border rounded">
               {/* header is neutral (no Day label to avoid duplication) */}
-              <div className="px-4 py-2 bg-gray-100 font-semibold text-gray-800">
-                Day {sec.dayNo ?? idx + 1}
-              </div>
-
-              <div className="p-4 text-text whitespace-pre-line">
-                {/* Bold Day label INSIDE the body */}
-                <div className="font-bold mb-3">
-                  Day {sec.dayNo ?? idx + 1}
-                  {sec.subtitle ? `: ${sec.subtitle}` : ":"}
-                </div>
-                {sec.body}
-              </div>
+          <div className="px-4 py-2 bg-gray-100 font-semibold text-gray-800">
+              Day {sec.dayNo ?? idx + 1}
+              {sec.subtitle ? `: ${sec.subtitle}` : ""}
+            </div>
+            
+            <div className="p-4 text-text whitespace-pre-line">
+              {sec.body}
+            </div>
             </div>
           ))}
 
