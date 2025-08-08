@@ -1,18 +1,26 @@
+// src/components/TripPlanner.jsx
 import { useState } from "react";
 import Itinerary from "./Itinerary";
 import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 
 const defaultForm = {
-  origin: "",
   destination: "",
   startDate: "",
-  endDate: "",
-  travelers: 2,
-  style: "Foodies",
-  pace: "Balanced",
-  budgetLevel: "Mid-range",
+  days: "",            // number of days (string so inputs are easy)
+  travelers: "",
+  style: "",           // NO DEFAULT — user must pick
+  budgetLevel: "",     // Budget Range
+  pace: "",            // Trip Pace
+  email: "",
 };
+
+function addDaysISO(isoDate, n) {
+  if (!isoDate || !n) return "";
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + (Number(n) - 1));
+  return d.toISOString().slice(0, 10);
+}
 
 export default function TripPlanner() {
   const [form, setForm] = useState(defaultForm);
@@ -30,12 +38,28 @@ export default function TripPlanner() {
     setError("");
     setLoading(true);
     try {
+      const endDate = addDaysISO(form.startDate, form.days);
+
+      // Build payload for your API
+      const payload = {
+        destination: form.destination,
+        startDate: form.startDate,
+        endDate,
+        days: Number(form.days || 0),
+        travelers: Number(form.travelers || 0),
+        style: form.style || undefined,
+        budgetLevel: form.budgetLevel || undefined,
+        pace: form.pace || undefined,
+        email: form.email || undefined,
+      };
+
       const res = await fetch("/api/generate-itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+
       const data = await res.json();
 
       const days = (data?.days || []).map((d, i) => ({
@@ -69,80 +93,130 @@ export default function TripPlanner() {
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <div className="px-4 pt-4">
-          <h2 className="text-lg font-bold">Plan Your Trip</h2>
+    <div className="max-w-4xl mx-auto px-4 md:px-6 space-y-6">
+      <Card className="shadow-md">
+        <div className="px-6 pt-6 text-center">
+          <h2 className="text-3xl font-semibold">Plan Your Trip</h2>
         </div>
-        <CardContent>
-          <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Origin</label>
-              <input className="w-full border rounded p-2" name="origin" value={form.origin} onChange={onChange} />
+
+        <CardContent className="p-6 md:p-8">
+          <form onSubmit={handleGenerate} className="grid grid-cols-12 gap-4">
+            {/* Row 1 */}
+            <div className="col-span-12 md:col-span-6">
+              <input
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="destination"
+                value={form.destination}
+                onChange={onChange}
+                placeholder="Destination (e.g., Beijing)"
+                required
+              />
+            </div>
+            <div className="col-span-12 md:col-span-6">
+              <input
+                type="date"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="startDate"
+                value={form.startDate}
+                onChange={onChange}
+                placeholder="mm/dd/yyyy"
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Destination</label>
-              <input className="w-full border rounded p-2" name="destination" value={form.destination} onChange={onChange} required />
+            {/* Row 2 */}
+            <div className="col-span-12 md:col-span-6">
+              <input
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="days"
+                value={form.days}
+                onChange={onChange}
+                placeholder="Number of Days"
+                inputMode="numeric"
+              />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Start Date</label>
-              <input type="date" className="w-full border rounded p-2" name="startDate" value={form.startDate} onChange={onChange} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">End Date</label>
-              <input type="date" className="w-full border rounded p-2" name="endDate" value={form.endDate} onChange={onChange} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Travelers</label>
-              <input type="number" min={1} className="w-full border rounded p-2" name="travelers" value={form.travelers} onChange={onChange} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Travel Style</label>
-              <select className="w-full border rounded p-2" name="style" value={form.style} onChange={onChange}>
-                <option>Foodies</option><option>Culture</option><option>Nature</option>
-                <option>Luxury</option><option>Budget</option><option>Family</option>
+            <div className="col-span-12 md:col-span-6">
+              <select
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="style"
+                value={form.style}
+                onChange={onChange}
+              >
+                <option value="" disabled hidden>
+                  Travel Style
+                </option>
+                <option>Foodies</option>
+                <option>Culture</option>
+                <option>Nature</option>
+                <option>Luxury</option>
+                <option>Budget</option>
+                <option>Family</option>
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Trip Pace</label>
-              <select className="w-full border rounded p-2" name="pace" value={form.pace} onChange={onChange}>
-                <option>Relaxed</option><option>Balanced</option><option>Fast</option>
+            {/* Row 3 */}
+            <div className="col-span-12 md:col-span-6">
+              <select
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="budgetLevel"
+                value={form.budgetLevel}
+                onChange={onChange}
+              >
+                <option value="" disabled hidden>
+                  Budget Range
+                </option>
+                <option>Budget</option>
+                <option>Mid-range</option>
+                <option>Luxury</option>
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Budget Level</label>
-              <select className="w-full border rounded p-2" name="budgetLevel" value={form.budgetLevel} onChange={onChange}>
-                <option>Budget</option><option>Mid-range</option><option>Luxury</option>
-              </select>
+            <div className="col-span-12 md:col-span-6">
+              <input
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="travelers"
+                value={form.travelers}
+                onChange={onChange}
+                placeholder="Number of Travelers"
+                inputMode="numeric"
+              />
             </div>
 
-            <div className="md:col-span-2">
-              <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded">
-                {loading ? "Generating..." : "Generate Itinerary"}
+            {/* Row 4 */}
+            <div className="col-span-12 md:col-span-6">
+              <select
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="pace"
+                value={form.pace}
+                onChange={onChange}
+              >
+                <option value="" disabled hidden>
+                  Trip Pace
+                </option>
+                <option>Relaxed</option>
+                <option>Balanced</option>
+                <option>Fast</option>
+              </select>
+            </div>
+            <div className="col-span-12 md:col-span-6">
+              <input
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                name="email"
+                value={form.email}
+                onChange={onChange}
+                placeholder="Email (optional)"
+                type="email"
+              />
+            </div>
+
+            {/* CTA */}
+            <div className="col-span-12">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition"
+              >
+                {loading ? "Generating..." : "Generate My Trip"}
               </button>
             </div>
           </form>
-          {error && <p className="mt-2 text-red-600">{error}</p>}
-        </CardContent>
-      </Card>
 
-      {itinerary && (
-        <>
-          <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} budgetRows={itinerary.budgetRows} />
-          <div className="flex gap-2">
-            <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded">
-              Download HTML
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+          {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
