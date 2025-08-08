@@ -10,51 +10,55 @@ function mdInline(s = "") {
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
 }
 
-// Parse "key: $123" style lines into rows; returns {rows:[{k,vNum,vRaw}], totalNum?, rawHtml?}
+// Parse "key: $123 — assumption text" style lines into rows.
 function parseBudget(text = "") {
-  // drop heading line if present
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (!lines.length) return null;
 
+  // Drop heading if present
   const first = lines[0];
-  const rest =
-    /^(budget(\s+breakdown|\s+estimate)?\s*:?)$/i.test(first) ? lines.slice(1) : lines;
+  const rest = /^(budget(\s+breakdown|\s+estimate)?\s*:?)$/i.test(first) ? lines.slice(1) : lines;
 
   const rows = [];
   let foundTotal = null;
 
   for (const raw of rest) {
-    // Accept bullets like "- Hotels: $900", "* Food: $300", or "Hotels - $900"
+    // capture "Category: $123 [— assumption]" or bullet variants
     const m =
-      raw.match(/^[\-\*•]?\s*([^:–—]+?)\s*[:–—-]\s*\$?\s*([\d,]+(?:\.\d{1,2})?)\b/i) ||
-      raw.match(/^[\-\*•]?\s*\$?\s*([\d,]+(?:\.\d{1,2})?)\b\s*[-–—]\s*(.+)$/i);
+      raw.match(/^[\-\*•]?\s*([^:–—]+?)\s*[:–—-]\s*\$?\s*([\d,]+(?:\.\d{1,2})?)\s*(?:[—-]\s*(.+))?$/i) ||
+      raw.match(/^[\-\*•]?\s*\$?\s*([\d,]+(?:\.\d{1,2})?)\s*[-–—]\s*(.+)$/i);
 
     if (m) {
-      // normalize captures (name first, then amount)
-      let k, amt;
-      if (m.length === 3 && /:|–|—|-/.test(raw)) {
+      let k, amt, note;
+      if (m.length >= 4 && /:|–|—|-/.test(raw)) {
+        // "Category: $123 — note"
         k = m[1].trim();
-        amt = m[2].replace(/,/g, "");
+        amt = (m[2] || "").replace(/,/g, "");
+        note = (m[3] || "").trim();
       } else {
+        // "$123 - Category"
         k = (m[2] || "Item").trim();
-        amt = m[1].replace(/,/g, "");
+        amt = (m[1] || "").replace(/,/g, "");
+        note = "";
       }
       const vNum = Number(amt);
-      const vRaw = isNaN(vNum) ? mdInline(raw) : `$${vNum.toLocaleString()}`;
-
       if (/^total\b/i.test(k)) {
-        foundTotal = isNaN(vNum) ? null : vNum;
+        if (!Number.isNaN(vNum)) foundTotal = vNum;
       } else {
-        rows.push({ k, vNum: isNaN(vNum) ? null : vNum, vRaw });
+        rows.push({
+          k,
+          vNum: Number.isNaN(vNum) ? null : vNum,
+          vRaw: Number.isNaN(vNum) ? "" : `$${vNum.toLocaleString()}`,
+          note: note || ""
+        });
       }
       continue;
     }
 
-    // If a line doesn't match key: value, keep it as raw
-    rows.push({ k: mdInline(raw), vNum: null, vRaw: "" });
+    // Keep unmatched line as raw (e.g., narrative)
+    rows.push({ k: mdInline(raw), vNum: null, vRaw: "", note: "" });
   }
 
-  // Compute total if not found and we have numeric rows
   const sum = rows.every(r => r.vNum !== null) ? rows.reduce((a, r) => a + r.vNum, 0) : null;
   const totalNum = foundTotal ?? sum;
 
@@ -98,21 +102,35 @@ function sectionToHtml(section) {
   </section>`;
 }
 
+// Pull out a dedicated "Assumptions" section if present
+function extractAssumptionsSection(fullText = "") {
+  const re = /^\s*(pricing\s+assumptions|assumptions)\s*:?\s*$/im;
+  const m = fullText.match(re);
+  if (!m) return "";
+
+  const start = m.index;
+  const after = fullText.slice(start + m[0].length);
+  // Until next top-level heading like "Day" or "Budget"
+  const splitRe = /\n(?=(Day\s+\d+\s*:|Budget(?:\s+Breakdown|\s+Estimate)?\s*:?)\b)/i;
+  const body = after.split(splitRe)[0];
+  return body.trim();
+}
+
 // --- main ----------------------------------------------------
 export function itineraryTextToHtml(itineraryText = "", title = "SmartTrip Itinerary") {
-  // 1) Split out Budget section (kept after itinerary)
-  const budgetRegex = /^\s*(budget(?:\s+breakdown|\s+estimate)?\s*:?)\s*$/im;
+  // Find Budget block
+  const budgetHdrRe = /^\s*(budget(?:\s+breakdown|\s+estimate)?\s*:?)\s*$/im;
   let budgetText = "";
   let itineraryOnly = itineraryText;
 
-  const match = itineraryText.match(budgetRegex);
-  if (match) {
-    const idx = match.index;
+  const bMatch = itineraryText.match(budgetHdrRe);
+  if (bMatch) {
+    const idx = bMatch.index;
     budgetText = itineraryText.slice(idx).trim();
     itineraryOnly = itineraryText.slice(0, idx).trim();
   }
 
-  // 2) Build day sections
+  // Build Day sections
   const parts = itineraryOnly
     .split(/\n(?=Day\s+\d+\s*:)/g)
     .map(s => s.trim())
@@ -122,16 +140,23 @@ export function itineraryTextToHtml(itineraryText = "", title = "SmartTrip Itine
     ? parts.map(sectionToHtml).join("\n")
     : `<p>${mdInline(itineraryOnly).replace(/\n/g, "<br/>")}</p>`;
 
-  // 3) Build budget HTML (if present)
+  // Build Budget table + collect inline assumption notes
   let budgetHtml = "";
+  let inlineAssumptions = [];
   if (budgetText) {
     const parsed = parseBudget(budgetText);
     if (parsed && parsed.rows.length) {
       const rowsHtml = parsed.rows
-        .map(r => r.vNum === null
-          ? `<tr><td colspan="2">${r.k}</td></tr>`
-          : `<tr><td>${mdInline(r.k)}</td><td class="num">$${r.vNum.toLocaleString()}</td></tr>`
-        )
+        .map(r => {
+          if (r.vNum === null) {
+            return `<tr><td colspan="2">${r.k}</td></tr>`;
+          }
+          if (r.note) inlineAssumptions.push(`${r.k}: ${r.note}`);
+          return `<tr>
+            <td>${mdInline(r.k)}</td>
+            <td class="num">$${r.vNum.toLocaleString()}</td>
+          </tr>`;
+        })
         .join("");
 
       const totalHtml = parsed.totalNum != null
@@ -141,15 +166,12 @@ export function itineraryTextToHtml(itineraryText = "", title = "SmartTrip Itine
       budgetHtml = `
       <section class="budget">
         <h2>💰 Budget Breakdown</h2>
-        <table>
-          <tbody>
-            ${rowsHtml}
-            ${totalHtml}
-          </tbody>
-        </table>
+        <table><tbody>
+          ${rowsHtml}
+          ${totalHtml}
+        </tbody></table>
       </section>`;
     } else {
-      // fallback: show raw text
       budgetHtml = `
       <section class="budget">
         <h2>💰 Budget Breakdown</h2>
@@ -158,7 +180,25 @@ export function itineraryTextToHtml(itineraryText = "", title = "SmartTrip Itine
     }
   }
 
-  // 4) Wrap with pretty styles
+  // Assumptions: prefer dedicated section; else use inline notes; else fallback default
+  let assumptionsRaw = extractAssumptionsSection(itineraryText);
+  if (!assumptionsRaw && inlineAssumptions.length) {
+    assumptionsRaw = inlineAssumptions.join("\n");
+  }
+  if (!assumptionsRaw) {
+    assumptionsRaw =
+      "Accommodation assumes mid-range (3-star) hotels in city-center locations, double occupancy. " +
+      "Food assumes a mix of casual and mid-range dining. Local transport assumes metro/bus/taxi for two riders. " +
+      "Attractions assume standard adult entry fees where applicable.";
+  }
+
+  const assumptionsHtml = `
+    <section class="assumptions">
+      <h2>🧾 Pricing Assumptions</h2>
+      <p>${mdInline(assumptionsRaw).replace(/\n/g, "<br/>")}</p>
+    </section>`;
+
+  // Wrap
   const html = String.raw`<!doctype html>
 <html>
 <head>
@@ -173,7 +213,7 @@ export function itineraryTextToHtml(itineraryText = "", title = "SmartTrip Itine
     @media print {
       .day{break-inside:avoid-page; page-break-inside:avoid; margin-bottom:12mm;}
       .day + .day{page-break-before:auto;}
-      .budget{break-inside:avoid-page; page-break-inside:avoid;}
+      .budget,.assumptions{break-inside:avoid-page; page-break-inside:avoid;}
     }
     *{box-sizing:border-box}
     body{margin:0; background:var(--bg); color:var(--text);
@@ -189,7 +229,7 @@ export function itineraryTextToHtml(itineraryText = "", title = "SmartTrip Itine
     .divider{height:1px; background:var(--border); margin:12px 0 16px}
     .tip{background:var(--tip); border:1px solid var(--tip-border); padding:10px 12px;
          border-radius:8px; margin:8px 0 12px}
-    .budget{margin-top:20px; padding:16px; border:1px solid var(--border); border-radius:10px; background:#fafafa;}
+    .budget,.assumptions{margin-top:20px; padding:16px; border:1px solid var(--border); border-radius:10px; background:#fafafa;}
     .budget table{width:100%; border-collapse:collapse;}
     .budget td{padding:8px 6px; border-bottom:1px solid var(--border);}
     .budget td.num{text-align:right; white-space:nowrap;}
@@ -204,6 +244,7 @@ export function itineraryTextToHtml(itineraryText = "", title = "SmartTrip Itine
     <div class="divider"></div>
     ${daysHtml}
     ${budgetHtml}
+    ${assumptionsHtml}
     <div class="footer">Open in a browser to print to PDF, or open in Word and Save as PDF/DOCX.</div>
   </div>
 </body>
