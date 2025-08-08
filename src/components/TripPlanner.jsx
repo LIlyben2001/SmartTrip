@@ -7,11 +7,11 @@ import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 const defaultForm = {
   destination: "",
   startDate: "",
-  days: "",            // number of days (string so inputs are easy)
+  days: "",
   travelers: "",
-  style: "",           // NO DEFAULT — user must pick
-  budgetLevel: "",     // Budget Range
-  pace: "",            // Trip Pace
+  style: "",
+  budgetLevel: "",
+  pace: "",
   email: "",
 };
 
@@ -40,7 +40,6 @@ export default function TripPlanner() {
     try {
       const endDate = addDaysISO(form.startDate, form.days);
 
-      // Build payload for your API
       const payload = {
         destination: form.destination,
         startDate: form.startDate,
@@ -217,6 +216,40 @@ export default function TripPlanner() {
                 {loading ? "Generating..." : "Generate My Trip"}
               </button>
             </div>
+
+            {/* Sample Itinerary Preview */}
+            <div className="col-span-12">
+              <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
+                <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
+                <p className="text-gray-700">
+                  Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City,
+                  hutong dining, and a local cooking class!
+                </p>
+              </div>
+            </div>
           </form>
 
           {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
+        </CardContent>
+      </Card>
+
+      {itinerary && (
+        <>
+          <Itinerary
+            tripTitle={itinerary.tripTitle}
+            days={itinerary.days}
+            budgetRows={itinerary.budgetRows}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleDownloadHtml}
+              className="px-4 py-2 bg-gray-800 text-white rounded-lg"
+            >
+              Download HTML
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
