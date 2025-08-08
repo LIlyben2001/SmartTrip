@@ -51,11 +51,143 @@ Keep formatting clean and skimmable.
     }
   };
 
+  // --- tiny markdown table renderer for the Budget card ---
+  const mdTableToHtml = (text = "") => {
+    const lines = text.split(/\r?\n/);
+    const firstPipe = lines.findIndex((l) => /\|/.test(l));
+    if (firstPipe === -1) return "";
+    let end = firstPipe;
+    while (end + 1 < lines.length && /\|/.test(lines[end + 1])) end++;
+    const block = lines.slice(firstPipe, end + 1);
+    if (block.length < 2) return "";
+
+    const toCells = (row) =>
+      row.replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+
+    const header = toCells(block[0]);
+    const bodyRows = block
+      .slice(1)
+      .filter(
+        (r) =>
+          !/^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(r)
+      );
+    const rows = bodyRows.map(toCells);
+
+    const thead = `<thead><tr>${header
+      .map((h) => `<th>${h}</th>`)
+      .join("")}</tr></thead>`;
+    const tbody = `<tbody>${rows
+      .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
+      .join("")}</tbody>`;
+    return `<table class="md">${thead}${tbody}</table>`;
+  };
+
+  // --- formatting helpers for section bodies ---
+  const normalizeBody = (raw = "") => {
+    // 1) convert markdown headings like "# X", "## X", "### Morning:" -> bullets
+    let t = raw.replace(/^\s*#{1,6}\s*(.+)$/gm, "• $1");
+
+    // 2) collapse 3+ newlines -> 2
+    t = t.replace(/\n{3,}/g, "\n\n");
+
+    // 3) trim stray spaces on lines
+    t = t.replace(/[ \t]+$/gm, "");
+
+    return t.trim();
+  };
+
+  // Parse for UI: separate budget text + day sections
+  const parseForUI = (txt) => {
+    if (!txt) return { days: [], budgetText: "" };
+
+    // Extract Budget block (from its header to end or until "Assumptions")
+    const budgetHeader = txt.match(/^\s*Budget(?:\s+Breakdown|\s+Estimate)?\s*:?\s*$/im);
+    let budgetText = "";
+    let daysText = txt;
+    if (budgetHeader) {
+      const from = budgetHeader.index;
+      const after = txt.slice(from + budgetHeader[0].length);
+      const split = after.split(/\n(?=(Pricing\s+Assumptions|Assumptions)\s*:?\s*$)/i)[0];
+      budgetText = (budgetHeader[0] + split).trim();
+      daysText = txt.slice(0, from).trim();
+    }
+
+    // Support: "Day 1:" / "**Day 1:**" / "# Day 1:" / "### Day 1: ..."
+    const headingRe =
+      /^\s*(?:#{1,3}\s*)?(?:\*{0,2}\s*)?Day\s+(\d+)\s*:\s*(.*)$/gm;
+
+    const matches = [...daysText.matchAll(headingRe)];
+
+    // Fallback: show whole text in one block
+    if (matches.length === 0) {
+      return {
+        days: [
+          {
+            key: "all",
+            dayNo: null,
+            subtitle: "",
+            body: normalizeBody(daysText),
+          },
+        ],
+        budgetText,
+      };
+    }
+
+    const sections = [];
+    for (let i = 0; i < matches.length; i++) {
+      const m = matches[i];
+      const next = matches[i + 1];
+
+      const dayNo = parseInt(m[1], 10);
+      const subtitle = (m[2] || "").trim(); // text after the colon
+
+      const start = m.index + m[0].length;
+      const end = next ? next.index : daysText.length;
+      let body = daysText.slice(start, end).trim();
+      if (!body) continue;
+
+      // If the body begins with another "Day X:" line, drop that duplicate
+      body = body.replace(
+        /^\s*(?:#{1,3}\s*)?(?:\*{0,2}\s*)?Day\s+\d+\s*:\s*.*/,
+        ""
+      ).trim();
+
+      sections.push({ dayNo, subtitle, body: normalizeBody(body) });
+    }
+
+    // Deduplicate by day number (keep the longer content)
+    const deduped = sections.reduce((acc, cur) => {
+      const idx = acc.findIndex((x) => x.dayNo === cur.dayNo);
+      if (idx === -1) return acc.concat(cur);
+      if (cur.body.length > acc[idx].body.length) acc[idx] = cur;
+      return acc;
+    }, []);
+
+    // We’re moving the visible "Day N" label into the body (not header),
+    // so the header can be simple and the body starts with a bold label.
+    return {
+      days: deduped.map((s) => ({
+        key: s.dayNo,
+        dayNo: s.dayNo,
+        subtitle: s.subtitle,
+        body: s.body,
+      })),
+      budgetText,
+    };
+  };
+
+  const { days, budgetText } = parseForUI(itinerary);
+
   return (
     <section id="planner" className="py-20 px-4 bg-white max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold text-center text-primary mb-10">Plan Your Trip</h2>
+      <h2 className="text-3xl font-bold text-center text-primary mb-10">
+        Plan Your Trip
+      </h2>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
         <input
           type="text"
           placeholder="Destination (e.g., Beijing)"
@@ -122,74 +254,61 @@ Keep formatting clean and skimmable.
 
       {!itinerary && (
         <div className="bg-gray-100 rounded-md p-4 mt-6 text-center">
-          <h3 className="text-lg font-semibold text-primary mb-2">Sample Itinerary Preview</h3>
+          <h3 className="text-lg font-semibold text-primary mb-2">
+            Sample Itinerary Preview
+          </h3>
           <p className="text-text">
-            Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City, hutong dining, and a local cooking class!
+            Your 5-day Cultural Adventure in Beijing includes the Great Wall,
+            Forbidden City, hutong dining, and a local cooking class!
           </p>
         </div>
       )}
 
       {itinerary && (
         <div className="bg-white mt-8 p-6 rounded shadow border">
-          <h3 className="text-xl font-bold text-primary mb-4">Your AI-Generated Itinerary</h3>
+          <h3 className="text-xl font-bold text-primary mb-4">
+            Your AI-Generated Itinerary
+          </h3>
 
-          {(() => {
-            // 1) Remove anything from "Budget ..." onward for the on-page UI
-            let uiText = itinerary;
-            const budgetHdr = uiText.match(/^\s*Budget(?:\s+Breakdown|\s+Estimate)?\s*:?\s*$/im);
-            if (budgetHdr) uiText = uiText.slice(0, budgetHdr.index).trim();
+          {/* Day sections (Day label moved into the BODY) */}
+          {days.map((sec, idx) => (
+            <div key={sec.key ?? idx} className="mb-4 border rounded">
+              {/* header is neutral (no Day label to avoid duplication) */}
+              <div className="px-4 py-2 bg-gray-100 font-semibold text-gray-800">
+                Day {sec.dayNo ?? idx + 1}
+              </div>
 
-            // 2) Find all "Day X:" headings (optional leading ** and spaces)
-            const headingRe = /^\s*\*{0,2}\s*Day\s+(\d+)\s*:\s*.*$/gm;
-            const matches = [...uiText.matchAll(headingRe)];
+              <div className="p-4 text-text whitespace-pre-line">
+                {/* Bold Day label INSIDE the body */}
+                <div className="font-bold mb-3">
+                  Day {sec.dayNo ?? idx + 1}
+                  {sec.subtitle ? `: ${sec.subtitle}` : ":"}
+                </div>
+                {sec.body}
+              </div>
+            </div>
+          ))}
 
-            // Fallback: if none, show whole thing as one block
-            if (matches.length === 0) {
-              return (
-                <CollapsibleDaySection
-                  title="Itinerary"
-                  content={uiText.trim()}
-                  defaultOpen={true}
-                />
-              );
-            }
+          {/* Budget card */}
+          {budgetText && (
+            <div className="mt-6 border rounded">
+              <div className="px-4 py-2 bg-gray-100 font-bold text-gray-800">
+                Budget Breakdown
+              </div>
+              <div className="p-4 text-text">
+                {/\|/.test(budgetText) ? (
+                  <div
+                    className="overflow-auto"
+                    dangerouslySetInnerHTML={{ __html: mdTableToHtml(budgetText) }}
+                  />
+                ) : (
+                  <pre className="whitespace-pre-wrap">{budgetText}</pre>
+                )}
+              </div>
+            </div>
+          )}
 
-            // 3) Slice sections between headings
-            const sections = [];
-            for (let i = 0; i < matches.length; i++) {
-              const m = matches[i];
-              const next = matches[i + 1];
-
-              const fullHeading = m[0].replace(/^\s*\*{0,2}\s*/, "").trim(); // "Day N: Title"
-              const dayNo = parseInt(m[1], 10);
-
-              const start = m.index + m[0].length;
-              const end = next ? next.index : uiText.length;
-              const body = uiText.slice(start, end).trim();
-              if (!body) continue;
-
-              sections.push({ dayNo, title: fullHeading, body });
-            }
-
-            // 4) Deduplicate duplicate day numbers (keep longer body)
-            const deduped = sections.reduce((acc, cur) => {
-              const idx = acc.findIndex((x) => x.dayNo === cur.dayNo);
-              if (idx === -1) return acc.concat(cur);
-              if (cur.body.length > acc[idx].body.length) acc[idx] = cur;
-              return acc;
-            }, []);
-
-            // 5) Render
-            return deduped.map((sec) => (
-              <CollapsibleDaySection
-                key={sec.dayNo}
-                title={sec.title.replace(/^(\s*\*{0,2}\s*)?/, "").trim()}
-                content={sec.body}
-                defaultOpen={true}
-              />
-            ));
-          })()}
-
+          {/* Actions */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => {
@@ -223,23 +342,3 @@ Keep formatting clean and skimmable.
 };
 
 export default TripPlanner;
-
-const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="mb-4 border rounded">
-      <button
-        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-bold text-gray-800"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {title}
-      </button>
-      {isOpen && (
-        <div className="p-4 whitespace-pre-line text-text">
-          {content}
-        </div>
-      )}
-    </div>
-  );
-};
