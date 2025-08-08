@@ -30,19 +30,18 @@ Category | Budget (2–3★) | Mid-range (3★) | Luxury (4–5★)
 Follow with a Total row for each column. Use realistic per-trip estimates.
 
 For each accommodation assumption, specify the quality level (e.g., 3-star city-center), room occupancy (e.g., double), and number of nights.
-
 In "Pricing Assumptions", state hotel class assumption, room occupancy, dining level, and ground transport basis in 2–5 short lines.
 
 Keep formatting clean and skimmable.
 `;
 
     try {
-      const response = await fetch("/api/generate-itinerary", {
+      const res = await fetch("/api/generate-itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      const data = await response.json();
+      const data = await res.json();
       setItinerary(data.result || "No itinerary generated.");
     } catch (err) {
       console.error(err);
@@ -140,11 +139,22 @@ Keep formatting clean and skimmable.
             const budgetHdr = uiText.match(/^\s*Budget(?:\s+Breakdown|\s+Estimate)?\s*:?\s*$/im);
             if (budgetHdr) uiText = uiText.slice(0, budgetHdr.index).trim();
 
-            // 2) Find all "Day X:" headings
+            // 2) Find all "Day X:" headings (optional leading ** and spaces)
             const headingRe = /^\s*\*{0,2}\s*Day\s+(\d+)\s*:\s*.*$/gm;
             const matches = [...uiText.matchAll(headingRe)];
 
-            // 3) Slice each section between this heading and the next
+            // Fallback: if none, show whole thing as one block
+            if (matches.length === 0) {
+              return (
+                <CollapsibleDaySection
+                  title="Itinerary"
+                  content={uiText.trim()}
+                  defaultOpen={true}
+                />
+              );
+            }
+
+            // 3) Slice sections between headings
             const sections = [];
             for (let i = 0; i < matches.length; i++) {
               const m = matches[i];
@@ -156,14 +166,14 @@ Keep formatting clean and skimmable.
               const start = m.index + m[0].length;
               const end = next ? next.index : uiText.length;
               const body = uiText.slice(start, end).trim();
+              if (!body) continue;
 
-              if (!body) continue; // skip empty
               sections.push({ dayNo, title: fullHeading, body });
             }
 
-            // 4) Deduplicate duplicated day numbers: keep the one with longer content
+            // 4) Deduplicate duplicate day numbers (keep longer body)
             const deduped = sections.reduce((acc, cur) => {
-              const idx = acc.findIndex(x => x.dayNo === cur.dayNo);
+              const idx = acc.findIndex((x) => x.dayNo === cur.dayNo);
               if (idx === -1) return acc.concat(cur);
               if (cur.body.length > acc[idx].body.length) acc[idx] = cur;
               return acc;
@@ -220,7 +230,7 @@ const CollapsibleDaySection = ({ title, content, defaultOpen = true }) => {
   return (
     <div className="mb-4 border rounded">
       <button
-        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold"
+        className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-bold text-gray-800"
         onClick={() => setIsOpen(!isOpen)}
       >
         {title}
