@@ -19,7 +19,15 @@ const TripPlanner = () => {
     setLoading(true);
     setItinerary("");
 
-    const prompt = `Create a detailed day-by-day ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. Budget: ${budget}. Include daily highlights, cultural or food experiences, and local tips. At the end, provide a budget breakdown by category (accommodation, food, transportation, attractions, and miscellaneous). Format clearly with headings.`; Include a "Budget Breakdown" section with line items and a final Total. For each line, specify the assumption in plain text (e.g., "Accommodation: $900 — 3-star city-center hotel, double occupancy, 6 nights"). After the table, include a "Pricing Assumptions" section that states hotel class, room occupancy, dining level, and ground transport basis.
+  const prompt = `
+Create a detailed day-by-day ${travelStyle} itinerary for ${numTravelers} people visiting ${destination} starting on ${startDate} for ${numDays} days. 
+Budget: ${budget}. Include daily highlights, cultural or food experiences, and local tips. 
+At the end, provide a "Budget Breakdown" section with line items and a final Total. 
+For each line, specify the assumption in plain text 
+(e.g., "Accommodation: $900 — 3-star city-center hotel, double occupancy, 6 nights"). 
+After the table, include a "Pricing Assumptions" section that states hotel class, room occupancy, dining level, and ground transport basis.
+Format clearly with headings.
+`;
 
     try {
       const response = await fetch("/api/generate-itinerary", {
