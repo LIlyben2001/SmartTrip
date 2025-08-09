@@ -58,8 +58,8 @@ const defaultForm = {
   days: "",
   travelers: "",
   style: "",
-  budgetLevel: "",
-  budgetUSD: 3000, // NEW: numeric budget control (slider elsewhere in your UI)
+  budgetLevel: "",   // derived from budgetUSD if empty
+  budgetUSD: 3000,   // numeric budget slider
   pace: "",
   email: "",
 };
@@ -211,6 +211,7 @@ export default function TripPlanner() {
         body: JSON.stringify(payload),
       });
 
+      // fallback to mock if live errors
       if (!res.ok && useLive) {
         try {
           const text = await res.text();
@@ -248,8 +249,8 @@ export default function TripPlanner() {
         tripTitle: data?.title || titleBits.join(" — "),
         days,
         budget,
-        travelers: form.travelers ? Number(form.travelers) : null, // used for per-person toggle
-        // NEW: pass context to BudgetCard
+        travelers: form.travelers ? Number(form.travelers) : null, // for per-person toggle
+        // context for BudgetCard accommodation calc
         daysCount: days.length,
         budgetTier: resolvedBudgetLevel || null,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
@@ -281,6 +282,11 @@ export default function TripPlanner() {
     }
   }, [itinerary]);
 
+  // Slider bounds
+  const BUDGET_MIN = 500;
+  const BUDGET_MAX = 20000;
+  const BUDGET_STEP = 100;
+
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 space-y-6">
       <Card className="shadow-md">
@@ -291,40 +297,88 @@ export default function TripPlanner() {
         </div>
 
         <CardContent className="p-6 md:p-8">
-          {/* ... your existing form fields, including the Budget slider ... */}
-          {/* (unchanged form UI omitted here for brevity) */}
-        </CardContent>
-      </Card>
+          <form onSubmit={handleGenerate} autoComplete="off" className="grid grid-cols-12 gap-4">
+            {/* Country */}
+            <div className="col-span-12 md:col-span-6">
+              <select
+                name="country"
+                value={form.country}
+                onChange={onChange}
+                disabled={loadingCountries}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="" disabled hidden>
+                  {loadingCountries ? "Loading countries..." : "Select Country"}
+                </option>
+                {countries.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
 
-      <div ref={resultRef} />
+            {/* City */}
+            <div className="col-span-12 md:col-span-6">
+              <select
+                name="city"
+                value={form.city}
+                onChange={onChange}
+                disabled={!form.country || loadingCities}
+                autoComplete="off"
+                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
+              >
+                <option value="" disabled hidden>
+                  {!form.country ? "Select Country First" : (loadingCities ? "Loading cities..." : "Select City")}
+                </option>
+                {cities.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
 
-      {itinerary && (
-        <>
-          <Itinerary
-            tripTitle={itinerary.tripTitle}
-            days={itinerary.days}
-          />
-
-          {itinerary.budget?.rows?.length ? (
-            <div className="mt-4">
-              <BudgetCard
-                budget={itinerary.budget}
-                travelers={itinerary.travelers}
-                // NEW props for Accommodation breakdown:
-                daysCount={itinerary.daysCount}
-                budgetTier={itinerary.budgetTier}
-                budgetUSD={itinerary.budgetUSD}
+            {/* Start Date */}
+            <div className="col-span-12 md:col-span-6">
+              <input
+                type="date"
+                name="startDate"
+                value={form.startDate}
+                onChange={onChange}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="mm/dd/yyyy"
               />
             </div>
-          ) : null}
 
-          <div className="flex flex-wrap gap-2 mt-2">
-            <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
-              Download HTML
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+            {/* Days */}
+            <div className="col-span-12 md:col-span-6">
+              <input
+                name="days"
+                value={form.days}
+                onChange={onChange}
+                inputMode="numeric"
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Number of Days"
+              />
+            </div>
+
+            {/* Travel Style */}
+            <div className="col-span-12 md:col-span-6">
+              <select
+                name="style"
+                value={form.style}
+                onChange={onChange}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="" disabled hidden>Travel Style</option>
+                <option>Foodies</option>
+                <option>Culture</option>
+                <option>Nature</option>
+                <option>Luxury</option>
+                <option>Budget</option>
+                <option>Family</option>
+              </select>
+            </div>
+
+            {/* Travelers */}
