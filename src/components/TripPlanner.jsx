@@ -2,6 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import Itinerary from "./Itinerary";
 import { Card, CardContent } from "./ui/card";
+import BudgetCard from "./BudgetCard";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 
 // --- Country -> Cities map (extend anytime) ---
