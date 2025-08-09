@@ -1,72 +1,126 @@
-// Turns the itinerary object into a simple HTML string and downloads it.
+// /src/utils/downloadHtml.js
+// Builds a clean HTML string for download and avoids duplicate location in day titles.
 
-export function itineraryTextToHtml({ tripTitle, days = [], budgetRows = [] }) {
+export function itineraryTextToHtml({ tripTitle = "", days = [], budgetRows = [] }) {
   const escape = (s) =>
-    String(s ?? "")
+    String(s || "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-  const dayHtml = days
-    .map(
-      (d, i) => `
-      <section style="margin-bottom:16px;">
-        <h3 style="margin:0 0 8px;font-size:18px;">${escape(d.title || `Day ${i+1}`)}${d.location ? " — " + escape(d.location) : ""}</h3>
-        <ul style="margin:0 0 8px 20px;">
-          ${(d.bullets || []).map(b => `<li>${escape(b)}</li>`).join("")}
-        </ul>
-      </section>`
-    )
-    .join("");
+  const currency = (n) =>
+    typeof n === "number"
+      ? new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        }).format(n)
+      : escape(n);
 
-  const budgetHtml = budgetRows.length
-    ? `
-    <section>
-      <h3 style="margin:16px 0 8px;font-size:18px;">Budget — Trip Overview</h3>
-      <table style="width:100%;border-collapse:collapse;">
+  const buildDisplayTitle = (index, rawTitle, location) => {
+    const i = index + 1;
+    const t = (rawTitle || "").trim();
+    if (t) {
+      // If title already begins with "Day X", keep its suffix but fix X
+      const m = t.match(/^ *Day\s*\d+\s*[:—-]?\s*(.*)$/i);
+      const suffix = m ? (m[1] || "").trim() : t;
+      // DO NOT append location here; suffix may already contain it
+      return suffix ? `Day ${i}: ${suffix}` : `Day ${i}`;
+    }
+    // Only when there's no custom title, fall back to "Day X — {location}"
+    return location ? `Day ${i} — ${location}` : `Day ${i}`;
+  };
+
+  const daySections = (Array.isArray(days) ? days : []).map((d, idx) => {
+    const title = buildDisplayTitle(idx, d?.title, d?.location);
+    const items = Array.isArray(d?.items) ? d.items : Array.isArray(d?.bullets) ? d.bullets : [];
+    const lis = items
+      .map((line) => `<li>${escape(line)}</li>`)
+      .join("");
+
+    return `
+      <section class="day">
+        <h3 class="day-title">${escape(title)}</h3>
+        <ul class="bullets">
+          ${lis}
+        </ul>
+      </section>
+    `;
+  });
+
+  const rows = Array.isArray(budgetRows) ? budgetRows : [];
+  const totals = rows.reduce(
+    (acc, r) => ({
+      budget: acc.budget + (r.budget || 0),
+      mid: acc.mid + (r.mid || 0),
+      luxury: acc.luxury + (r.luxury || 0),
+    }),
+    { budget: 0, mid: 0, luxury: 0 }
+  );
+
+  const budgetTable = `
+    <section class="budget">
+      <h3>Budget — Trip Overview</h3>
+      <table class="budget-table">
         <thead>
           <tr>
-            <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Category</th>
-            <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Budget (2–3★)</th>
-            <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Mid-range (3★)</th>
-            <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Luxury (4–5★)</th>
+            <th>Category</th>
+            <th>Budget (2–3★)</th>
+            <th>Mid-range (3★)</th>
+            <th>Luxury (4–5★)</th>
           </tr>
         </thead>
         <tbody>
-          ${budgetRows
+          ${rows
             .map(
               (r) => `
             <tr>
-              <td style="border-bottom:1px solid #eee;padding:6px;">${escape(r.category)}</td>
-              <td style="border-bottom:1px solid #eee;padding:6px;">${escape(r.budget)}</td>
-              <td style="border-bottom:1px solid #eee;padding:6px;">${escape(r.mid)}</td>
-              <td style="border-bottom:1px solid #eee;padding:6px;">${escape(r.luxury)}</td>
+              <td>${escape(r.category)}</td>
+              <td>${currency(r.budget)}</td>
+              <td>${currency(r.mid)}</td>
+              <td>${currency(r.luxury)}</td>
             </tr>`
             )
             .join("")}
+          <tr class="total">
+            <td>Total</td>
+            <td>${currency(totals.budget)}</td>
+            <td>${currency(totals.mid)}</td>
+            <td>${currency(totals.luxury)}</td>
+          </tr>
         </tbody>
       </table>
-    </section>`
-    : "";
+    </section>
+  `;
 
   return `
-  <!doctype html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <title>${escape(tripTitle || "Itinerary")}</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <style>
-        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; line-height: 1.5; }
-        h2 { margin: 0 0 12px; font-size: 22px; }
-      </style>
-    </head>
-    <body>
-      <h2>${escape(tripTitle || "Itinerary")}</h2>
-      ${dayHtml}
-      ${budgetHtml}
-    </body>
-  </html>`;
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${escape(tripTitle || "Itinerary")}</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.5; color: #111; margin: 32px; }
+  h1 { font-size: 28px; margin: 0 0 18px; }
+  h2 { font-size: 20px; margin: 24px 0 12px; }
+  .day { margin: 18px 0 24px; }
+  .day-title { font-size: 18px; margin: 0 0 8px; padding: 8px 12px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; }
+  .bullets { margin: 8px 0 0 22px; }
+  .bullets li { margin: 4px 0; }
+  .budget { margin-top: 28px; }
+  .budget-table { border-collapse: collapse; width: 100%; }
+  .budget-table th, .budget-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; }
+  .budget-table .total td { font-weight: 700; }
+</style>
+</head>
+<body>
+  <h1>${escape(tripTitle || "Your Trip")}</h1>
+  <h2>Your AI-Generated Itinerary</h2>
+  ${daySections.join("")}
+  ${rows.length ? budgetTable : ""}
+</body>
+</html>
+  `.trim();
 }
 
 export function downloadHtml(htmlString, filename = "itinerary.html") {
@@ -74,7 +128,9 @@ export function downloadHtml(htmlString, filename = "itinerary.html") {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = filename;
+  a.download = filename.replace(/[\\/:*?"<>|]+/g, "_");
+  document.body.appendChild(a);
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  a.remove();
+  URL.revokeObjectURL(url);
 }
