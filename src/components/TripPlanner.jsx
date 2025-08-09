@@ -1,10 +1,29 @@
+// src/components/TripPlanner.jsx
 import { useRef, useState, useEffect } from "react";
 import Itinerary from "./Itinerary";
 import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 
+// --- Country -> Cities map (extend anytime) ---
+const COUNTRY_CITIES = {
+  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami"],
+  China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
+  Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
+  "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York"],
+  France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux"],
+  Italy: ["Rome", "Florence", "Venice", "Milan", "Naples"],
+  Spain: ["Barcelona", "Madrid", "Seville", "Valencia", "Granada"],
+  Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
+  Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
+  Singapore: ["Singapore"],
+  "United Arab Emirates": ["Dubai", "Abu Dhabi"],
+};
+
+const COUNTRIES = Object.keys(COUNTRY_CITIES).sort();
+
 const defaultForm = {
-  destination: "",
+  country: "",
+  city: "",
   startDate: "",
   days: "",
   travelers: "",
@@ -28,19 +47,39 @@ export default function TripPlanner() {
   const [itinerary, setItinerary] = useState(null);
   const resultRef = useRef(null);
 
+  const citiesForCountry = form.country ? COUNTRY_CITIES[form.country] || [] : [];
+
   function onChange(e) {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm((f) => {
+      // If country changes, clear city if it isn't valid for the new country
+      if (name === "country") {
+        const nextCities = COUNTRY_CITIES[value] || [];
+        const nextCity = nextCities.includes(f.city) ? f.city : "";
+        return { ...f, country: value, city: nextCity };
+      }
+      return { ...f, [name]: value };
+    });
   }
 
   async function handleGenerate(e) {
     e?.preventDefault?.();
     setError("");
+    // simple front-end validation
+    if (!form.country || !form.city) {
+      setError("Please select both a country and a city.");
+      return;
+    }
     setLoading(true);
+
     try {
+      const destination = `${form.city}, ${form.country}`;
       const endDate = addDaysISO(form.startDate, form.days);
+
       const payload = {
-        destination: form.destination,
+        destination,                     // <- city, country combined for your API
+        country: form.country,
+        city: form.city,
         startDate: form.startDate || undefined,
         endDate: endDate || undefined,
         days: form.days ? Number(form.days) : undefined,
@@ -62,7 +101,7 @@ export default function TripPlanner() {
 
       const days = (data?.days || []).map((d, i) => ({
         title: d.title || `Day ${i + 1}`,
-        location: d.location || form.destination || "",
+        location: d.location || destination,
         bullets: Array.isArray(d.items) ? d.items : (d.bullets || []),
       }));
 
@@ -75,7 +114,7 @@ export default function TripPlanner() {
         tripTitle:
           data?.title ||
           [
-            form.destination || "Your Trip",
+            destination || "Your Trip",
             form.days ? `${form.days} days` : "",
             form.style,
             form.budgetLevel,
@@ -87,13 +126,11 @@ export default function TripPlanner() {
         budgetRows,
       });
 
-      // 🔒 Clear the form so fields don't “remember”
+      // Clear the form so fields don't “remember”
       setForm({ ...defaultForm });
     } catch (err) {
       console.error(err);
-      setError(
-        `Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`
-      );
+      setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
       setItinerary(null);
     } finally {
       setLoading(false);
@@ -122,54 +159,82 @@ export default function TripPlanner() {
         <CardContent className="p-6 md:p-8">
           <form
             onSubmit={handleGenerate}
-            autoComplete="off"                                   // stop browser autofill
+            autoComplete="off"
             className="grid grid-cols-12 gap-4"
           >
+            {/* Country */}
             <div className="col-span-12 md:col-span-6">
-              <input
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                name="destination"
-                value={form.destination}
+              <select
+                name="country"
+                value={form.country}
                 onChange={onChange}
-                placeholder="Destination (e.g., Beijing)"
-                required
-              />
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="" disabled hidden>
+                  Select Country
+                </option>
+                {COUNTRIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
+
+            {/* City/Destination (disabled until country chosen) */}
+            <div className="col-span-12 md:col-span-6">
+              <select
+                name="city"
+                value={form.city}
+                onChange={onChange}
+                autoComplete="off"
+                disabled={!form.country}
+                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
+              >
+                <option value="" disabled hidden>
+                  {form.country ? "Select City" : "Select Country First"}
+                </option>
+                {citiesForCountry.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Start Date */}
             <div className="col-span-12 md:col-span-6">
               <input
                 type="date"
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="startDate"
                 value={form.startDate}
                 onChange={onChange}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="mm/dd/yyyy"
               />
             </div>
 
+            {/* Days */}
             <div className="col-span-12 md:col-span-6">
               <input
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="days"
                 value={form.days}
                 onChange={onChange}
-                placeholder="Number of Days"
                 inputMode="numeric"
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Number of Days"
               />
             </div>
+
+            {/* Style */}
             <div className="col-span-12 md:col-span-6">
               <select
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="style"
                 value={form.style}
                 onChange={onChange}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  Travel Style
-                </option>
+                <option value="" disabled hidden>Travel Style</option>
                 <option>Foodies</option>
                 <option>Culture</option>
                 <option>Nature</option>
@@ -179,62 +244,67 @@ export default function TripPlanner() {
               </select>
             </div>
 
+            {/* Travelers */}
+            <div className="col-span-12 md:col-span-6">
+              <input
+                name="travelers"
+                value={form.travelers}
+                onChange={onChange}
+                inputMode="numeric"
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Number of Travelers"
+              />
+            </div>
+
+            {/* Budget Range */}
             <div className="col-span-12 md:col-span-6">
               <select
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="budgetLevel"
                 value={form.budgetLevel}
                 onChange={onChange}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  Budget Range
-                </option>
+                <option value="" disabled hidden>Budget Range</option>
                 <option>Budget</option>
                 <option>Mid-range</option>
                 <option>Luxury</option>
               </select>
             </div>
-            <div className="col-span-12 md:col-span-6">
-              <input
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                name="travelers"
-                value={form.travelers}
-                onChange={onChange}
-                placeholder="Number of Travelers"
-                inputMode="numeric"
-              />
-            </div>
 
+            {/* Trip Pace */}
             <div className="col-span-12 md:col-span-6">
               <select
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 name="pace"
                 value={form.pace}
                 onChange={onChange}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  Trip Pace
-                </option>
+                <option value="" disabled hidden>Trip Pace</option>
                 <option>Relaxed</option>
                 <option>Balanced</option>
                 <option>Fast</option>
               </select>
             </div>
+
+            {/* Email (optional) */}
             <div className="col-span-12 md:col-span-6">
               <input
-                autoComplete="new-password"                      {/* extra-stubborn autofill */}
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                type="email"
                 name="email"
                 value={form.email}
                 onChange={onChange}
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="none"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="Email (optional)"
-                type="email"
               />
             </div>
 
+            {/* CTA */}
             <div className="col-span-12">
               <button
                 type="submit"
@@ -246,12 +316,13 @@ export default function TripPlanner() {
               </button>
             </div>
 
+            {/* Sample Itinerary Preview */}
             <div className="col-span-12">
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
                 <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
                 <p className="text-gray-700">
-                  Your 5-day Cultural Adventure in Beijing includes the Great Wall, Forbidden City,
-                  hutong dining, and a local cooking class!
+                  Your 5-day Cultural Adventure in {form.city || "Beijing"} includes iconic sites,
+                  neighborhood dining, and a local experience!
                 </p>
               </div>
             </div>
