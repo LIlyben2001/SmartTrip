@@ -382,3 +382,139 @@ export default function TripPlanner() {
             </div>
 
             {/* Travelers */}
+            <div className="col-span-12 md:col-span-6">
+              <input
+                name="travelers"
+                value={form.travelers}
+                onChange={onChange}
+                inputMode="numeric"
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Number of Travelers"
+              />
+            </div>
+
+            {/* Budget (Slider + Number input) */}
+            <div className="col-span-12 md:col-span-6">
+              <label htmlFor="budgetUSD" className="block text-sm font-medium text-gray-700 mb-1">
+                Total Budget: <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
+              </label>
+              <input
+                id="budgetUSD"
+                type="range"
+                name="budgetUSD"
+                min={BUDGET_MIN}
+                max={BUDGET_MAX}
+                step={BUDGET_STEP}
+                value={Number(form.budgetUSD || 0)}
+                onChange={onChange}
+                className="w-full"
+              />
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="number"
+                  name="budgetUSD"
+                  min={BUDGET_MIN}
+                  max={BUDGET_MAX}
+                  step={BUDGET_STEP}
+                  value={form.budgetUSD}
+                  onChange={onChange}
+                  className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter total budget in USD"
+                />
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                {currencyFmt.format(BUDGET_MIN)} – {currencyFmt.format(BUDGET_MAX)} • Step {currencyFmt.format(BUDGET_STEP)}
+              </div>
+              <div className="mt-1 text-xs text-gray-600">
+                Estimated tier: <span className="font-medium">{budgetLevelFromAmount(form.budgetUSD) || "—"}</span>
+              </div>
+            </div>
+
+            {/* Trip Pace */}
+            <div className="col-span-12 md:col-span-6">
+              <select
+                name="pace"
+                value={form.pace}
+                onChange={onChange}
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="" disabled hidden>Trip Pace</option>
+                <option>Relaxed</option>
+                <option>Balanced</option>
+                <option>Fast</option>
+              </select>
+            </div>
+
+            {/* Email (optional) */}
+            <div className="col-span-12 md:col-span-6">
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={onChange}
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="none"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Email (optional)"
+              />
+            </div>
+
+            {/* CTA */}
+            <div className="col-span-12">
+              <button
+                type="submit"
+                onClick={handleGenerate}
+                disabled={loading}
+                className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition"
+              >
+                {loading ? "Generating..." : "Generate My Trip"}
+              </button>
+            </div>
+
+            {/* Sample Itinerary Preview */}
+            <div className="col-span-12">
+              <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
+                <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
+                <p className="text-gray-700">
+                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} with a budget of{" "}
+                  {currencyFmt.format(form.budgetUSD || 3000)} includes iconic sites, neighborhood dining, and a local experience!
+                </p>
+              </div>
+            </div>
+          </form>
+          {/* <<<<<<<<<<<<<< END FORM — keep this! */}
+          {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
+        </CardContent>
+      </Card>
+
+      <div ref={resultRef} />
+
+      {itinerary && (
+        <>
+          <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} />
+
+          {itinerary.budget?.rows?.length ? (
+            <div className="mt-4">
+              <BudgetCard
+                budget={itinerary.budget}
+                travelers={itinerary.travelers}
+                daysCount={itinerary.daysCount}
+                budgetTier={itinerary.budgetTier}
+                budgetUSD={itinerary.budgetUSD}
+              />
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
+              Download HTML
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
