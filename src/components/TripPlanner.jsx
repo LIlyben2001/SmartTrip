@@ -5,14 +5,14 @@ import BudgetCard from "./BudgetCard";
 import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 
-/* ---------- URL toggle: ?live=1 -> use OpenAI; otherwise mock ---------- */
+/* ---------- URL toggle: ?live=1 -> OpenAI; otherwise mock ---------- */
 function resolveUseLiveFromURL() {
   if (typeof window === "undefined") return false;
   const qs = new URLSearchParams(window.location.search);
   const v = qs.get("live");
   if (v === "1" || v === "true") return true;
   if (v === "0" || v === "false") return false;
-  return false; // default to mock
+  return false; // default mock
 }
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
@@ -28,7 +28,6 @@ const COUNTRY_CITIES_FALLBACK = {
   Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
   China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
   Brazil: ["Rio de Janeiro", "São Paulo", "Salvador"],
-  // NEW
   Argentina: ["Buenos Aires", "Mendoza", "Bariloche"],
   Greece: ["Athens", "Santorini", "Thessaloniki"],
   Turkey: ["Istanbul", "Cappadocia", "Antalya"],
@@ -68,12 +67,11 @@ export default function TripPlanner() {
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
-  // URL toggle for live vs mock
-  const [useLive, setUseLive] = useState(resolveUseLiveFromURL());
+  // Live/Mock toggle via URL
+  const [useLive] = useState(resolveUseLiveFromURL());
 
   const resultRef = useRef(null);
 
-  // Tiny badge to show mode
   const ModeBadge = () => (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
@@ -114,7 +112,6 @@ export default function TripPlanner() {
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
       setCities(list);
-      // If current city isn't in new list, clear it
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
 
@@ -174,7 +171,7 @@ export default function TripPlanner() {
       const endDate = addDaysISO(form.startDate, form.days);
 
       const payload = {
-        destination, // City, Country
+        destination,
         country: form.country,
         city: form.city,
         startDate: form.startDate || undefined,
@@ -191,14 +188,13 @@ export default function TripPlanner() {
       const mockEndpoint = "/api/generate-itinerary";
       const primary = useLive ? liveEndpoint : mockEndpoint;
 
-      // Try primary endpoint (live or mock)
       let res = await fetch(primary, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      // If live fails, fall back to mock automatically (so the UI still works)
+      // fallback to mock if live errors
       if (!res.ok && useLive) {
         try {
           const text = await res.text();
@@ -221,7 +217,6 @@ export default function TripPlanner() {
         bullets: Array.isArray(d.items) ? d.items : d.bullets || [],
       }));
 
-      // Save full budget object so BudgetCard can render
       const budget = data?.budget && data.budget.rows ? data.budget : null;
 
       setItinerary({
@@ -232,10 +227,10 @@ export default function TripPlanner() {
             .join(" — "),
         days,
         budget,
+        travelers: form.travelers ? Number(form.travelers) : null, // <-- for per-person toggle
       });
 
-      // Clear form so inputs don't “remember”
-      setForm({ ...defaultForm });
+      setForm({ ...defaultForm }); // clear inputs
     } catch (err) {
       console.error(err);
       setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
@@ -247,7 +242,6 @@ export default function TripPlanner() {
 
   function handleDownloadHtml() {
     if (!itinerary) return;
-    // Pass rows into exporter (it expects budgetRows)
     const html = itineraryTextToHtml({
       tripTitle: itinerary.tripTitle,
       days: itinerary.days,
@@ -287,14 +281,12 @@ export default function TripPlanner() {
                   {loadingCountries ? "Loading countries..." : "Select Country"}
                 </option>
                 {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
 
-            {/* City (disabled until country chosen) */}
+            {/* City */}
             <div className="col-span-12 md:col-span-6">
               <select
                 name="city"
@@ -302,17 +294,13 @@ export default function TripPlanner() {
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 autoComplete="off"
-                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                  !form.country ? "opacity-60 cursor-not-allowed" : ""
-                }`}
+                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
               >
                 <option value="" disabled hidden>
-                  {!form.country ? "Select Country First" : loadingCities ? "Loading cities..." : "Select City"}
+                  {!form.country ? "Select Country First" : (loadingCities ? "Loading cities..." : "Select City")}
                 </option>
                 {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
+                  <option key={city} value={city}>{city}</option>
                 ))}
               </select>
             </div>
@@ -352,9 +340,7 @@ export default function TripPlanner() {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  Travel Style
-                </option>
+                <option value="" disabled hidden>Travel Style</option>
                 <option>Foodies</option>
                 <option>Culture</option>
                 <option>Nature</option>
@@ -386,9 +372,7 @@ export default function TripPlanner() {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  Budget Range
-                </option>
+                <option value="" disabled hidden>Budget Range</option>
                 <option>Budget</option>
                 <option>Mid-range</option>
                 <option>Luxury</option>
@@ -404,9 +388,7 @@ export default function TripPlanner() {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  Trip Pace
-                </option>
+                <option value="" disabled hidden>Trip Pace</option>
                 <option>Relaxed</option>
                 <option>Balanced</option>
                 <option>Fast</option>
@@ -445,8 +427,8 @@ export default function TripPlanner() {
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
                 <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
                 <p className="text-gray-700">
-                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} includes iconic
-                  sites, neighborhood dining, and a local experience!
+                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} includes iconic sites,
+                  neighborhood dining, and a local experience!
                 </p>
               </div>
             </div>
@@ -463,13 +445,11 @@ export default function TripPlanner() {
           <Itinerary
             tripTitle={itinerary.tripTitle}
             days={itinerary.days}
-            /* If your Itinerary also shows Budget, remove the BudgetCard below to avoid duplicates */
           />
 
-          {/* Always render BudgetCard here so it never “disappears” */}
           {itinerary.budget?.rows?.length ? (
             <div className="mt-4">
-              <BudgetCard budget={itinerary.budget} />
+              <BudgetCard budget={itinerary.budget} travelers={itinerary.travelers} />
             </div>
           ) : null}
 
