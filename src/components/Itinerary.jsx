@@ -1,44 +1,52 @@
 // src/components/Itinerary.jsx
-import DaySection from "./DaySection";
-import BudgetCard from "./BudgetCard";
+// Renders the itinerary days with tidy card titles and indented bullets.
 
-const DEFAULT_BUDGET_ROWS = [
-  { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
-  { category: "Food",          budget: 150, mid: 250, luxury: 400 },
-  { category: "Transportation",budget:  50, mid: 100, luxury: 200 },
-  { category: "Activities",    budget: 100, mid: 200, luxury: 300 },
-  { category: "Souvenirs",     budget:  50, mid: 100, luxury: 200 },
-];
+import { Card, CardContent } from "./ui/card";
 
-export default function Itinerary({ tripTitle, days = [], budgetRows }) {
-  if (!Array.isArray(days) || days.length === 0) return null;
+function buildDisplayTitle(index, rawTitle, location) {
+  const i = index + 1;
+  const t = (rawTitle || "").trim();
+  if (t) {
+    // If raw title already includes "Day X:", keep its suffix; otherwise prefix it.
+    const m = t.match(/^ *Day\s*\d+\s*[:—-]?\s*(.*)$/i);
+    const suffix = m ? (m[1] || "").trim() : t;
+    return suffix ? `Day ${i}: ${suffix}` : `Day ${i}`;
+  }
+  return location ? `Day ${i} — ${location}` : `Day ${i}`;
+}
 
-  const rows = (Array.isArray(budgetRows) && budgetRows.length)
-    ? budgetRows
-    : DEFAULT_BUDGET_ROWS;
-
+export default function Itinerary({ tripTitle, days = [] }) {
   return (
-    <div className="max-w-4xl mx-auto px-2 md:px-0">
-      {tripTitle && (
-        <h2 className="text-2xl font-semibold mb-3">{tripTitle}</h2>
-      )}
-      <h3 className="text-xl font-semibold mb-3">Your AI-Generated Itinerary</h3>
+    <div className="space-y-4">
+      {/* Page Title */}
+      {tripTitle ? (
+        <div className="text-center mb-2">
+          <h3 className="text-2xl font-semibold">{tripTitle}</h3>
+        </div>
+      ) : null}
 
-      <div className="space-y-4">
-        {days.map((day, idx) => (
-          <DaySection
-            key={idx}
-            index={idx}
-            title={day.title}                         // keep descriptive titles like "Day 1: ..."
-            location={day.location}
-            bullets={day.bullets ?? day.items ?? []}  // support either key
-          />
-        ))}
-      </div>
-
-      <div className="mt-4">
-        <BudgetCard title="Budget — Trip Overview" rows={rows} />
-      </div>
+      {/* Day Cards */}
+      {days.map((d, idx) => {
+        const title = buildDisplayTitle(idx, d?.title, d?.location);
+        const items = Array.isArray(d?.bullets) ? d.bullets : Array.isArray(d?.items) ? d.items : [];
+        return (
+          <Card key={idx} className="shadow-sm">
+            {/* Card header (no CardHeader dependency) */}
+            <div className="px-5 pt-4 pb-2 border-b border-gray-200 bg-gray-50">
+              <h4 className="text-base md:text-lg font-semibold text-gray-800">{title}</h4>
+            </div>
+            <CardContent className="p-5">
+              <ul className="list-disc pl-6 space-y-1">
+                {items.map((line, i) => (
+                  <li key={i} className="text-gray-800">
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
