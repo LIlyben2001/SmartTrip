@@ -34,6 +34,22 @@ const COUNTRY_CITIES_FALLBACK = {
 };
 const COUNTRIES_FALLBACK = Object.keys(COUNTRY_CITIES_FALLBACK).sort();
 
+/* ---------- Helpers ---------- */
+const currencyFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+function addDaysISO(isoDate, n) {
+  if (!isoDate || !n) return "";
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + (Number(n) - 1));
+  return d.toISOString().slice(0, 10);
+}
+function budgetLevelFromAmount(amount) {
+  const a = Number(amount || 0);
+  if (!a) return "";
+  if (a <= 1500) return "Budget";
+  if (a <= 4000) return "Mid-range";
+  return "Luxury";
+}
+
 /* ---------- Form defaults ---------- */
 const defaultForm = {
   country: "",
@@ -42,17 +58,13 @@ const defaultForm = {
   days: "",
   travelers: "",
   style: "",
+  // keep budgetLevel for compatibility; we’ll auto-derive it from budgetUSD if empty
   budgetLevel: "",
+  // NEW: numeric budget slider (USD total trip budget, user-selected)
+  budgetUSD: 3000,
   pace: "",
   email: "",
 };
-
-function addDaysISO(isoDate, n) {
-  if (!isoDate || !n) return "";
-  const d = new Date(isoDate);
-  d.setDate(d.getDate() + (Number(n) - 1));
-  return d.toISOString().slice(0, 10);
-}
 
 export default function TripPlanner() {
   const [form, setForm] = useState(defaultForm);
@@ -152,6 +164,11 @@ export default function TripPlanner() {
         const nextCity = list.includes(f.city) ? f.city : "";
         return { ...f, country: value, city: nextCity };
       }
+      if (name === "budgetUSD") {
+        const val = value === "" ? "" : Math.max(0, Number(value));
+        const derived = budgetLevelFromAmount(val);
+        return { ...f, budgetUSD: val, budgetLevel: f.budgetLevel || derived };
+      }
       return { ...f, [name]: value };
     });
   }
@@ -169,6 +186,7 @@ export default function TripPlanner() {
     try {
       const destination = `${form.city}, ${form.country}`;
       const endDate = addDaysISO(form.startDate, form.days);
+      const resolvedBudgetLevel = form.budgetLevel || budgetLevelFromAmount(form.budgetUSD);
 
       const payload = {
         destination,
@@ -179,7 +197,9 @@ export default function TripPlanner() {
         days: form.days ? Number(form.days) : undefined,
         travelers: form.travelers ? Number(form.travelers) : undefined,
         style: form.style || undefined,
-        budgetLevel: form.budgetLevel || undefined,
+        // keep legacy field + NEW numeric budget
+        budgetLevel: resolvedBudgetLevel || undefined,
+        budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
         pace: form.pace || undefined,
         email: form.email || undefined,
       };
@@ -219,15 +239,20 @@ export default function TripPlanner() {
 
       const budget = data?.budget && data.budget.rows ? data.budget : null;
 
+      const titleBits = [
+        destination || "Your Trip",
+        form.days ? `${form.days} days` : "",
+        form.style,
+        resolvedBudgetLevel,
+        form.pace,
+        form.budgetUSD ? `~${currencyFmt.format(form.budgetUSD)}` : "",
+      ].filter(Boolean);
+
       setItinerary({
-        tripTitle:
-          data?.title ||
-          [destination || "Your Trip", form.days ? `${form.days} days` : "", form.style, form.budgetLevel, form.pace]
-            .filter(Boolean)
-            .join(" — "),
+        tripTitle: data?.title || titleBits.join(" — "),
         days,
         budget,
-        travelers: form.travelers ? Number(form.travelers) : null, // <-- for per-person toggle
+        travelers: form.travelers ? Number(form.travelers) : null, // for per-person toggle
       });
 
       setForm({ ...defaultForm }); // clear inputs
@@ -255,6 +280,11 @@ export default function TripPlanner() {
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [itinerary]);
+
+  // Slider bounds (tweak as you like)
+  const BUDGET_MIN = 500;
+  const BUDGET_MAX = 20000;
+  const BUDGET_STEP = 100;
 
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 space-y-6">
@@ -363,20 +393,41 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* Budget Range */}
+            {/* Budget (Slider + Number input) */}
             <div className="col-span-12 md:col-span-6">
-              <select
-                name="budgetLevel"
-                value={form.budgetLevel}
+              <label htmlFor="budgetUSD" className="block text-sm font-medium text-gray-700 mb-1">
+                Total Budget: <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
+              </label>
+              <input
+                id="budgetUSD"
+                type="range"
+                name="budgetUSD"
+                min={BUDGET_MIN}
+                max={BUDGET_MAX}
+                step={BUDGET_STEP}
+                value={Number(form.budgetUSD || 0)}
                 onChange={onChange}
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="" disabled hidden>Budget Range</option>
-                <option>Budget</option>
-                <option>Mid-range</option>
-                <option>Luxury</option>
-              </select>
+                className="w-full"
+              />
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="number"
+                  name="budgetUSD"
+                  min={BUDGET_MIN}
+                  max={BUDGET_MAX}
+                  step={BUDGET_STEP}
+                  value={form.budgetUSD}
+                  onChange={onChange}
+                  className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter total budget in USD"
+                />
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                {currencyFmt.format(BUDGET_MIN)} – {currencyFmt.format(BUDGET_MAX)} • Step {currencyFmt.format(BUDGET_STEP)}
+              </div>
+              <div className="mt-1 text-xs text-gray-600">
+                Estimated tier: <span className="font-medium">{budgetLevelFromAmount(form.budgetUSD) || "—"}</span>
+              </div>
             </div>
 
             {/* Trip Pace */}
@@ -427,8 +478,8 @@ export default function TripPlanner() {
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
                 <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
                 <p className="text-gray-700">
-                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} includes iconic sites,
-                  neighborhood dining, and a local experience!
+                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} with a budget of{" "}
+                  {currencyFmt.format(form.budgetUSD || 3000)} includes iconic sites, neighborhood dining, and a local experience!
                 </p>
               </div>
             </div>
