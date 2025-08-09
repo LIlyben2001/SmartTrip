@@ -1,80 +1,53 @@
 // src/components/BudgetCard.jsx
-// Self-styled card (no dependency on ui/card exports that may not exist)
+import React from "react";
+import { Card, CardContent } from "./ui/card";
 
-const currency = (n) =>
-  typeof n === "number"
-    ? new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      }).format(n)
-    : n;
-
-export default function BudgetCard({
-  title = "Estimated Budget",
-  rows = [
-    { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
-    { category: "Food",          budget: 150, mid: 250, luxury: 400 },
-    { category: "Transportation",budget:  50, mid: 100, luxury: 200 },
-    { category: "Activities",    budget: 100, mid: 200, luxury: 300 },
-    { category: "Souvenirs",     budget:  50, mid: 100, luxury: 200 },
-  ],
-}) {
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-
-  const totals = rows.reduce(
-    (acc, r) => ({
-      budget: acc.budget + (r.budget || 0),
-      mid:    acc.mid    + (r.mid    || 0),
-      luxury: acc.luxury + (r.luxury || 0),
-    }),
-    { budget: 0, mid: 0, luxury: 0 }
-  );
+export default function BudgetCard({ budget }) {
+  if (!budget || !budget.rows || budget.rows.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="rounded-lg border border-gray-200 shadow-sm overflow-hidden bg-white">
-      {/* Header */}
-      <div className="px-4 pt-4">
-        <h3 className="text-lg font-bold">{title}</h3>
+    <Card className="shadow-md">
+      {/* Card Header */}
+      <div className="px-6 pt-6 pb-2 border-b border-gray-200 bg-gray-50">
+        <h3 className="text-lg font-bold text-gray-800">
+          Estimated Trip Budget
+        </h3>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
+      <CardContent className="p-6">
+        {/* Disclaimer */}
+        <p className="text-xs text-gray-500 mb-4">
+          * These amounts are rough estimates based on typical costs for budget,
+          mid-range, and luxury travel. Prices are not in real-time and may vary
+          depending on the season, destination, and booking choices.
+        </p>
+
+        {/* Budget Table */}
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
-            <thead>
+          <table className="min-w-full border border-gray-200 text-sm">
+            <thead className="bg-gray-100">
               <tr>
-                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "34%"}}>Category</th>
-                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "22%"}}>Budget (2–3★)</th>
-                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "22%"}}>Mid-range (3★)</th>
-                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "22%"}}>Luxury (4–5★)</th>
+                <th className="px-4 py-2 border">Category</th>
+                <th className="px-4 py-2 border">Budget</th>
+                <th className="px-4 py-2 border">Mid-Range</th>
+                <th className="px-4 py-2 border">Luxury</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.category}>
-                  <td className="border-b px-3 py-2">{r.category}</td>
-                  <td className="border-b px-3 py-2">{currency(r.budget)}</td>
-                  <td className="border-b px-3 py-2">{currency(r.mid)}</td>
-                  <td className="border-b px-3 py-2">{currency(r.luxury)}</td>
+              {budget.rows.map((row, idx) => (
+                <tr key={idx}>
+                  <td className="px-4 py-2 border font-medium">{row.category}</td>
+                  <td className="px-4 py-2 border">${row.budget}</td>
+                  <td className="px-4 py-2 border">${row.mid}</td>
+                  <td className="px-4 py-2 border">${row.luxury}</td>
                 </tr>
               ))}
-              <tr className="font-bold">
-                <td className="border-b px-3 py-2">Total</td>
-                <td className="border-b px-3 py-2">{currency(totals.budget)}</td>
-                <td className="border-b px-3 py-2">{currency(totals.mid)}</td>
-                <td className="border-b px-3 py-2">{currency(totals.luxury)}</td>
-              </tr>
             </tbody>
           </table>
         </div>
-
-        {/* Disclaimer */}
-        <p className="text-xs text-gray-500 mt-4 italic">
-          *Prices shown are estimates based on average costs for the destination.
-          Actual costs may vary depending on travel dates, accommodation, and local market conditions.
-        </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
