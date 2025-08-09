@@ -31,31 +31,31 @@ function fmt(amount, code) {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: code,
-      maximumFractionDigits: code === "JPY" ? 0 : 0, // whole numbers keep the table tidy
+      maximumFractionDigits: code === "JPY" ? 0 : 0, // keep whole numbers for table
     }).format(amount);
   } catch {
-    // fallback if a locale doesn't support the code on some browsers
     return `${CURRENCY_LABELS[code] || code} ${Math.round(amount).toLocaleString()}`;
   }
 }
 
-export default function BudgetCard({ budget }) {
+export default function BudgetCard({ budget, travelers }) {
   const rows = budget?.rows || [];
   const [currency, setCurrency] = useState("USD");
+  const [perPerson, setPerPerson] = useState(false);
 
   const factor = RATES[currency] ?? 1;
+  const divisor = perPerson && travelers > 0 ? travelers : 1;
 
-  // Convert row-by-row from USD to chosen currency
+  // Convert + optionally divide per person
   const convertedRows = useMemo(() => {
     return rows.map((r) => ({
       category: r.category,
-      budget: (Number(r.budget) || 0) * factor,
-      mid: (Number(r.mid) || 0) * factor,
-      luxury: (Number(r.luxury) || 0) * factor,
+      budget: ((Number(r.budget) || 0) * factor) / divisor,
+      mid: ((Number(r.mid) || 0) * factor) / divisor,
+      luxury: ((Number(r.luxury) || 0) * factor) / divisor,
     }));
-  }, [rows, factor]);
+  }, [rows, factor, divisor]);
 
-  // Totals in selected currency
   const totals = useMemo(() => {
     return convertedRows.reduce(
       (acc, r) => ({
@@ -71,24 +71,45 @@ export default function BudgetCard({ budget }) {
 
   return (
     <Card className="shadow-md">
-      {/* Header with currency selector */}
+      {/* Header with currency + per-person controls */}
       <div className="px-6 pt-6 pb-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3 flex-wrap">
         <h3 className="text-lg font-bold text-gray-800">Estimated Trip Budget</h3>
 
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-gray-600">Currency</span>
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="rounded-md border border-gray-300 bg-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-orange-500"
-          >
-            {Object.keys(RATES).map((code) => (
-              <option key={code} value={code}>
-                {CURRENCY_LABELS[code] || code}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Per person toggle */}
+          <label className="flex items-center gap-2 text-sm select-none">
+            <input
+              type="checkbox"
+              checked={perPerson}
+              onChange={(e) => setPerPerson(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <span>
+              Per person
+              {travelers > 0 ? (
+                <span className="text-gray-500"> (÷ {travelers})</span>
+              ) : (
+                <span className="text-gray-400"> (set travelers above)</span>
+              )}
+            </span>
+          </label>
+
+          {/* Currency selector */}
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600">Currency</span>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              {Object.keys(RATES).map((code) => (
+                <option key={code} value={code}>
+                  {CURRENCY_LABELS[code] || code}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       <CardContent className="p-6">
@@ -120,7 +141,9 @@ export default function BudgetCard({ budget }) {
                 </tr>
               ))}
               <tr className="font-bold bg-gray-50">
-                <td className="px-4 py-2 border">Total</td>
+                <td className="px-4 py-2 border">
+                  Total{perPerson && travelers > 0 ? " (per person)" : ""}
+                </td>
                 <td className="px-4 py-2 border text-right">{fmt(totals.budget, currency)}</td>
                 <td className="px-4 py-2 border text-right">{fmt(totals.mid, currency)}</td>
                 <td className="px-4 py-2 border text-right">{fmt(totals.luxury, currency)}</td>
