@@ -4,11 +4,11 @@ export default async function handler(req, res) {
 
   try {
     const {
-      destination = "Your Destination",
+      destination = "",
       startDate,
       endDate,
       days,
-      travelers = 2,
+      travelers = "",
       style = "",
       budgetLevel = "",
       pace = "",
