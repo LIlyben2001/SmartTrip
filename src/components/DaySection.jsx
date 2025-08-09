@@ -1,27 +1,19 @@
 // src/components/DaySection.jsx
-// Self-styled card: header bar + indented content
-
+// Self-styled card: gray header + indented content
 function buildDisplayTitle(index, rawTitle, location) {
   const i = index + 1;
   if (typeof rawTitle === "string" && rawTitle.trim()) {
-    // If title already starts with "Day X", keep suffix but fix number
     const m = rawTitle.match(/^ *Day\s*\d+\s*[:—-]?\s*(.*)$/i);
     if (m) {
       const suffix = (m[1] || "").trim();
       return suffix ? `Day ${i}: ${suffix}` : `Day ${i}`;
     }
-    // Otherwise prefix with "Day X:"
     return `Day ${i}: ${rawTitle.trim()}`;
   }
   return location ? `Day ${i} — ${location}` : `Day ${i}`;
 }
 
-export default function DaySection({
-  index = 0,
-  title = "",
-  location = "",
-  bullets = [],
-}) {
+export default function DaySection({ index = 0, title = "", location = "", bullets = [] }) {
   const displayTitle = buildDisplayTitle(index, title, location);
   const items = Array.isArray(bullets) ? bullets : [];
 
