@@ -21,22 +21,17 @@ export function itineraryTextToHtml({ tripTitle = "", days = [], budgetRows = []
     const i = index + 1;
     const t = (rawTitle || "").trim();
     if (t) {
-      // If title already begins with "Day X", keep its suffix but fix X
       const m = t.match(/^ *Day\s*\d+\s*[:—-]?\s*(.*)$/i);
       const suffix = m ? (m[1] || "").trim() : t;
-      // DO NOT append location here; suffix may already contain it
       return suffix ? `Day ${i}: ${suffix}` : `Day ${i}`;
     }
-    // Only when there's no custom title, fall back to "Day X — {location}"
     return location ? `Day ${i} — ${location}` : `Day ${i}`;
   };
 
   const daySections = (Array.isArray(days) ? days : []).map((d, idx) => {
     const title = buildDisplayTitle(idx, d?.title, d?.location);
     const items = Array.isArray(d?.items) ? d.items : Array.isArray(d?.bullets) ? d.bullets : [];
-    const lis = items
-      .map((line) => `<li>${escape(line)}</li>`)
-      .join("");
+    const lis = items.map((line) => `<li>${escape(line)}</li>`).join("");
 
     return `
       <section class="day">
@@ -58,9 +53,15 @@ export function itineraryTextToHtml({ tripTitle = "", days = [], budgetRows = []
     { budget: 0, mid: 0, luxury: 0 }
   );
 
-  const budgetTable = `
+  const budgetSection = rows.length
+    ? `
     <section class="budget">
-      <h3>Budget — Trip Overview</h3>
+      <h3>Estimated Trip Budget</h3>
+      <p class="disclaimer">
+        * These amounts are rough estimates based on typical costs for budget, mid-range,
+        and luxury travel. Prices are not in real-time and may vary depending on the season,
+        destination, and booking choices.
+      </p>
       <table class="budget-table">
         <thead>
           <tr>
@@ -91,7 +92,8 @@ export function itineraryTextToHtml({ tripTitle = "", days = [], budgetRows = []
         </tbody>
       </table>
     </section>
-  `;
+  `
+    : "";
 
   return `
 <!doctype html>
@@ -108,6 +110,7 @@ export function itineraryTextToHtml({ tripTitle = "", days = [], budgetRows = []
   .bullets { margin: 8px 0 0 22px; }
   .bullets li { margin: 4px 0; }
   .budget { margin-top: 28px; }
+  .budget .disclaimer { font-size: 12px; color: #6b7280; font-style: italic; margin: 6px 0 10px; }
   .budget-table { border-collapse: collapse; width: 100%; }
   .budget-table th, .budget-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; }
   .budget-table .total td { font-weight: 700; }
@@ -117,7 +120,7 @@ export function itineraryTextToHtml({ tripTitle = "", days = [], budgetRows = []
   <h1>${escape(tripTitle || "Your Trip")}</h1>
   <h2>Your AI-Generated Itinerary</h2>
   ${daySections.join("")}
-  ${rows.length ? budgetTable : ""}
+  ${budgetSection}
 </body>
 </html>
   `.trim();
