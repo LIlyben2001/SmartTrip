@@ -1,24 +1,31 @@
 // /api/generate-itinerary.js
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
     const {
-      destination = "Your Destination",
+      destination: destRaw = "",
       startDate,
       endDate,
       days,
-      travelers = 2,
+      travelers = "",
       style = "",
       budgetLevel = "",
       pace = "",
     } = req.body || {};
 
+    const destination = (destRaw || "").trim() || "Your Destination";
+
     // derive # of days
     let n = Number(days) || 0;
     if (!n && startDate && endDate) {
-      const sd = new Date(startDate), ed = new Date(endDate);
-      if (!isNaN(sd) && !isNaN(ed)) n = Math.max(1, Math.round((ed - sd) / 86400000) + 1);
+      const sd = new Date(startDate);
+      const ed = new Date(endDate);
+      if (!isNaN(sd) && !isNaN(ed)) {
+        n = Math.max(1, Math.round((ed - sd) / 86400000) + 1);
+      }
     }
     if (!n) n = 5;
 
@@ -68,7 +75,7 @@ export default async function handler(req, res) {
       title: tripTitle,
       days: dayList,
       budget,
-      travelers,
+      travelers: Number(travelers) || null,
       startDate: startDate || null,
       endDate: endDate || null,
       source: "mock",
