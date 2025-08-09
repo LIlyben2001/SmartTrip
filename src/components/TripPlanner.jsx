@@ -5,6 +5,16 @@ import BudgetCard from "./BudgetCard";
 import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 
+/* ---------- URL toggle: ?live=1 -> use OpenAI; otherwise mock ---------- */
+function resolveUseLiveFromURL() {
+  if (typeof window === "undefined") return false;
+  const qs = new URLSearchParams(window.location.search);
+  const v = qs.get("live");
+  if (v === "1" || v === "true") return true;
+  if (v === "0" || v === "false") return false;
+  return false; // default to mock
+}
+
 /* ---------- Static fallback (used if JSON not found) ---------- */
 const COUNTRY_CITIES_FALLBACK = {
   "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami"],
@@ -58,7 +68,21 @@ export default function TripPlanner() {
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
+  // URL toggle for live vs mock
+  const [useLive, setUseLive] = useState(resolveUseLiveFromURL());
+
   const resultRef = useRef(null);
+
+  // Tiny badge to show mode
+  const ModeBadge = () => (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+      ${useLive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"}`}
+      title={useLive ? "Using OpenAI live endpoint" : "Using mock endpoint"}
+    >
+      {useLive ? "Live AI" : "Mock"}
+    </span>
+  );
 
   /* ---------- Load countries (dynamic JSON if available) ---------- */
   useEffect(() => {
@@ -78,7 +102,9 @@ export default function TripPlanner() {
         if (mounted) setLoadingCountries(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   /* ---------- Load city map or filter cities when country changes ---------- */
@@ -86,7 +112,7 @@ export default function TripPlanner() {
     let mounted = true;
 
     const updateCitiesFromMap = (map) => {
-      const list = form.country ? (map[form.country] || []) : [];
+      const list = form.country ? map[form.country] || [] : [];
       setCities(list);
       // If current city isn't in new list, clear it
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
@@ -115,7 +141,9 @@ export default function TripPlanner() {
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [form.country]);
 
   function onChange(e) {
@@ -126,7 +154,7 @@ export default function TripPlanner() {
         const list = map[value] || [];
         const nextCity = list.includes(f.city) ? f.city : "";
         return { ...f, country: value, city: nextCity };
-        }
+      }
       return { ...f, [name]: value };
     });
   }
@@ -159,11 +187,30 @@ export default function TripPlanner() {
         email: form.email || undefined,
       };
 
-      const res = await fetch("/api/generate-itinerary", {
+      const liveEndpoint = "/api/generate-itinerary-live";
+      const mockEndpoint = "/api/generate-itinerary";
+      const primary = useLive ? liveEndpoint : mockEndpoint;
+
+      // Try primary endpoint (live or mock)
+      let res = await fetch(primary, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      // If live fails, fall back to mock automatically (so the UI still works)
+      if (!res.ok && useLive) {
+        try {
+          const text = await res.text();
+          console.warn("Live failed, falling back to mock. Live response:", text);
+        } catch {}
+        res = await fetch(mockEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
       const data = await res.json();
@@ -171,7 +218,7 @@ export default function TripPlanner() {
       const days = (data?.days || []).map((d, i) => ({
         title: d.title || `Day ${i + 1}`,
         location: d.location || destination,
-        bullets: Array.isArray(d.items) ? d.items : (d.bullets || []),
+        bullets: Array.isArray(d.items) ? d.items : d.bullets || [],
       }));
 
       // Save full budget object so BudgetCard can render
@@ -180,13 +227,7 @@ export default function TripPlanner() {
       setItinerary({
         tripTitle:
           data?.title ||
-          [
-            destination || "Your Trip",
-            form.days ? `${form.days} days` : "",
-            form.style,
-            form.budgetLevel,
-            form.pace,
-          ]
+          [destination || "Your Trip", form.days ? `${form.days} days` : "", form.style, form.budgetLevel, form.pace]
             .filter(Boolean)
             .join(" — "),
         days,
@@ -197,9 +238,7 @@ export default function TripPlanner() {
       setForm({ ...defaultForm });
     } catch (err) {
       console.error(err);
-      setError(
-        `Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`
-      );
+      setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
       setItinerary(null);
     } finally {
       setLoading(false);
@@ -227,15 +266,13 @@ export default function TripPlanner() {
     <div className="max-w-4xl mx-auto px-4 md:px-6 space-y-6">
       <Card className="shadow-md">
         <div className="px-6 pt-6 text-center">
-          <h2 className="text-3xl font-semibold">Plan Your Trip</h2>
+          <h2 className="text-3xl font-semibold inline-flex items-center gap-2 justify-center">
+            Plan Your Trip <ModeBadge />
+          </h2>
         </div>
 
         <CardContent className="p-6 md:p-8">
-          <form
-            onSubmit={handleGenerate}
-            autoComplete="off"
-            className="grid grid-cols-12 gap-4"
-          >
+          <form onSubmit={handleGenerate} autoComplete="off" className="grid grid-cols-12 gap-4">
             {/* Country */}
             <div className="col-span-12 md:col-span-6">
               <select
@@ -250,7 +287,9 @@ export default function TripPlanner() {
                   {loadingCountries ? "Loading countries..." : "Select Country"}
                 </option>
                 {countries.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -263,13 +302,17 @@ export default function TripPlanner() {
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 autoComplete="off"
-                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
+                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  !form.country ? "opacity-60 cursor-not-allowed" : ""
+                }`}
               >
                 <option value="" disabled hidden>
-                  {!form.country ? "Select Country First" : (loadingCities ? "Loading cities..." : "Select City")}
+                  {!form.country ? "Select Country First" : loadingCities ? "Loading cities..." : "Select City"}
                 </option>
                 {cities.map((city) => (
-                  <option key={city} value={city}>{city}</option>
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
                 ))}
               </select>
             </div>
@@ -309,7 +352,9 @@ export default function TripPlanner() {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>Travel Style</option>
+                <option value="" disabled hidden>
+                  Travel Style
+                </option>
                 <option>Foodies</option>
                 <option>Culture</option>
                 <option>Nature</option>
@@ -341,7 +386,9 @@ export default function TripPlanner() {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>Budget Range</option>
+                <option value="" disabled hidden>
+                  Budget Range
+                </option>
                 <option>Budget</option>
                 <option>Mid-range</option>
                 <option>Luxury</option>
@@ -357,7 +404,9 @@ export default function TripPlanner() {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>Trip Pace</option>
+                <option value="" disabled hidden>
+                  Trip Pace
+                </option>
                 <option>Relaxed</option>
                 <option>Balanced</option>
                 <option>Fast</option>
@@ -396,8 +445,8 @@ export default function TripPlanner() {
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
                 <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
                 <p className="text-gray-700">
-                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} includes iconic sites,
-                  neighborhood dining, and a local experience!
+                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} includes iconic
+                  sites, neighborhood dining, and a local experience!
                 </p>
               </div>
             </div>
@@ -425,10 +474,7 @@ export default function TripPlanner() {
           ) : null}
 
           <div className="flex flex-wrap gap-2 mt-2">
-            <button
-              onClick={handleDownloadHtml}
-              className="px-4 py-2 bg-gray-800 text-white rounded-lg"
-            >
+            <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
               Download HTML
             </button>
           </div>
