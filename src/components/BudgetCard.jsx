@@ -1,43 +1,80 @@
 // src/components/BudgetCard.jsx
-import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+// Self-styled card (no dependency on ui/card exports that may not exist)
 
-export default function BudgetCard({ budget }) {
-  if (!budget?.rows?.length) return null;
+const currency = (n) =>
+  typeof n === "number"
+    ? new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }).format(n)
+    : n;
+
+export default function BudgetCard({
+  title = "Estimated Budget",
+  rows = [
+    { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
+    { category: "Food",          budget: 150, mid: 250, luxury: 400 },
+    { category: "Transportation",budget:  50, mid: 100, luxury: 200 },
+    { category: "Activities",    budget: 100, mid: 200, luxury: 300 },
+    { category: "Souvenirs",     budget:  50, mid: 100, luxury: 200 },
+  ],
+}) {
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+
+  const totals = rows.reduce(
+    (acc, r) => ({
+      budget: acc.budget + (r.budget || 0),
+      mid:    acc.mid    + (r.mid    || 0),
+      luxury: acc.luxury + (r.luxury || 0),
+    }),
+    { budget: 0, mid: 0, luxury: 0 }
+  );
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle>Estimated Budget</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-1">Category</th>
-              <th className="text-right py-1">Budget</th>
-              <th className="text-right py-1">Mid-Range</th>
-              <th className="text-right py-1">Luxury</th>
-            </tr>
-          </thead>
-          <tbody>
-            {budget.rows.map((row, idx) => (
-              <tr key={idx} className="border-b">
-                <td className="py-1">{row.category}</td>
-                <td className="text-right py-1">${row.budget}</td>
-                <td className="text-right py-1">${row.mid}</td>
-                <td className="text-right py-1">${row.luxury}</td>
+    <div className="rounded-lg border border-gray-200 shadow-sm overflow-hidden bg-white">
+      {/* Header */}
+      <div className="px-4 pt-4">
+        <h3 className="text-lg font-bold">{title}</h3>
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
+            <thead>
+              <tr>
+                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "34%"}}>Category</th>
+                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "22%"}}>Budget (2–3★)</th>
+                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "22%"}}>Mid-range (3★)</th>
+                <th className="text-left font-semibold border-b px-3 py-2" style={{width: "22%"}}>Luxury (4–5★)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.category}>
+                  <td className="border-b px-3 py-2">{r.category}</td>
+                  <td className="border-b px-3 py-2">{currency(r.budget)}</td>
+                  <td className="border-b px-3 py-2">{currency(r.mid)}</td>
+                  <td className="border-b px-3 py-2">{currency(r.luxury)}</td>
+                </tr>
+              ))}
+              <tr className="font-bold">
+                <td className="border-b px-3 py-2">Total</td>
+                <td className="border-b px-3 py-2">{currency(totals.budget)}</td>
+                <td className="border-b px-3 py-2">{currency(totals.mid)}</td>
+                <td className="border-b px-3 py-2">{currency(totals.luxury)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         {/* Disclaimer */}
         <p className="text-xs text-gray-500 mt-4 italic">
-          *Prices shown are estimates based on average costs for the destination. 
+          *Prices shown are estimates based on average costs for the destination.
           Actual costs may vary depending on travel dates, accommodation, and local market conditions.
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
