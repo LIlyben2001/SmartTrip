@@ -5,18 +5,21 @@ import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 
 // --- Country -> Cities map (extend anytime) ---
-const COUNTRY_CITIES = {
-  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami"],
-  China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
-  Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
-  "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York"],
-  France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux"],
-  Italy: ["Rome", "Florence", "Venice", "Milan", "Naples"],
-  Spain: ["Barcelona", "Madrid", "Seville", "Valencia", "Granada"],
-  Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
-  Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
-  Singapore: ["Singapore"],
-  "United Arab Emirates": ["Dubai", "Abu Dhabi"],
+const countryCities = {
+  "United States": ["New York", "Los Angeles", "Chicago", "Miami"],
+  "Canada": ["Toronto", "Vancouver", "Montreal"],
+  "United Kingdom": ["London", "Manchester", "Edinburgh"],
+  "France": ["Paris", "Nice", "Lyon"],
+  "Italy": ["Rome", "Florence", "Venice"],
+  "Spain": ["Barcelona", "Madrid", "Seville"],
+  "Germany": ["Berlin", "Munich", "Hamburg"],
+  "Australia": ["Sydney", "Melbourne", "Brisbane"],
+  "Japan": ["Tokyo", "Kyoto", "Osaka"],
+  "China": ["Beijing", "Shanghai", "Guangzhou"],
+  "Brazil": ["Rio de Janeiro", "São Paulo", "Salvador"],
+  "Argentina": ["Buenos Aires", "Mendoza", "Bariloche"], // added
+  "Greece": ["Athens", "Santorini", "Thessaloniki"], // added
+  "Turkey": ["Istanbul", "Cappadocia", "Antalya"] // added
 };
 
 const COUNTRIES = Object.keys(COUNTRY_CITIES).sort();
