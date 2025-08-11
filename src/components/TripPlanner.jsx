@@ -92,20 +92,36 @@ export default function TripPlanner() {
     </span>
   );
 
-  /* ---------- Load countries (dynamic JSON if available) ---------- */
+  /* ---------- helpers to fetch with graceful fallback ---------- */
+  async function fetchJSONWithFallback(primary, secondary) {
+    // try primary
+    try {
+      const r1 = await fetch(primary, { cache: "no-store" });
+      if (r1.ok) return await r1.json();
+    } catch {}
+    // try secondary
+    if (secondary) {
+      try {
+        const r2 = await fetch(secondary, { cache: "no-store" });
+        if (r2.ok) return await r2.json();
+      } catch {}
+    }
+    return null;
+  }
+
+  /* ---------- Load countries (dynamic if available) ---------- */
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         setLoadingCountries(true);
-        const res = await fetch("/countries.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("countries.json not found");
-        const data = await res.json();
+        // Try API first, then public JSON
+        const data = await fetchJSONWithFallback("/api/countries", "/countries.json");
         if (mounted && Array.isArray(data) && data.length) {
-          setCountries(data);
+          setCountries(data.slice().sort());
+        } else if (mounted) {
+          setCountries(COUNTRIES_FALLBACK);
         }
-      } catch {
-        setCountries(COUNTRIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCountries(false);
       }
@@ -115,13 +131,13 @@ export default function TripPlanner() {
     };
   }, []);
 
-  /* ---------- Load city map or filter cities when country changes ---------- */
+  /* ---------- Load city map (dynamic if available) and filter cities when country changes ---------- */
   useEffect(() => {
     let mounted = true;
 
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
-      setCities(list);
+      setCities(list.slice().sort());
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
 
@@ -132,17 +148,18 @@ export default function TripPlanner() {
       }
       try {
         setLoadingCities(true);
-        const res = await fetch("/country-cities.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("country-cities.json not found");
-        const map = await res.json();
+        // Only refetch the map when we need it; try API first then JSON
+        const map = await fetchJSONWithFallback("/api/country-cities", "/country-cities.json");
         if (mounted && map && typeof map === "object") {
           setCountryCityMap(map);
           updateCitiesFromMap(map);
           return;
         }
-      } catch {
-        setCountryCityMap(COUNTRY_CITIES_FALLBACK);
-        updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
+        // Fallback to static
+        if (mounted) {
+          setCountryCityMap(COUNTRY_CITIES_FALLBACK);
+          updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
+        }
       } finally {
         if (mounted) setLoadingCities(false);
       }
@@ -158,8 +175,9 @@ export default function TripPlanner() {
     setForm((f) => {
       if (name === "country") {
         const map = countryCityMap || COUNTRY_CITIES_FALLBACK;
-        const list = map[value] || [];
+        const list = (map[value] || []).slice().sort();
         const nextCity = list.includes(f.city) ? f.city : "";
+        setCities(list);
         return { ...f, country: value, city: nextCity };
       }
       if (name === "budgetUSD") {
@@ -282,7 +300,7 @@ export default function TripPlanner() {
     }
   }, [itinerary]);
 
-  // Slider bounds
+  // Slider bounds (unchanged)
   const BUDGET_MIN = 500;
   const BUDGET_MAX = 20000;
   const BUDGET_STEP = 100;
