@@ -1,0 +1,17 @@
+export async function GET() {
+  const data = {
+    "United States": ["New York","Los Angeles","San Francisco","Chicago","Miami"],
+    "Canada": ["Toronto","Vancouver","Montreal","Calgary","Ottawa"],
+    "United Kingdom": ["London","Edinburgh","Manchester","Bath","York"],
+    "France": ["Paris","Nice","Lyon","Marseille","Bordeaux"],
+    "Italy": ["Rome","Florence","Venice","Milan","Naples"],
+    "Spain": ["Barcelona","Madrid","Seville","Valencia","Granada"],
+    "Germany": ["Berlin","Munich","Hamburg"],
+    "Australia": ["Sydney","Melbourne","Brisbane","Perth","Adelaide"],
+    "Japan": ["Tokyo","Kyoto","Osaka","Sapporo","Hiroshima"],
+    "China": ["Beijing","Shanghai","Shenzhen","Guangzhou","Xi'an"],
+    "Greece": ["Athens","Santorini","Thessaloniki"],
+    "Turkey": ["Istanbul","Cappadocia","Antalya"]
+  };
+  return Response.json(data);
+}
