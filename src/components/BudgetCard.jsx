@@ -249,10 +249,10 @@ export default function BudgetCard({
           <table className="min-w-full border border-gray-200 text-sm">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-2 border text-left">Category</th>
-                <th className="px-4 py-2 border text-right">Budget (2–3★)</th>
-                <th className="px-4 py-2 border text-right">Mid-range (3★)</th>
-                <th className="px-4 py-2 border text-right">Luxury (4–5★)</th>
+                  <th className="px-4 py-2 border text-left whitespace-nowrap">Category</th>
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Budget (2–3★)</th>
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Mid-range (3★)</th>
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Luxury (4–5★)</th>
               </tr>
             </thead>
             <tbody>
