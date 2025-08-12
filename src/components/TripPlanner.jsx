@@ -16,21 +16,18 @@ function resolveUseLiveFromURL() {
 }
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
+/* Reduced countries list for cleaner UX; still allows dynamic JSON override */
 const COUNTRY_CITIES_FALLBACK = {
-  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami"],
+  "United States": ["New York", "Los Angeles", "Chicago", "Miami", "San Francisco"],
   Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
   "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York"],
   France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux"],
   Italy: ["Rome", "Florence", "Venice", "Milan", "Naples"],
   Spain: ["Barcelona", "Madrid", "Seville", "Valencia", "Granada"],
-  Germany: ["Berlin", "Munich", "Hamburg"],
   Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
   Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
   China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
-  Brazil: ["Rio de Janeiro", "São Paulo", "Salvador"],
-  Argentina: ["Buenos Aires", "Mendoza", "Bariloche"],
-  Greece: ["Athens", "Santorini", "Thessaloniki"],
-  Turkey: ["Istanbul", "Cappadocia", "Antalya"],
+  Greece: ["Athens", "Santorini", "Thessaloniki"]
 };
 const COUNTRIES_FALLBACK = Object.keys(COUNTRY_CITIES_FALLBACK).sort();
 
@@ -92,53 +89,38 @@ export default function TripPlanner() {
     </span>
   );
 
-  /* ---------- helpers to fetch with graceful fallback ---------- */
-  async function fetchJSONWithFallback(primary, secondary) {
-    // try primary
-    try {
-      const r1 = await fetch(primary, { cache: "no-store" });
-      if (r1.ok) return await r1.json();
-    } catch {}
-    // try secondary
-    if (secondary) {
-      try {
-        const r2 = await fetch(secondary, { cache: "no-store" });
-        if (r2.ok) return await r2.json();
-      } catch {}
-    }
-    return null;
-  }
-
-  /* ---------- Load countries (dynamic if available) ---------- */
+  /* ---------- Load countries (dynamic JSON if available) ---------- */
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         setLoadingCountries(true);
-        // Try API first, then public JSON
-        const data = await fetchJSONWithFallback("/api/countries", "/countries.json");
-        if (mounted && Array.isArray(data) && data.length) {
-          setCountries(data.slice().sort());
-        } else if (mounted) {
-          setCountries(COUNTRIES_FALLBACK);
+        // Try public JSON first; if missing, use fallback.
+        const res = await fetch("/countries.json", { cache: "no-store" }).catch(() => null);
+        if (res && res.ok) {
+          const data = await res.json();
+          if (mounted && Array.isArray(data) && data.length) {
+            setCountries(data.slice().sort());
+            return;
+          }
         }
+        if (mounted) setCountries(COUNTRIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCountries(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
-  /* ---------- Load city map (dynamic if available) and filter cities when country changes ---------- */
+  /* ---------- Load city map or filter cities when country changes ---------- */
   useEffect(() => {
     let mounted = true;
 
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
-      setCities(list.slice().sort());
-      setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
+      const sorted = list.slice().sort();
+      setCities(sorted);
+      setForm((f) => (sorted.includes(f.city) ? f : { ...f, city: "" }));
     };
 
     (async () => {
@@ -148,14 +130,17 @@ export default function TripPlanner() {
       }
       try {
         setLoadingCities(true);
-        // Only refetch the map when we need it; try API first then JSON
-        const map = await fetchJSONWithFallback("/api/country-cities", "/country-cities.json");
-        if (mounted && map && typeof map === "object") {
-          setCountryCityMap(map);
-          updateCitiesFromMap(map);
-          return;
+        // Try public JSON; if missing, use fallback.
+        const res = await fetch("/country-cities.json", { cache: "no-store" }).catch(() => null);
+        if (res && res.ok) {
+          const map = await res.json();
+          if (mounted && map && typeof map === "object") {
+            setCountryCityMap(map);
+            updateCitiesFromMap(map);
+            return;
+          }
         }
-        // Fallback to static
+        // Fallback
         if (mounted) {
           setCountryCityMap(COUNTRY_CITIES_FALLBACK);
           updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
@@ -165,9 +150,7 @@ export default function TripPlanner() {
       }
     })();
 
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [form.country]);
 
   function onChange(e) {
@@ -300,7 +283,7 @@ export default function TripPlanner() {
     }
   }, [itinerary]);
 
-  // Slider bounds (unchanged)
+  // Slider bounds (keep as-is; change later if you want)
   const BUDGET_MIN = 500;
   const BUDGET_MAX = 20000;
   const BUDGET_STEP = 100;
@@ -335,23 +318,23 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* City */}
+            {/* City — type ahead via <datalist> */}
             <div className="col-span-12 md:col-span-6">
-              <select
+              <input
+                list="city-list"
                 name="city"
                 value={form.city}
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 autoComplete="off"
+                placeholder={!form.country ? "Select Country First" : "Type or select a city"}
                 className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
-              >
-                <option value="" disabled hidden>
-                  {!form.country ? "Select Country First" : (loadingCities ? "Loading cities..." : "Select City")}
-                </option>
+              />
+              <datalist id="city-list">
                 {cities.map((city) => (
-                  <option key={city} value={city}>{city}</option>
+                  <option key={city} value={city} />
                 ))}
-              </select>
+              </datalist>
             </div>
 
             {/* Start Date */}
