@@ -1,12 +1,11 @@
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import TripPlanner from './components/TripPlanner';
+import TripPlanner from "./components/TripPlanner";
 
 export default function LandingPage() {
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
+      {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
         <div className="text-2xl font-bold text-[#1F2F46]">SmartTrip</div>
         <nav className="flex flex-wrap justify-center gap-4">
@@ -16,37 +15,45 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      {/*HERO SECTION */}
+      {/* HERO SECTION */}
       <section className="text-center py-8 px-4 bg-white">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
         <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
-          Plan. Pack. Explore.
+          Your Personalized Travel Planner
         </h1>
         <p className="mt-4 text-lg md:text-xl text-text font-medium max-w-2xl mx-auto">
-          Plan Smarter, Travel Better. Your AI-powered travel assistant for China and beyond — build itineraries, estimate time and budget, and simplify complex travel planning.
+          Plan smarter, travel better. Create custom day-by-day itineraries, budgets, and activities
+          for China and destinations worldwide — instantly. Powered by AI to simplify planning and
+          help you start your adventure sooner.
         </p>
         <div className="mt-4">
           <a
-            href="#planner"
+            href="#trip-planner"
             className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full transition"
           >
             Plan My Trip Now
           </a>
         </div>
       </section>
-      <TripPlanner />
+
+      {/* Trip Planner (anchor target) */}
+      <div id="trip-planner">
+        <TripPlanner />
+      </div>
 
       {/* FEATURE SECTION */}
-      <section id= "features" className="py-20 px-4 max-w-6xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-12">Core Features - Coming Soon</h2>
+      <section id="features" className="py-20 px-4 max-w-6xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-12">
+          Core Features — Coming Soon
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { icon: '🧠', title: "AI Trip Builder", desc: "Build multi-city trips with smart time & cost estimates." },
-            { icon: '💰', title: "Real-Time Budget", desc: "Know how much your trip will cost as you plan." },
-            { icon: '🎟️', title: "Ticketing Alerts", desc: "Get notified of places that need advance booking or permits." },
-            { icon: '📋', title: "Custom Itineraries", desc: "Save, share or download your personalized trip plan." },
-            { icon: '📶', title: "Offline Access", desc: "Export your itinerary as PDF for travel use." },
-            { icon: '🇨🇳', title: "China Ready", desc: "Handles real-name bookings, permits & local transit." },
+            { icon: "🧠", title: "AI Trip Builder", desc: "Build multi-city trips with smart time & cost estimates." },
+            { icon: "💰", title: "Real-Time Budget", desc: "Know how much your trip will cost as you plan." },
+            { icon: "🎟️", title: "Ticketing Alerts", desc: "Get notified of places that need advance booking or permits." },
+            { icon: "📋", title: "Custom Itineraries", desc: "Save, share or download your personalized trip plan." },
+            { icon: "📶", title: "Offline Access", desc: "Export your itinerary as PDF for travel use." },
+            { icon: "🇨🇳", title: "China Ready", desc: "Handles real-name bookings, permits & local transit." },
           ].map((f, i) => (
             <Card key={i} className="shadow-md text-center">
               <CardContent className="p-6">
@@ -59,6 +66,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="bg-[#1f2a44] text-white py-10 text-center">
         <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
         <p className="mb-4">Be the first to access the app and get travel-ready perks.</p>
@@ -76,23 +84,4 @@ export default function LandingPage() {
       </footer>
     </div>
   );
-}
-
-import Itinerary from "./components/Itinerary";
-
-const mockDays = [
-  { title: "Day 1", location: "Shanghai", bullets: ["Yu Garden", "Nanjing Rd walk", "Soup dumplings"] },
-  { title: "Day 2", location: "Suzhou",   bullets: ["Humble Administrator’s Garden", "Canal ride"] },
-];
-
-const mockBudget = [
-  { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
-  { category: "Food",          budget: 150, mid: 250, luxury: 400 },
-  { category: "Transportation",budget:  50, mid: 100, luxury: 200 },
-  { category: "Activities",    budget: 100, mid: 200, luxury: 300 },
-  { category: "Souvenirs",     budget:  50, mid: 100, luxury: 200 },
-];
-
-function Preview() {
-  return <Itinerary tripTitle="Shanghai Weekend" days={mockDays} budgetRows={mockBudget} />;
 }
