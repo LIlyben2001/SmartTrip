@@ -27,6 +27,8 @@ const COUNTRY_CITIES_FALLBACK = {
   Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
   Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
   China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
+  Brazil: ["Rio de Janeiro", "São Paulo", "Salvador"],
+  Argentina: ["Buenos Aires", "Mendoza", "Bariloche"],
   Greece: ["Athens", "Santorini", "Thessaloniki"],
   Turkey: ["Istanbul", "Cappadocia", "Antalya"],
 };
@@ -90,21 +92,20 @@ export default function TripPlanner() {
     </span>
   );
 
-  /* ---------- Load countries (from /public if present) ---------- */
+  /* ---------- Load countries (dynamic JSON if available) ---------- */
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         setLoadingCountries(true);
-        const res = await fetch("/countries.json", { cache: "no-store" }).catch(() => null);
-        if (res?.ok) {
-          const data = await res.json();
-          if (mounted && Array.isArray(data) && data.length) {
-            setCountries(data.slice().sort());
-            return;
-          }
+        const res = await fetch("/countries.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("countries.json not found");
+        const data = await res.json();
+        if (mounted && Array.isArray(data) && data.length) {
+          setCountries(data);
         }
-        if (mounted) setCountries(COUNTRIES_FALLBACK);
+      } catch {
+        setCountries(COUNTRIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCountries(false);
       }
@@ -112,16 +113,14 @@ export default function TripPlanner() {
     return () => { mounted = false; };
   }, []);
 
-  /* ---------- Load city map (from /public if present) when country changes ---------- */
+  /* ---------- Load city map or filter cities when country changes ---------- */
   useEffect(() => {
     let mounted = true;
 
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
-      const sorted = list.slice().sort();
-      setCities(sorted);
-      // Keep city if it’s still in the new list; otherwise clear.
-      setForm((f) => (sorted.includes(f.city) ? f : { ...f, city: "" }));
+      setCities(list);
+      setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
 
     (async () => {
@@ -131,19 +130,17 @@ export default function TripPlanner() {
       }
       try {
         setLoadingCities(true);
-        const res = await fetch("/country-cities.json", { cache: "no-store" }).catch(() => null);
-        if (res?.ok) {
-          const map = await res.json();
-          if (mounted && map && typeof map === "object") {
-            setCountryCityMap(map);
-            updateCitiesFromMap(map);
-            return;
-          }
+        const res = await fetch("/country-cities.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("country-cities.json not found");
+        const map = await res.json();
+        if (mounted && map && typeof map === "object") {
+          setCountryCityMap(map);
+          updateCitiesFromMap(map);
+          return;
         }
-        if (mounted) {
-          setCountryCityMap(COUNTRY_CITIES_FALLBACK);
-          updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
-        }
+      } catch {
+        setCountryCityMap(COUNTRY_CITIES_FALLBACK);
+        updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCities(false);
       }
@@ -157,10 +154,8 @@ export default function TripPlanner() {
     setForm((f) => {
       if (name === "country") {
         const map = countryCityMap || COUNTRY_CITIES_FALLBACK;
-        const list = (map[value] || []).slice().sort();
-        // When switching country, clear city unless it’s valid for the new country
+        const list = map[value] || [];
         const nextCity = list.includes(f.city) ? f.city : "";
-        setCities(list);
         return { ...f, country: value, city: nextCity };
       }
       if (name === "budgetUSD") {
@@ -168,7 +163,6 @@ export default function TripPlanner() {
         const derived = budgetLevelFromAmount(val);
         return { ...f, budgetUSD: val, budgetLevel: f.budgetLevel || derived };
       }
-      // City (free text via <datalist>) or other inputs
       return { ...f, [name]: value };
     });
   }
@@ -257,8 +251,6 @@ export default function TripPlanner() {
         budgetTier: resolvedBudgetLevel || null,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
       });
-
-      setForm({ ...defaultForm }); // clear inputs
     } catch (err) {
       console.error(err);
       setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
@@ -319,23 +311,23 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* City — type-ahead via <datalist> */}
+            {/* City */}
             <div className="col-span-12 md:col-span-6">
-              <input
-                list="city-list"
+              <select
                 name="city"
                 value={form.city}
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 autoComplete="off"
-                placeholder={!form.country ? "Select Country First" : "Type or select a city"}
                 className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
-              />
-              <datalist id="city-list">
+              >
+                <option value="" disabled hidden>
+                  {!form.country ? "Select Country First" : (loadingCities ? "Loading cities..." : "Select City")}
+                </option>
                 {cities.map((city) => (
-                  <option key={city} value={city} />
+                  <option key={city} value={city}>{city}</option>
                 ))}
-              </datalist>
+              </select>
             </div>
 
             {/* Start Date */}
@@ -487,7 +479,6 @@ export default function TripPlanner() {
               </div>
             </div>
           </form>
-          {/* <<<<<<<<<<<<<< END FORM — keep this! */}
           {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
         </CardContent>
       </Card>
