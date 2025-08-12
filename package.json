@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "smarttrip-landing",
   "version": "1.0.0",
   "scripts": {
