@@ -3,18 +3,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import TripPlanner from "./components/TripPlanner";
 
 export default function LandingPage() {
-  // Smooth scroll for in-page anchor links
+  // Smooth scroll for in-page anchor links (e.g., #planner, #features, #signup)
   useEffect(() => {
     const handleClick = (e) => {
-      const target = e.target.closest("a[href^='#']");
-      if (target) {
-        const id = target.getAttribute("href").slice(1);
-        const el = document.getElementById(id);
-        if (el) {
-          e.preventDefault();
-          el.scrollIntoView({ behavior: "smooth" });
-        }
-      }
+      const a = e.target.closest("a[href^='#']");
+      if (!a) return;
+      const id = a.getAttribute("href").slice(1);
+      const el = document.getElementById(id);
+      if (!el) return;
+      e.preventDefault();
+      el.scrollIntoView({ behavior: "smooth" });
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
@@ -22,24 +20,24 @@ export default function LandingPage() {
 
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
-      {/* HEADER */}
+      {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
         <div className="text-2xl font-bold text-[#1F2F46]">SmartTrip</div>
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
-          <a href="#demo" className="text-[#1F2F46] font-medium">Demo</a>
+          <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
           <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
         </nav>
       </header>
 
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="text-center py-8 px-4 bg-white">
         <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
         <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
           Personalized Travel Planner + AI Trip Builder
         </h1>
         <p className="mt-4 text-lg md:text-xl text-text font-medium max-w-2xl mx-auto">
-          Plan smarter, travel better. Create customized itineraries, get instant budgets, 
+          Plan smarter, travel better. Create customized itineraries, get instant budgets,
           and explore hidden gems — for China and worldwide adventures.
         </p>
         <div className="mt-4">
@@ -52,15 +50,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* TRIP PLANNER */}
+      {/* Trip Planner anchor target */}
       <div id="planner">
         <TripPlanner />
       </div>
 
-      {/* FEATURE SECTION */}
+      {/* Features */}
       <section id="features" className="py-20 px-4 max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-12">
-          Core Features - Coming Soon
+          Core Features — Coming Soon
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
@@ -69,7 +67,7 @@ export default function LandingPage() {
             { icon: "🎟️", title: "Ticketing Alerts", desc: "Get notified of places that need advance booking or permits." },
             { icon: "📋", title: "Custom Itineraries", desc: "Save, share or download your personalized trip plan." },
             { icon: "📶", title: "Offline Access", desc: "Export your itinerary as PDF for travel use." },
-            { icon: "🌏", title: "China + Global Ready", desc: "Handles local bookings, permits & worldwide travel planning." },
+            { icon: "🌏", title: "China + Global Ready", desc: "Handles local bookings, permits & worldwide planning." },
           ].map((f, i) => (
             <Card key={i} className="shadow-md text-center">
               <CardContent className="p-6">
@@ -82,7 +80,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* Footer / Signup */}
       <footer className="bg-[#1f2a44] text-white py-10 text-center" id="signup">
         <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
         <p className="mb-4">Be the first to access the app and get travel-ready perks.</p>
