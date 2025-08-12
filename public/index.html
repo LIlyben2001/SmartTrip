@@ -20,7 +20,6 @@
       property="og:description"
       content="Plan smarter trips with AI. Get instant day-by-day itineraries, budgets, and travel tips tailored to your style."
     />
-    <!-- Make sure this image exists in /public and is ~1200x630 -->
     <meta property="og:image" content="/og-image.jpg" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://smart-trip-six.vercel.app/" />
@@ -50,7 +49,7 @@
       }
     </script>
 
-    <!-- Structured Data: Organization (optional but helpful) -->
+    <!-- Structured Data: Organization -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -59,6 +58,22 @@
         "url": "https://smart-trip-six.vercel.app/",
         "logo": "https://smart-trip-six.vercel.app/logo.png",
         "sameAs": []
+      }
+    </script>
+
+    <!-- Structured Data: Sitemap -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "itemListElement": [
+          {
+            "@type": "SiteNavigationElement",
+            "position": 1,
+            "name": "Home",
+            "url": "https://smart-trip-six.vercel.app/"
+          }
+        ]
       }
     </script>
   </head>
