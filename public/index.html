@@ -2,22 +2,65 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SmartTrip</title>
 
-    <!-- Open Graph tags for link previews -->
-    <meta property="og:title" content="SmartTrip - Explore the World’s Wonders" />
-    <meta property="og:description" content="Plan your dream trip in minutes with SmartTrip’s AI-powered itinerary builder. Get personalized plans, budgets, and hidden gems instantly." />
-    <meta property="og:image" content="/SmartTrip_ Explore the World’s Wonders.png" />
+    <!-- SEO: Title & Description -->
+    <title>SmartTrip — AI-Powered Travel Planner</title>
+    <meta
+      name="description"
+      content="Plan smarter trips with AI. Get instant day-by-day itineraries, budgets, and travel tips tailored to your style."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://smart-trip-six.vercel.app/" />
+
+    <!-- Open Graph (Link Previews) -->
+    <meta property="og:title" content="SmartTrip — AI-Powered Travel Planner" />
+    <meta
+      property="og:description"
+      content="Plan smarter trips with AI. Get instant day-by-day itineraries, budgets, and travel tips tailored to your style."
+    />
+    <!-- Make sure this image exists in /public and is ~1200x630 -->
+    <meta property="og:image" content="/og-image.jpg" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://smart-trip-six.vercel.app/" />
 
-    <!-- Twitter Card (optional for better preview on Twitter/X) -->
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="SmartTrip - Explore the World’s Wonders" />
-    <meta name="twitter:description" content="Plan your dream trip in minutes with SmartTrip’s AI-powered itinerary builder." />
-    <meta name="twitter:image" content="/SmartTrip_ Explore the World’s Wonders.png" />
+    <meta name="twitter:title" content="SmartTrip — AI-Powered Travel Planner" />
+    <meta
+      name="twitter:description"
+      content="Plan smarter trips with AI. Get instant day-by-day itineraries, budgets, and travel tips tailored to your style."
+    />
+    <meta name="twitter:image" content="/og-image.jpg" />
+
+    <!-- Structured Data: WebSite -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "SmartTrip",
+        "url": "https://smart-trip-six.vercel.app/",
+        "inLanguage": "en",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://smart-trip-six.vercel.app/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
+    <!-- Structured Data: Organization (optional but helpful) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "SmartTrip",
+        "url": "https://smart-trip-six.vercel.app/",
+        "logo": "https://smart-trip-six.vercel.app/logo.png",
+        "sameAs": []
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
