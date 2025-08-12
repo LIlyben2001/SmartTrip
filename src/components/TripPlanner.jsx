@@ -16,18 +16,19 @@ function resolveUseLiveFromURL() {
 }
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
-/* Reduced countries list for cleaner UX; still allows dynamic JSON override */
 const COUNTRY_CITIES_FALLBACK = {
-  "United States": ["New York", "Los Angeles", "Chicago", "Miami", "San Francisco"],
+  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami"],
   Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
   "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York"],
   France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux"],
   Italy: ["Rome", "Florence", "Venice", "Milan", "Naples"],
   Spain: ["Barcelona", "Madrid", "Seville", "Valencia", "Granada"],
+  Germany: ["Berlin", "Munich", "Hamburg"],
   Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
   Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
   China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
-  Greece: ["Athens", "Santorini", "Thessaloniki"]
+  Greece: ["Athens", "Santorini", "Thessaloniki"],
+  Turkey: ["Istanbul", "Cappadocia", "Antalya"],
 };
 const COUNTRIES_FALLBACK = Object.keys(COUNTRY_CITIES_FALLBACK).sort();
 
@@ -89,15 +90,14 @@ export default function TripPlanner() {
     </span>
   );
 
-  /* ---------- Load countries (dynamic JSON if available) ---------- */
+  /* ---------- Load countries (from /public if present) ---------- */
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         setLoadingCountries(true);
-        // Try public JSON first; if missing, use fallback.
         const res = await fetch("/countries.json", { cache: "no-store" }).catch(() => null);
-        if (res && res.ok) {
+        if (res?.ok) {
           const data = await res.json();
           if (mounted && Array.isArray(data) && data.length) {
             setCountries(data.slice().sort());
@@ -112,7 +112,7 @@ export default function TripPlanner() {
     return () => { mounted = false; };
   }, []);
 
-  /* ---------- Load city map or filter cities when country changes ---------- */
+  /* ---------- Load city map (from /public if present) when country changes ---------- */
   useEffect(() => {
     let mounted = true;
 
@@ -120,6 +120,7 @@ export default function TripPlanner() {
       const list = form.country ? map[form.country] || [] : [];
       const sorted = list.slice().sort();
       setCities(sorted);
+      // Keep city if it’s still in the new list; otherwise clear.
       setForm((f) => (sorted.includes(f.city) ? f : { ...f, city: "" }));
     };
 
@@ -130,9 +131,8 @@ export default function TripPlanner() {
       }
       try {
         setLoadingCities(true);
-        // Try public JSON; if missing, use fallback.
         const res = await fetch("/country-cities.json", { cache: "no-store" }).catch(() => null);
-        if (res && res.ok) {
+        if (res?.ok) {
           const map = await res.json();
           if (mounted && map && typeof map === "object") {
             setCountryCityMap(map);
@@ -140,7 +140,6 @@ export default function TripPlanner() {
             return;
           }
         }
-        // Fallback
         if (mounted) {
           setCountryCityMap(COUNTRY_CITIES_FALLBACK);
           updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
@@ -159,6 +158,7 @@ export default function TripPlanner() {
       if (name === "country") {
         const map = countryCityMap || COUNTRY_CITIES_FALLBACK;
         const list = (map[value] || []).slice().sort();
+        // When switching country, clear city unless it’s valid for the new country
         const nextCity = list.includes(f.city) ? f.city : "";
         setCities(list);
         return { ...f, country: value, city: nextCity };
@@ -168,6 +168,7 @@ export default function TripPlanner() {
         const derived = budgetLevelFromAmount(val);
         return { ...f, budgetUSD: val, budgetLevel: f.budgetLevel || derived };
       }
+      // City (free text via <datalist>) or other inputs
       return { ...f, [name]: value };
     });
   }
@@ -283,7 +284,7 @@ export default function TripPlanner() {
     }
   }, [itinerary]);
 
-  // Slider bounds (keep as-is; change later if you want)
+  // Slider bounds
   const BUDGET_MIN = 500;
   const BUDGET_MAX = 20000;
   const BUDGET_STEP = 100;
@@ -318,7 +319,7 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* City — type ahead via <datalist> */}
+            {/* City — type-ahead via <datalist> */}
             <div className="col-span-12 md:col-span-6">
               <input
                 list="city-list"
