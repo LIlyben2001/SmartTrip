@@ -1,8 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import TripPlanner from "./components/TripPlanner";
 
 export default function LandingPage() {
+  const [language, setLanguage] = useState("en");
+
   // Smooth scroll for in-page anchor links (e.g., #planner, #features, #signup)
   useEffect(() => {
     const handleClick = (e) => {
@@ -23,10 +25,23 @@ export default function LandingPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
         <div className="text-2xl font-bold text-[#1F2F46]">SmartTrip</div>
-        <nav className="flex flex-wrap justify-center gap-4">
+        <nav className="flex flex-wrap justify-center gap-4 items-center">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
           <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
+          {/* Language Selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm"
+          >
+            <option value="en">English</option>
+            <option value="zh">中文 (Chinese)</option>
+            <option value="es">Español (Spanish)</option>
+            <option value="fr">Français (French)</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="ja">日本語 (Japanese)</option>
+          </select>
         </nav>
       </header>
 
@@ -52,7 +67,7 @@ export default function LandingPage() {
 
       {/* Trip Planner anchor target */}
       <div id="planner">
-        <TripPlanner />
+        <TripPlanner selectedLanguage={language} />
       </div>
 
       {/* Features */}
