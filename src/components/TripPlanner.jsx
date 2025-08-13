@@ -17,20 +17,18 @@ function resolveUseLiveFromURL() {
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
 const COUNTRY_CITIES_FALLBACK = {
-  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami"],
-  Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
-  "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York"],
-  France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux"],
-  Italy: ["Rome", "Florence", "Venice", "Milan", "Naples"],
-  Spain: ["Barcelona", "Madrid", "Seville", "Valencia", "Granada"],
-  Germany: ["Berlin", "Munich", "Hamburg"],
-  Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
-  Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
-  China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
-  Brazil: ["Rio de Janeiro", "São Paulo", "Salvador"],
-  Argentina: ["Buenos Aires", "Mendoza", "Bariloche"],
-  Greece: ["Athens", "Santorini", "Thessaloniki"],
-  Turkey: ["Istanbul", "Cappadocia", "Antalya"],
+  "United States": ["New York","Los Angeles","San Francisco","Chicago","Miami"],
+  Canada: ["Toronto","Vancouver","Montreal","Calgary","Ottawa"],
+  "United Kingdom": ["London","Edinburgh","Manchester","Bath","York"],
+  France: ["Paris","Nice","Lyon","Marseille","Bordeaux"],
+  Italy: ["Rome","Florence","Venice","Milan","Naples"],
+  Spain: ["Barcelona","Madrid","Seville","Valencia","Granada"],
+  Germany: ["Berlin","Munich","Hamburg"],
+  Australia: ["Sydney","Melbourne","Brisbane","Perth","Adelaide"],
+  Japan: ["Tokyo","Kyoto","Osaka","Sapporo","Hiroshima"],
+  China: ["Beijing","Shanghai","Shenzhen","Guangzhou","Xi'an"],
+  Greece: ["Athens","Santorini","Thessaloniki"],
+  Turkey: ["Istanbul","Cappadocia","Antalya"],
 };
 const COUNTRIES_FALLBACK = Object.keys(COUNTRY_CITIES_FALLBACK).sort();
 
@@ -58,8 +56,8 @@ const defaultForm = {
   days: "",
   travelers: "",
   style: "",
-  budgetLevel: "",   // derived from budgetUSD if empty
-  budgetUSD: 3000,   // numeric budget slider
+  budgetLevel: "",
+  budgetUSD: 3000,
   pace: "",
   email: "",
 };
@@ -77,9 +75,7 @@ export default function TripPlanner() {
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
-  // Live/Mock toggle via URL
   const [useLive] = useState(resolveUseLiveFromURL());
-
   const resultRef = useRef(null);
 
   const ModeBadge = () => (
@@ -98,13 +94,16 @@ export default function TripPlanner() {
     (async () => {
       try {
         setLoadingCountries(true);
+        console.log("Fetching /countries.json …");
         const res = await fetch("/countries.json", { cache: "no-store" });
+        console.log("countries.json status:", res.status);
         if (!res.ok) throw new Error("countries.json not found");
         const data = await res.json();
         if (mounted && Array.isArray(data) && data.length) {
           setCountries(data);
         }
-      } catch {
+      } catch (e) {
+        console.warn("Falling back to COUNTRIES_FALLBACK:", e.message);
         setCountries(COUNTRIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCountries(false);
@@ -119,18 +118,18 @@ export default function TripPlanner() {
 
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
+      console.log("Cities for", form.country, "=>", list);
       setCities(list);
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
 
     (async () => {
-      if (!form.country) {
-        setCities([]);
-        return;
-      }
+      if (!form.country) { setCities([]); return; }
       try {
         setLoadingCities(true);
+        console.log("Fetching /country-cities.json …");
         const res = await fetch("/country-cities.json", { cache: "no-store" });
+        console.log("country-cities.json status:", res.status);
         if (!res.ok) throw new Error("country-cities.json not found");
         const map = await res.json();
         if (mounted && map && typeof map === "object") {
@@ -138,7 +137,8 @@ export default function TripPlanner() {
           updateCitiesFromMap(map);
           return;
         }
-      } catch {
+      } catch (e) {
+        console.warn("Falling back to COUNTRY_CITIES_FALLBACK:", e.message);
         setCountryCityMap(COUNTRY_CITIES_FALLBACK);
         updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
       } finally {
@@ -207,12 +207,8 @@ export default function TripPlanner() {
         body: JSON.stringify(payload),
       });
 
-      // fallback to mock if live errors
       if (!res.ok && useLive) {
-        try {
-          const text = await res.text();
-          console.warn("Live failed, falling back to mock. Live response:", text);
-        } catch {}
+        try { console.warn("Live failed, falling back to mock. Live response:", await res.text()); } catch {}
         res = await fetch(mockEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -245,8 +241,7 @@ export default function TripPlanner() {
         tripTitle: data?.title || titleBits.join(" — "),
         days,
         budget,
-        travelers: form.travelers ? Number(form.travelers) : null, // for per-person toggle
-        // context for BudgetCard accommodation calc
+        travelers: form.travelers ? Number(form.travelers) : null,
         daysCount: days.length,
         budgetTier: resolvedBudgetLevel || null,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
@@ -311,23 +306,21 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* City */}
+            {/* City (type or pick) */}
             <div className="col-span-12 md:col-span-6">
-              <select
+              <input
+                list="city-options"
                 name="city"
                 value={form.city}
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 autoComplete="off"
-                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
-              >
-                <option value="" disabled hidden>
-                  {!form.country ? "Select Country First" : (loadingCities ? "Loading cities..." : "Select City")}
-                </option>
-                {cities.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
+                placeholder={!form.country ? "Select Country First" : "Type or pick a city"}
+                className={`w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
+              />
+              <datalist id="city-options">
+                {cities.map((c) => (<option key={c} value={c} />))}
+              </datalist>
             </div>
 
             {/* Start Date */}
@@ -441,7 +434,7 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* Email (optional) */}
+            {/* Email */}
             <div className="col-span-12 md:col-span-6">
               <input
                 type="email"
@@ -468,7 +461,7 @@ export default function TripPlanner() {
               </button>
             </div>
 
-            {/* Sample Itinerary Preview */}
+            {/* Sample Preview */}
             <div className="col-span-12">
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
                 <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
@@ -488,7 +481,6 @@ export default function TripPlanner() {
       {itinerary && (
         <>
           <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} />
-
           {itinerary.budget?.rows?.length ? (
             <div className="mt-4">
               <BudgetCard
@@ -500,7 +492,6 @@ export default function TripPlanner() {
               />
             </div>
           ) : null}
-
           <div className="flex flex-wrap gap-2 mt-2">
             <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
               Download HTML
