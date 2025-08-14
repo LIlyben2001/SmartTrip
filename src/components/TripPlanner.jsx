@@ -94,16 +94,13 @@ export default function TripPlanner() {
     (async () => {
       try {
         setLoadingCountries(true);
-        console.log("Fetching /countries.json …");
         const res = await fetch("/countries.json", { cache: "no-store" });
-        console.log("countries.json status:", res.status);
         if (!res.ok) throw new Error("countries.json not found");
         const data = await res.json();
         if (mounted && Array.isArray(data) && data.length) {
           setCountries(data);
         }
       } catch (e) {
-        console.warn("Falling back to COUNTRIES_FALLBACK:", e.message);
         setCountries(COUNTRIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCountries(false);
@@ -118,7 +115,6 @@ export default function TripPlanner() {
 
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
-      console.log("Cities for", form.country, "=>", list);
       setCities(list);
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
@@ -127,9 +123,7 @@ export default function TripPlanner() {
       if (!form.country) { setCities([]); return; }
       try {
         setLoadingCities(true);
-        console.log("Fetching /country-cities.json …");
         const res = await fetch("/country-cities.json", { cache: "no-store" });
-        console.log("country-cities.json status:", res.status);
         if (!res.ok) throw new Error("country-cities.json not found");
         const map = await res.json();
         if (mounted && map && typeof map === "object") {
@@ -138,7 +132,6 @@ export default function TripPlanner() {
           return;
         }
       } catch (e) {
-        console.warn("Falling back to COUNTRY_CITIES_FALLBACK:", e.message);
         setCountryCityMap(COUNTRY_CITIES_FALLBACK);
         updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
       } finally {
@@ -165,6 +158,19 @@ export default function TripPlanner() {
       }
       return { ...f, [name]: value };
     });
+  }
+
+  /* ---------- Helper: email the itinerary HTML (POST /api/send-itinerary) ---------- */
+  async function sendItineraryEmail({ html, to, subject = "Your SmartTrip Itinerary" }) {
+    try {
+      await fetch("/api/send-itinerary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to, subject, html }),
+      });
+    } catch (e) {
+      console.warn("Email send failed:", e);
+    }
   }
 
   async function handleGenerate(e) {
@@ -237,7 +243,7 @@ export default function TripPlanner() {
         form.budgetUSD ? `~${currencyFmt.format(form.budgetUSD)}` : "",
       ].filter(Boolean);
 
-      setItinerary({
+      const itineraryObj = {
         tripTitle: data?.title || titleBits.join(" — "),
         days,
         budget,
@@ -245,7 +251,20 @@ export default function TripPlanner() {
         daysCount: days.length,
         budgetTier: resolvedBudgetLevel || null,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
-      });
+      };
+
+      // Email the itinerary HTML if a valid email was provided
+      if (form.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+        const html = itineraryTextToHtml({
+          tripTitle: itineraryObj.tripTitle,
+          days: itineraryObj.days,
+          budgetRows: itineraryObj.budget?.rows || [],
+        });
+        // Fire-and-forget; don't block the UI
+        sendItineraryEmail({ html, to: form.email });
+      }
+
+      setItinerary(itineraryObj);
     } catch (err) {
       console.error(err);
       setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
@@ -434,7 +453,7 @@ export default function TripPlanner() {
               </select>
             </div>
 
-          {/* Email (send me my itinerary) */}
+            {/* Email (send me my itinerary) */}
             <div className="col-span-12 md:col-span-6">
               <label htmlFor="plannerEmail" className="block text-sm font-medium text-gray-700 mb-1">
                 Email me my itinerary (optional)
@@ -456,12 +475,10 @@ export default function TripPlanner() {
               </p>
             </div>
 
-
             {/* CTA */}
             <div className="col-span-12">
               <button
                 type="submit"
-                onClick={handleGenerate}
                 disabled={loading}
                 className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition"
               >
