@@ -10,37 +10,25 @@ import { Resend } from "resend";
  *   EMAIL_FROM     = "SmartTrip <itinerary@your-domain.com>"
  */
 export default async function handler(req, res) {
-  // Allow CORS (useful during local dev; safe to keep in prod for same-origin calls)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || "SmartTrip <itinerary@your-domain.com>";
-  if (!apiKey) {
-    return res.status(500).json({ error: "Missing RESEND_API_KEY env variable" });
-  }
+  if (!apiKey) return res.status(500).json({ error: "Missing RESEND_API_KEY env variable" });
 
   try {
     const { to, subject, html, replyTo } = req.body || {};
-
-    // Minimal validation
-    if (!to || typeof to !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
       return res.status(400).json({ error: "Valid 'to' email is required" });
     }
     if (!html || typeof html !== "string" || html.trim().length < 20) {
       return res.status(400).json({ error: "'html' content is required" });
     }
 
-    // Build a plain-text fallback (very basic)
     const text = html
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
@@ -60,11 +48,7 @@ export default async function handler(req, res) {
       reply_to: replyTo || undefined,
     });
 
-    // If Resend returns an error field
-    if (resp?.error) {
-      return res.status(500).json({ error: resp.error?.message || "Email send failed" });
-    }
-
+    if (resp?.error) return res.status(500).json({ error: resp.error?.message || "Email send failed" });
     return res.status(200).json({ ok: true, id: resp?.data?.id || null });
   } catch (err) {
     console.error("send-itinerary error:", err);
