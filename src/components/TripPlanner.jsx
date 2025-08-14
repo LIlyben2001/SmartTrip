@@ -5,193 +5,6 @@ import BudgetCard from "./BudgetCard";
 import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
 
-/* -------------------- i18n -------------------- */
-const LANG_LABEL = {
-  en: "English",
-  zh: "中文",
-  es: "Español",
-  fr: "Français",
-  de: "Deutsch",
-  ja: "日本語",
-};
-const tMap = {
-  en: {
-    planYourTrip: "Plan Your Trip",
-    selectCountry: "Select Country",
-    selectCity: "Select City",
-    selectCountryFirst: "Select Country First",
-    loadingCountries: "Loading countries...",
-    loadingCities: "Loading cities...",
-    date: "mm/dd/yyyy",
-    days: "Number of Days",
-    style: "Travel Style",
-    travelers: "Number of Travelers",
-    budgetLabel: "Total Budget",
-    tripPace: "Trip Pace",
-    relaxed: "Relaxed",
-    balanced: "Balanced",
-    fast: "Fast",
-    generate: "Generate My Trip",
-    previewTitle: "Sample Itinerary Preview",
-    previewLine:
-      "Your {days}-day {style} Adventure in {city} with a budget of {budget} includes iconic sites, neighborhood dining, and a local experience!",
-    tier: "Estimated tier",
-    step: "Step",
-    rangeSep: "–",
-    mock: "Mock",
-    live: "Live AI",
-    currencyNote: "Enter total budget in USD",
-    email: "Email (optional)",
-    errorMissingLocation: "Please select both a country and a city.",
-  },
-  zh: {
-    planYourTrip: "规划你的行程",
-    selectCountry: "选择国家",
-    selectCity: "选择城市",
-    selectCountryFirst: "请先选择国家",
-    loadingCountries: "正在加载国家…",
-    loadingCities: "正在加载城市…",
-    date: "年-月-日",
-    days: "旅行天数",
-    style: "旅行风格",
-    travelers: "出行人数",
-    budgetLabel: "总预算",
-    tripPace: "行程节奏",
-    relaxed: "休闲",
-    balanced: "适中",
-    fast: "紧凑",
-    generate: "生成我的行程",
-    previewTitle: "示例行程预览",
-    previewLine:
-      "你的{days}天{style}之旅（目的地：{city}，预算：{budget}）包含地标景点、社区美食与本地体验！",
-    tier: "预算档位",
-    step: "步进",
-    rangeSep: "—",
-    mock: "模拟",
-    live: "实时 AI",
-    currencyNote: "请输入总预算（美元）",
-    email: "邮箱（可选）",
-    errorMissingLocation: "请同时选择国家和城市。",
-  },
-  es: {
-    planYourTrip: "Planifica tu viaje",
-    selectCountry: "Selecciona un país",
-    selectCity: "Selecciona una ciudad",
-    selectCountryFirst: "Selecciona primero un país",
-    loadingCountries: "Cargando países…",
-    loadingCities: "Cargando ciudades…",
-    date: "dd/mm/aaaa",
-    days: "Número de días",
-    style: "Estilo de viaje",
-    travelers: "Número de viajeros",
-    budgetLabel: "Presupuesto total",
-    tripPace: "Ritmo del viaje",
-    relaxed: "Relajado",
-    balanced: "Equilibrado",
-    fast: "Rápido",
-    generate: "Generar mi viaje",
-    previewTitle: "Vista previa del itinerario",
-    previewLine:
-      "Tu aventura de {days} días de {style} en {city} con un presupuesto de {budget} incluye sitios icónicos, gastronomía local y experiencias auténticas.",
-    tier: "Nivel estimado",
-    step: "Paso",
-    rangeSep: "–",
-    mock: "Simulado",
-    live: "IA en vivo",
-    currencyNote: "Introduce el presupuesto total en USD",
-    email: "Correo (opcional)",
-    errorMissingLocation: "Selecciona un país y una ciudad.",
-  },
-  fr: {
-    planYourTrip: "Planifiez votre voyage",
-    selectCountry: "Sélectionnez un pays",
-    selectCity: "Sélectionnez une ville",
-    selectCountryFirst: "Sélectionnez d'abord un pays",
-    loadingCountries: "Chargement des pays…",
-    loadingCities: "Chargement des villes…",
-    date: "jj/mm/aaaa",
-    days: "Nombre de jours",
-    style: "Style de voyage",
-    travelers: "Nombre de voyageurs",
-    budgetLabel: "Budget total",
-    tripPace: "Rythme du voyage",
-    relaxed: "Détendu",
-    balanced: "Équilibré",
-    fast: "Rapide",
-    generate: "Générer mon voyage",
-    previewTitle: "Aperçu d’itinéraire",
-    previewLine:
-      "Votre aventure {style} de {days} jours à {city} avec un budget de {budget} inclut des sites emblématiques, une cuisine locale et des expériences authentiques.",
-    tier: "Niveau estimé",
-    step: "Pas",
-    rangeSep: "–",
-    mock: "Simulé",
-    live: "IA en direct",
-    currencyNote: "Saisissez le budget total en USD",
-    email: "E-mail (facultatif)",
-    errorMissingLocation: "Veuillez sélectionner un pays et une ville.",
-  },
-  de: {
-    planYourTrip: "Reise planen",
-    selectCountry: "Land auswählen",
-    selectCity: "Stadt auswählen",
-    selectCountryFirst: "Bitte zuerst ein Land auswählen",
-    loadingCountries: "Länder werden geladen…",
-    loadingCities: "Städte werden geladen…",
-    date: "TT/MM/JJJJ",
-    days: "Anzahl der Tage",
-    style: "Reisestil",
-    travelers: "Anzahl Reisende",
-    budgetLabel: "Gesamtbudget",
-    tripPace: "Reisetempo",
-    relaxed: "Entspannt",
-    balanced: "Ausgewogen",
-    fast: "Schnell",
-    generate: "Reise erstellen",
-    previewTitle: "Reisevorschau",
-    previewLine:
-      "Dein {days}-tägiges {style}-Abenteuer in {city} mit einem Budget von {budget} umfasst Highlights, lokale Küche und authentische Erlebnisse.",
-    tier: "Geschätzte Stufe",
-    step: "Schritt",
-    rangeSep: "–",
-    mock: "Mock",
-    live: "Live-KI",
-    currencyNote: "Gesamtbudget in USD eingeben",
-    email: "E-Mail (optional)",
-    errorMissingLocation: "Bitte Land und Stadt auswählen.",
-  },
-  ja: {
-    planYourTrip: "旅程を計画する",
-    selectCountry: "国を選択",
-    selectCity: "都市を選択",
-    selectCountryFirst: "先に国を選択してください",
-    loadingCountries: "国を読み込み中…",
-    loadingCities: "都市を読み込み中…",
-    date: "yyyy/mm/dd",
-    days: "日数",
-    style: "旅行スタイル",
-    travelers: "人数",
-    budgetLabel: "合計予算",
-    tripPace: "旅のペース",
-    relaxed: "ゆったり",
-    balanced: "バランス",
-    fast: "駆け足",
-    generate: "旅程を作成",
-    previewTitle: "旅程サンプル",
-    previewLine:
-      "{city}での{days}日間の{style}旅行（予算：{budget}）は、名所、ローカルグルメ、体験型アクティビティを含みます。",
-    tier: "推定クラス",
-    step: "刻み",
-    rangeSep: "～",
-    mock: "モック",
-    live: "ライブAI",
-    currencyNote: "合計予算（USD）を入力",
-    email: "メール（任意）",
-    errorMissingLocation: "国と都市を選択してください。",
-  },
-};
-const t = (lang, key) => (tMap[lang]?.[key] ?? tMap.en[key] ?? key);
-
 /* ---------- URL toggle: ?live=1 -> OpenAI; otherwise mock ---------- */
 function resolveUseLiveFromURL() {
   if (typeof window === "undefined") return false;
@@ -204,18 +17,18 @@ function resolveUseLiveFromURL() {
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
 const COUNTRY_CITIES_FALLBACK = {
-  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami"],
-  Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
-  "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York"],
-  France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux"],
-  Italy: ["Rome", "Florence", "Venice", "Milan", "Naples"],
-  Spain: ["Barcelona", "Madrid", "Seville", "Valencia", "Granada"],
-  Germany: ["Berlin", "Munich", "Hamburg"],
-  Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
-  Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima"],
-  China: ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an"],
-  Greece: ["Athens", "Santorini", "Thessaloniki"],
-  Turkey: ["Istanbul", "Cappadocia", "Antalya"],
+  "United States": ["New York","Los Angeles","San Francisco","Chicago","Miami"],
+  Canada: ["Toronto","Vancouver","Montreal","Calgary","Ottawa"],
+  "United Kingdom": ["London","Edinburgh","Manchester","Bath","York"],
+  France: ["Paris","Nice","Lyon","Marseille","Bordeaux"],
+  Italy: ["Rome","Florence","Venice","Milan","Naples"],
+  Spain: ["Barcelona","Madrid","Seville","Valencia","Granada"],
+  Germany: ["Berlin","Munich","Hamburg"],
+  Australia: ["Sydney","Melbourne","Brisbane","Perth","Adelaide"],
+  Japan: ["Tokyo","Kyoto","Osaka","Sapporo","Hiroshima"],
+  China: ["Beijing","Shanghai","Shenzhen","Guangzhou","Xi'an"],
+  Greece: ["Athens","Santorini","Thessaloniki"],
+  Turkey: ["Istanbul","Cappadocia","Antalya"],
 };
 const COUNTRIES_FALLBACK = Object.keys(COUNTRY_CITIES_FALLBACK).sort();
 
@@ -243,13 +56,13 @@ const defaultForm = {
   days: "",
   travelers: "",
   style: "",
-  budgetLevel: "", // derived from budgetUSD if empty
-  budgetUSD: 3000, // numeric budget slider
+  budgetLevel: "",
+  budgetUSD: 3000,
   pace: "",
   email: "",
 };
 
-export default function TripPlanner({ selectedLanguage = "en" }) {
+export default function TripPlanner() {
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -262,25 +75,16 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
-  // Live/Mock toggle via URL
   const [useLive] = useState(resolveUseLiveFromURL());
-
   const resultRef = useRef(null);
-
-  // keep <html lang="…"> in sync for a11y/SEO
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("lang", selectedLanguage);
-    }
-  }, [selectedLanguage]);
 
   const ModeBadge = () => (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
       ${useLive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"}`}
-      title={useLive ? t(selectedLanguage, "live") : t(selectedLanguage, "mock")}
+      title={useLive ? "Using OpenAI live endpoint" : "Using mock endpoint"}
     >
-      {useLive ? t(selectedLanguage, "live") : t(selectedLanguage, "mock")}
+      {useLive ? "Live AI" : "Mock"}
     </span>
   );
 
@@ -290,21 +94,22 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
     (async () => {
       try {
         setLoadingCountries(true);
+        console.log("Fetching /countries.json …");
         const res = await fetch("/countries.json", { cache: "no-store" });
+        console.log("countries.json status:", res.status);
         if (!res.ok) throw new Error("countries.json not found");
         const data = await res.json();
         if (mounted && Array.isArray(data) && data.length) {
           setCountries(data);
         }
-      } catch {
+      } catch (e) {
+        console.warn("Falling back to COUNTRIES_FALLBACK:", e.message);
         setCountries(COUNTRIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCountries(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   /* ---------- Load city map or filter cities when country changes ---------- */
@@ -313,18 +118,18 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
 
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
+      console.log("Cities for", form.country, "=>", list);
       setCities(list);
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
 
     (async () => {
-      if (!form.country) {
-        setCities([]);
-        return;
-      }
+      if (!form.country) { setCities([]); return; }
       try {
         setLoadingCities(true);
+        console.log("Fetching /country-cities.json …");
         const res = await fetch("/country-cities.json", { cache: "no-store" });
+        console.log("country-cities.json status:", res.status);
         if (!res.ok) throw new Error("country-cities.json not found");
         const map = await res.json();
         if (mounted && map && typeof map === "object") {
@@ -332,7 +137,8 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
           updateCitiesFromMap(map);
           return;
         }
-      } catch {
+      } catch (e) {
+        console.warn("Falling back to COUNTRY_CITIES_FALLBACK:", e.message);
         setCountryCityMap(COUNTRY_CITIES_FALLBACK);
         updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
       } finally {
@@ -340,9 +146,7 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
       }
     })();
 
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [form.country]);
 
   function onChange(e) {
@@ -368,7 +172,7 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
     setError("");
 
     if (!form.country || !form.city) {
-      setError(t(selectedLanguage, "errorMissingLocation"));
+      setError("Please select both a country and a city.");
       return;
     }
 
@@ -377,9 +181,6 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
       const destination = `${form.city}, ${form.country}`;
       const endDate = addDaysISO(form.startDate, form.days);
       const resolvedBudgetLevel = form.budgetLevel || budgetLevelFromAmount(form.budgetUSD);
-
-      // Language name to instruct the model explicitly
-      const langName = LANG_LABEL[selectedLanguage] || "English";
 
       const payload = {
         destination,
@@ -394,11 +195,6 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
         pace: form.pace || undefined,
         email: form.email || undefined,
-        // 👇 ensure the backend responds in the user-selected language
-        language: selectedLanguage,
-        languageName: langName,
-        // Some backends use a freeform instruction:
-        instruction: `Respond in ${langName} for all text and headings.`,
       };
 
       const liveEndpoint = "/api/generate-itinerary-live";
@@ -411,12 +207,8 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
         body: JSON.stringify(payload),
       });
 
-      // fallback to mock if live errors
       if (!res.ok && useLive) {
-        try {
-          const text = await res.text();
-          console.warn("Live failed, falling back to mock. Live response:", text);
-        } catch {}
+        try { console.warn("Live failed, falling back to mock. Live response:", await res.text()); } catch {}
         res = await fetch(mockEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -449,13 +241,11 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
         tripTitle: data?.title || titleBits.join(" — "),
         days,
         budget,
-        travelers: form.travelers ? Number(form.travelers) : null, // for per-person toggle
+        travelers: form.travelers ? Number(form.travelers) : null,
         daysCount: days.length,
         budgetTier: resolvedBudgetLevel || null,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
       });
-
-      setForm({ ...defaultForm }); // clear inputs
     } catch (err) {
       console.error(err);
       setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
@@ -486,16 +276,12 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
   const BUDGET_MAX = 20000;
   const BUDGET_STEP = 100;
 
-  const fmtRange = `${currencyFmt.format(BUDGET_MIN)} ${t(selectedLanguage, "rangeSep")} ${currencyFmt.format(
-    BUDGET_MAX
-  )} • ${t(selectedLanguage, "step")} ${currencyFmt.format(BUDGET_STEP)}`;
-
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 space-y-6">
       <Card className="shadow-md">
         <div className="px-6 pt-6 text-center">
           <h2 className="text-3xl font-semibold inline-flex items-center gap-2 justify-center">
-            {t(selectedLanguage, "planYourTrip")} <ModeBadge />
+            Plan Your Trip <ModeBadge />
           </h2>
         </div>
 
@@ -512,41 +298,29 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="" disabled hidden>
-                  {loadingCountries ? t(selectedLanguage, "loadingCountries") : t(selectedLanguage, "selectCountry")}
+                  {loadingCountries ? "Loading countries..." : "Select Country"}
                 </option>
                 {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
 
-            {/* City */}
+            {/* City (type or pick) */}
             <div className="col-span-12 md:col-span-6">
-              <select
+              <input
+                list="city-options"
                 name="city"
                 value={form.city}
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 autoComplete="off"
-                className={`w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                  !form.country ? "opacity-60 cursor-not-allowed" : ""
-                }`}
-              >
-                <option value="" disabled hidden>
-                  {!form.country
-                    ? t(selectedLanguage, "selectCountryFirst")
-                    : loadingCities
-                    ? t(selectedLanguage, "loadingCities")
-                    : t(selectedLanguage, "selectCity")}
-                </option>
-                {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
+                placeholder={!form.country ? "Select Country First" : "Type or pick a city"}
+                className={`w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 ${!form.country ? "opacity-60 cursor-not-allowed" : ""}`}
+              />
+              <datalist id="city-options">
+                {cities.map((c) => (<option key={c} value={c} />))}
+              </datalist>
             </div>
 
             {/* Start Date */}
@@ -558,7 +332,7 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 onChange={onChange}
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder={t(selectedLanguage, "date")}
+                placeholder="mm/dd/yyyy"
               />
             </div>
 
@@ -571,7 +345,7 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 inputMode="numeric"
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder={t(selectedLanguage, "days")}
+                placeholder="Number of Days"
               />
             </div>
 
@@ -584,9 +358,7 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  {t(selectedLanguage, "style")}
-                </option>
+                <option value="" disabled hidden>Travel Style</option>
                 <option>Foodies</option>
                 <option>Culture</option>
                 <option>Nature</option>
@@ -605,15 +377,14 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 inputMode="numeric"
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder={t(selectedLanguage, "travelers")}
+                placeholder="Number of Travelers"
               />
             </div>
 
             {/* Budget (Slider + Number input) */}
             <div className="col-span-12 md:col-span-6">
               <label htmlFor="budgetUSD" className="block text-sm font-medium text-gray-700 mb-1">
-                {t(selectedLanguage, "budgetLabel")}:{" "}
-                <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
+                Total Budget: <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
               </label>
               <input
                 id="budgetUSD"
@@ -636,13 +407,14 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                   value={form.budgetUSD}
                   onChange={onChange}
                   className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder={t(selectedLanguage, "currencyNote")}
+                  placeholder="Enter total budget in USD"
                 />
               </div>
-              <div className="mt-1 text-xs text-gray-500">{fmtRange}</div>
+              <div className="mt-1 text-xs text-gray-500">
+                {currencyFmt.format(BUDGET_MIN)} – {currencyFmt.format(BUDGET_MAX)} • Step {currencyFmt.format(BUDGET_STEP)}
+              </div>
               <div className="mt-1 text-xs text-gray-600">
-                {t(selectedLanguage, "tier")}:{" "}
-                <span className="font-medium">{budgetLevelFromAmount(form.budgetUSD) || "—"}</span>
+                Estimated tier: <span className="font-medium">{budgetLevelFromAmount(form.budgetUSD) || "—"}</span>
               </div>
             </div>
 
@@ -655,16 +427,14 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="" disabled hidden>
-                  {t(selectedLanguage, "tripPace")}
-                </option>
-                <option>{t(selectedLanguage, "relaxed")}</option>
-                <option>{t(selectedLanguage, "balanced")}</option>
-                <option>{t(selectedLanguage, "fast")}</option>
+                <option value="" disabled hidden>Trip Pace</option>
+                <option>Relaxed</option>
+                <option>Balanced</option>
+                <option>Fast</option>
               </select>
             </div>
 
-            {/* Email (optional) */}
+            {/* Email */}
             <div className="col-span-12 md:col-span-6">
               <input
                 type="email"
@@ -675,7 +445,7 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 autoCorrect="off"
                 autoCapitalize="none"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder={t(selectedLanguage, "email")}
+                placeholder="Email (optional)"
               />
             </div>
 
@@ -687,25 +457,21 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
                 disabled={loading}
                 className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition"
               >
-                {loading ? "…" : t(selectedLanguage, "generate")}
+                {loading ? "Generating..." : "Generate My Trip"}
               </button>
             </div>
 
-            {/* Sample Itinerary Preview */}
+            {/* Sample Preview */}
             <div className="col-span-12">
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
-                <h3 className="font-semibold mb-1">{t(selectedLanguage, "previewTitle")}</h3>
+                <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
                 <p className="text-gray-700">
-                  {t(selectedLanguage, "previewLine")
-                    .replace("{days}", form.days || 5)
-                    .replace("{style}", form.style || "Cultural")
-                    .replace("{city}", form.city || "Beijing")
-                    .replace("{budget}", currencyFmt.format(form.budgetUSD || 3000))}
+                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} with a budget of{" "}
+                  {currencyFmt.format(form.budgetUSD || 3000)} includes iconic sites, neighborhood dining, and a local experience!
                 </p>
               </div>
             </div>
           </form>
-
           {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
         </CardContent>
       </Card>
@@ -715,7 +481,6 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
       {itinerary && (
         <>
           <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} />
-
           {itinerary.budget?.rows?.length ? (
             <div className="mt-4">
               <BudgetCard
@@ -727,7 +492,6 @@ export default function TripPlanner({ selectedLanguage = "en" }) {
               />
             </div>
           ) : null}
-
           <div className="flex flex-wrap gap-2 mt-2">
             <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
               Download HTML
