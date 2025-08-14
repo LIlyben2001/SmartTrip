@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
@@ -29,6 +29,37 @@ export default function LandingPage() {
     const target = document.getElementById("planner");
     if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  // --- Footer "Notify Me" subscribe form state/handler ---
+  const [submitting, setSubmitting] = useState(false);
+  const [subEmail, setSubEmail] = useState("");
+  const [subMsg, setSubMsg] = useState("");
+
+  async function handleSubscribe(e) {
+    e.preventDefault();
+    setSubMsg("");
+    // simple email check
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(subEmail);
+    if (!valid) {
+      setSubMsg("Please enter a valid email.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: subEmail }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setSubMsg("You're on the list! Check your inbox for a confirmation.");
+      setSubEmail("");
+    } catch (err) {
+      setSubMsg("Sorry, something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
@@ -170,17 +201,37 @@ export default function LandingPage() {
       <footer className="bg-[#1f2a44] text-white py-10 text-center" id="signup">
         <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
         <p className="mb-4">Be the first to access the app and get travel-ready perks.</p>
-        <div className="flex justify-center gap-2">
+
+        {/* Subscribe form */}
+        <form onSubmit={handleSubscribe} className="flex justify-center gap-2">
           <input
             type="email"
+            value={subEmail}
+            onChange={(e) => setSubEmail(e.target.value)}
             placeholder="Enter your email"
             className="px-4 py-2 rounded-full border border-gray-300 text-black"
-            aria-label="Email address"
+            aria-label="Email for product updates"
+            required
           />
-          <button className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full">
-            Notify Me
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {submitting ? "Sending..." : "Notify Me"}
           </button>
-        </div>
+        </form>
+
+        {/* Helper + status message */}
+        <p className="text-xs text-white mt-2 opacity-80">
+          Occasional product updates only. Unsubscribe anytime.
+        </p>
+        {subMsg && (
+          <p className="text-xs text-white mt-2">
+            {subMsg}
+          </p>
+        )}
+
         <p className="text-xs text-white mt-6">
           © {new Date().getFullYear()} SmartTrip. All rights reserved.
         </p>
