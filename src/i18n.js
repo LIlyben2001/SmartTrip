@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-/** Add/extend languages here */
+/** Extend languages here */
 const MESSAGES = {
-  "en": {
+  en: {
     nav: { features: "Features", demo: "Demo", getStarted: "Get Started" },
     hero: {
       title: "Personalized Travel Planner + AI Trip Builder",
       subtitle:
-        "Plan smarter, travel better. Create customized itineraries, get instant budgets, and explore hidden gems — for China and worldwide adventures."
+        "Plan smarter, travel better. Create customized itineraries, get instant budgets, and explore hidden gems — for China and worldwide adventures.",
     },
     cta: { planNow: "Plan My Trip Now" },
     planner: { title: "Plan Your Trip", live: "Live AI" },
@@ -28,44 +28,18 @@ const MESSAGES = {
       sampleTitle: "Sample Itinerary Preview",
       sampleLine:
         "Your {days}-day {style} Adventure in {city} with a budget of {budget} includes iconic sites, neighborhood dining, and a local experience!",
-      needCountryCity: "Please select both a country and a city."
+      needCountryCity: "Please select both a country and a city.",
     },
-    style: { Foodies: "Foodies", Culture: "Culture", Nature: "Nature", Luxury: "Luxury", Budget: "Budget", Family: "Family" },
+    style: {
+      Foodies: "Foodies",
+      Culture: "Culture",
+      Nature: "Nature",
+      Luxury: "Luxury",
+      Budget: "Budget",
+      Family: "Family",
+    },
     pace: { Relaxed: "Relaxed", Balanced: "Balanced", Fast: "Fast" },
-    langLabel: "Language"
-  },
-
-  "es": {
-    nav: { features: "Funciones", demo: "Demo", getStarted: "Comenzar" },
-    hero: {
-      title: "Planificador de Viajes Personalizado + Generador de Itinerarios con IA",
-      subtitle:
-        "Planifica mejor y viaja mejor. Crea itinerarios a medida, obtén presupuestos al instante y descubre joyas ocultas — para China y destinos en todo el mundo."
-    },
-    cta: { planNow: "Planear mi viaje ahora" },
-    planner: { title: "Planifica tu viaje", live: "IA en vivo" },
-    form: {
-      country: "Seleccionar país",
-      cityPickFirst: "Primero selecciona un país",
-      cityTypeOrPick: "Escribe o elige una ciudad",
-      startDate: "dd/mm/aaaa",
-      days: "Número de días",
-      style: "Estilo de viaje",
-      travelers: "Número de viajeros",
-      budgetLabel: "Presupuesto total",
-      budgetRange: "Paso",
-      tier: "Nivel estimado",
-      pace: "Ritmo del viaje",
-      email: "Correo (opcional)",
-      generate: "Generar mi itinerario",
-      sampleTitle: "Vista previa del itinerario",
-      sampleLine:
-        "Tu aventura de {days} días de {style} en {city} con un presupuesto de {budget} incluye sitios icónicos, comida local y experiencias auténticas.",
-      needCountryCity: "Selecciona país y ciudad."
-    },
-    style: { Foodies: "Gastronomía", Culture: "Cultura", Nature: "Naturaleza", Luxury: "Lujo", Budget: "Económico", Family: "Familiar" },
-    pace: { Relaxed: "Tranquilo", Balanced: "Equilibrado", Fast: "Rápido" },
-    langLabel: "Idioma"
+    langLabel: "Language",
   },
 
   "zh-CN": {
@@ -73,7 +47,7 @@ const MESSAGES = {
     hero: {
       title: "个性化旅行规划 + AI 行程生成器",
       subtitle:
-        "更聪明地规划，更轻松地出行。自定义行程、即时预算、探索隐藏的宝藏——适用于中国及全球旅行。"
+        "更聪明地规划，更轻松地出行。自定义行程、即时预算、探索隐藏的宝藏——适用于中国及全球旅行。",
     },
     cta: { planNow: "立即规划行程" },
     planner: { title: "规划你的行程", live: "实时 AI" },
@@ -94,12 +68,59 @@ const MESSAGES = {
       sampleTitle: "行程示例预览",
       sampleLine:
         "你的 {days} 天{style}之旅（目的地 {city}，预算 {budget}）将包含地标景点、街巷美食与本地体验！",
-      needCountryCity: "请同时选择国家和城市。"
+      needCountryCity: "请同时选择国家和城市。",
     },
-    style: { Foodies: "美食", Culture: "文化", Nature: "自然", Luxury: "高端", Budget: "经济", Family: "亲子" },
+    style: {
+      Foodies: "美食",
+      Culture: "文化",
+      Nature: "自然",
+      Luxury: "高端",
+      Budget: "经济",
+      Family: "亲子",
+    },
     pace: { Relaxed: "悠闲", Balanced: "均衡", Fast: "紧凑" },
-    langLabel: "语言"
-  }
+    langLabel: "语言",
+  },
+
+  es: {
+    nav: { features: "Funciones", demo: "Demo", getStarted: "Comenzar" },
+    hero: {
+      title: "Planificador de Viajes Personalizado + Generador de Itinerarios con IA",
+      subtitle:
+        "Planifica mejor y viaja mejor. Crea itinerarios a medida, obtén presupuestos al instante y descubre joyas ocultas — para China y destinos en todo el mundo.",
+    },
+    cta: { planNow: "Planear mi viaje ahora" },
+    planner: { title: "Planifica tu viaje", live: "IA en vivo" },
+    form: {
+      country: "Seleccionar país",
+      cityPickFirst: "Primero selecciona un país",
+      cityTypeOrPick: "Escribe o elige una ciudad",
+      startDate: "dd/mm/aaaa",
+      days: "Número de días",
+      style: "Estilo de viaje",
+      travelers: "Número de viajeros",
+      budgetLabel: "Presupuesto total",
+      budgetRange: "Paso",
+      tier: "Nivel estimado",
+      pace: "Ritmo del viaje",
+      email: "Correo (opcional)",
+      generate: "Generar mi itinerario",
+      sampleTitle: "Vista previa del itinerario",
+      sampleLine:
+        "Tu aventura de {days} días de {style} en {city} con un presupuesto de {budget} incluye sitios icónicos, comida local y experiencias auténticas.",
+      needCountryCity: "Selecciona país y ciudad.",
+    },
+    style: {
+      Foodies: "Gastronomía",
+      Culture: "Cultura",
+      Nature: "Naturaleza",
+      Luxury: "Lujo",
+      Budget: "Económico",
+      Family: "Familiar",
+    },
+    pace: { Relaxed: "Tranquilo", Balanced: "Equilibrado", Fast: "Rápido" },
+    langLabel: "Idioma",
+  },
 };
 
 const LanguageContext = createContext({ lang: "en", setLang: () => {}, t: (k) => k });
@@ -114,9 +135,8 @@ export function LanguageProvider({ children }) {
 
   const t = useMemo(() => {
     const dict = MESSAGES[lang] || MESSAGES.en;
-    /** k = "form.country" etc. */
     return (k, vars) => {
-      const val = k.split(".").reduce((obj, key) => (obj ? obj[key] : undefined), dict);
+      const val = k.split(".").reduce((acc, key) => (acc ? acc[key] : undefined), dict);
       if (!val) return k;
       if (!vars) return val;
       return String(val).replace(/\{(\w+)\}/g, (_, name) => (vars[name] ?? `{${name}}`));
@@ -124,7 +144,6 @@ export function LanguageProvider({ children }) {
   }, [lang]);
 
   const value = useMemo(() => ({ lang, setLang, t }), [lang, t]);
-
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
