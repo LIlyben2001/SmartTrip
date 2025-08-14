@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import TripPlanner from "./components/TripPlanner";
+import Hero from "./components/Hero";
 
 export default function LandingPage() {
   // Smooth scroll for in-page anchor links (e.g., #planner, #features, #signup, #faq)
@@ -31,41 +32,8 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      {/* HERO (background image + overlay) */}
-      <section
-        className="relative text-center px-4"
-        style={{
-          backgroundImage:
-            "linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.45)), url('/og-image.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="max-w-6xl mx-auto py-12 md:py-20 relative">
-          <img
-            src="/logo.png"
-            alt="SmartTrip Logo"
-            className="mx-auto mb-6 h-20 w-auto drop-shadow"
-          />
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
-            Personalized Travel Planner + AI Trip Builder
-          </h1>
-          <p className="mt-4 text-lg md:text-xl font-medium max-w-2xl mx-auto text-white/90">
-            Plan smarter, travel better. Create customized itineraries, get instant budgets,
-            and explore hidden gems — for China and worldwide adventures.
-          </p>
-          <div className="mt-6">
-            <a
-              href="#planner"
-              className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full transition"
-            >
-              Plan My Trip Now
-            </a>
-          </div>
-        </div>
-        {/* bottom fade into page background for a smooth transition */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 md:h-16 bg-gradient-to-b from-transparent to-[#F9F9F9]" />
-      </section>
+      {/* HERO (now a separate component with readable text styling) */}
+      <Hero />
 
       {/* Trip Planner anchor target */}
       <main id="planner" className="contents">
@@ -158,7 +126,6 @@ export default function LandingPage() {
           </details>
         </div>
 
-        {/* CTA back to planner */}
         <div className="text-center mt-8">
           <a
             href="#planner"
