@@ -1,17 +1,27 @@
 // /api/send-itinerary.js
 export default async function handler(req, res) {
-  // CORS (optional)
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // --- TEMP: debug GET ---
+  if (req.method === "GET") {
+    return res.status(200).json({
+      ok: true,
+      method: "GET",
+      hasKey: !!process.env.RESEND_API_KEY,
+      from: process.env.EMAIL_FROM || null,
+    });
+  }
+  // -----------------------
 
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed. Use POST." });
     }
 
-    // Dynamic import so a missing package won't crash the function at load time
     let Resend;
     try {
       ({ Resend } = await import("resend"));
@@ -38,7 +48,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "'html' content is required." });
     }
 
-    // Optional debug:
     console.log("send-itinerary hit", { hasKey: !!apiKey, from });
 
     const resend = new Resend(apiKey);
@@ -47,7 +56,6 @@ export default async function handler(req, res) {
       to,
       subject: subject || "Your SmartTrip Itinerary",
       html,
-      // plain-text fallback (not required, but nice)
       text: html
         .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
