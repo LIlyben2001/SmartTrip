@@ -30,24 +30,42 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      {/* HERO */}
-      <section className="text-center py-8 px-4 bg-white">
-        <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
-        <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
-          Personalized Travel Planner + AI Trip Builder
-        </h1>
-        <p className="mt-4 text-lg md:text-xl text-text font-medium max-w-2xl mx-auto">
-          Plan smarter, travel better. Create customized itineraries, get instant budgets,
-          and explore hidden gems — for China and worldwide adventures.
-        </p>
-        <div className="mt-4">
-          <a
-            href="#planner"
-            className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full transition"
-          >
-            Plan My Trip Now
-          </a>
+      {/* HERO (updated with background image + overlay) */}
+      <section
+        className="relative text-center px-4"
+        style={{
+          backgroundImage:
+            "linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.45)), url('/og-image.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* content container */}
+        <div className="max-w-6xl mx-auto py-12 md:py-20 relative">
+          <img
+            src="/logo.png"
+            alt="SmartTrip Logo"
+            className="mx-auto mb-6 h-20 w-auto drop-shadow"
+          />
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+            Personalized Travel Planner + AI Trip Builder
+          </h1>
+          <p className="mt-4 text-lg md:text-xl font-medium max-w-2xl mx-auto text-white/90">
+            Plan smarter, travel better. Create customized itineraries, get instant budgets,
+            and explore hidden gems — for China and worldwide adventures.
+          </p>
+          <div className="mt-6">
+            <a
+              href="#planner"
+              className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full transition"
+            >
+              Plan My Trip Now
+            </a>
+          </div>
         </div>
+
+        {/* bottom fade into page background for a smooth transition */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 md:h-16 bg-gradient-to-b from-transparent to-[#F9F9F9]" />
       </section>
 
       {/* Trip Planner anchor target */}
@@ -94,7 +112,7 @@ export default function LandingPage() {
             Notify Me
           </button>
         </div>
-        <p className="text-xs text-white mt-6">© 2025 SmartTrip. All rights reserved.</p>
+        <p className="text-xs text-white mt-6">© {new Date().getFullYear()} SmartTrip. All rights reserved.</p>
       </footer>
     </div>
   );
