@@ -434,9 +434,13 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* Email */}
+          {/* Email (send me my itinerary) */}
             <div className="col-span-12 md:col-span-6">
+              <label htmlFor="plannerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                Email me my itinerary (optional)
+              </label>
               <input
+                id="plannerEmail"
                 type="email"
                 name="email"
                 value={form.email}
@@ -445,9 +449,13 @@ export default function TripPlanner() {
                 autoCorrect="off"
                 autoCapitalize="none"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Email (optional)"
+                placeholder="you@example.com"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                We’ll email a copy after it’s generated. No marketing unless you sign up below.
+              </p>
             </div>
+
 
             {/* CTA */}
             <div className="col-span-12">
