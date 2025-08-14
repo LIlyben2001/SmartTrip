@@ -1,35 +1,9 @@
-// src/App.jsx
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-const TripPlanner = React.lazy(() => import("./components/TripPlanner"));
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, message: "" };
-  }
-  static getDerivedStateFromError(err) {
-    return { hasError: true, message: err?.message || "Something went wrong." };
-  }
-  componentDidCatch(err, info) {
-    console.error("TripPlanner error:", err, info);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="max-w-3xl mx-auto my-6 p-4 border rounded bg-red-50 text-red-700">
-          <p className="font-semibold">Trip planner failed to load.</p>
-          <p className="text-sm opacity-80">{this.state.message}</p>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+import TripPlanner from "./components/TripPlanner";
 
 export default function LandingPage() {
-  const [language, setLanguage] = useState("en");
-
+  // Smooth scroll for in-page anchor links (e.g., #planner, #features, #signup)
   useEffect(() => {
     const handleClick = (e) => {
       const a = e.target.closest("a[href^='#']");
@@ -49,22 +23,10 @@ export default function LandingPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
         <div className="text-2xl font-bold text-[#1F2F46]">SmartTrip</div>
-        <nav className="flex flex-wrap justify-center gap-4 items-center">
+        <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
           <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
-          >
-            <option value="en">English</option>
-            <option value="zh">中文 (Chinese)</option>
-            <option value="es">Español (Spanish)</option>
-            <option value="fr">Français (French)</option>
-            <option value="de">Deutsch (German)</option>
-            <option value="ja">日本語 (Japanese)</option>
-          </select>
         </nav>
       </header>
 
@@ -88,13 +50,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trip Planner */}
-      <div id="planner" className="max-w-6xl mx-auto">
-        <ErrorBoundary>
-          <Suspense fallback={<div className="my-6 text-center text-gray-600">Loading trip planner…</div>}>
-            <TripPlanner selectedLanguage={language} />
-          </Suspense>
-        </ErrorBoundary>
+      {/* Trip Planner anchor target */}
+      <div id="planner">
+        <TripPlanner />
       </div>
 
       {/* Features */}
