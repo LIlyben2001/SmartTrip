@@ -21,10 +21,7 @@ export default function LandingPage() {
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       {/* Header */}
-      <header
-        className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4"
-        role="banner"
-      >
+      <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4" role="banner">
         <div className="text-2xl font-bold text-[#1F2F46]">SmartTrip</div>
         <nav className="flex flex-wrap justify-center gap-4" aria-label="Primary">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
@@ -43,7 +40,6 @@ export default function LandingPage() {
           backgroundPosition: "center",
         }}
       >
-        {/* content container */}
         <div className="max-w-6xl mx-auto py-12 md:py-20 relative">
           <img
             src="/logo.png"
@@ -101,6 +97,52 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* FAQ (matches JSON-LD) */}
+      <section id="faq" className="py-16 px-4 max-w-4xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-8">Frequently Asked Questions</h2>
+
+        <div className="space-y-4">
+          <details className="rounded-lg border bg-white p-5 open:shadow-md">
+            <summary className="cursor-pointer text-lg font-semibold text-[#1F2F46]">
+              What is SmartTrip?
+            </summary>
+            <p className="mt-3 text-[#333333]">
+              SmartTrip is an AI-powered travel planning tool that helps you create personalized
+              itineraries, estimate budgets, and discover hidden gems for destinations worldwide.
+            </p>
+          </details>
+
+          <details className="rounded-lg border bg-white p-5 open:shadow-md">
+            <summary className="cursor-pointer text-lg font-semibold text-[#1F2F46]">
+              Is SmartTrip free to use?
+            </summary>
+            <p className="mt-3 text-[#333333]">
+              Yes, SmartTrip offers a free beta experience. Some advanced features may become
+              part of premium plans in the future.
+            </p>
+          </details>
+
+          <details className="rounded-lg border bg-white p-5 open:shadow-md">
+            <summary className="cursor-pointer text-lg font-semibold text-[#1F2F46]">
+              Can SmartTrip plan trips outside of China?
+            </summary>
+            <p className="mt-3 text-[#333333]">
+              Absolutely. SmartTrip is designed for both China and international destinations.
+            </p>
+          </details>
+        </div>
+
+        {/* Optional anchor to encourage scroll to planner */}
+        <div className="text-center mt-8">
+          <a
+            href="#planner"
+            className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-3 rounded-lg transition"
+          >
+            Start Planning
+          </a>
+        </div>
+      </section>
+
       {/* Footer / Signup */}
       <footer className="bg-[#1f2a44] text-white py-10 text-center" id="signup">
         <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
@@ -112,7 +154,7 @@ export default function LandingPage() {
             className="px-4 py-2 rounded-full border border-gray-300 text-black"
             aria-label="Email address"
           />
-        <button className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full">
+          <button className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full">
             Notify Me
           </button>
         </div>
