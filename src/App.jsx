@@ -4,7 +4,7 @@ import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
 
 export default function LandingPage() {
-  // Smooth scroll for in-page anchor links
+  // Smooth scroll for any in-page anchor links as a fallback
   useEffect(() => {
     const handleClick = (e) => {
       const a = e.target.closest("a[href^='#']");
@@ -19,24 +19,41 @@ export default function LandingPage() {
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
+  // Explicit helpers for top/planner (more reliable than global listener)
+  const scrollToTop = (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const scrollToPlanner = (e) => {
+    e.preventDefault();
+    const target = document.getElementById("planner");
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
-        <div className="flex items-center gap-2">
+        {/* Logo + brand (clickable to scroll to top) */}
+        <a
+          href="#top"
+          onClick={scrollToTop}
+          className="flex items-center gap-2 group"
+          aria-label="Go to top"
+        >
           <img src="/logo.png" alt="SmartTrip Logo" className="h-8 w-auto" />
-          <span className="text-2xl font-bold text-white">SmartTrip</span>
-        </div>
+          <span className="text-2xl font-bold text-white group-hover:opacity-90">
+            SmartTrip
+          </span>
+        </a>
+
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
           <a
             href="#planner"
-            onClick={(e) => {
-              e.preventDefault();
-              const target = document.getElementById("planner");
-              if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
+            onClick={scrollToPlanner}
             className="text-[#FF6B35] font-semibold"
           >
             Get Started
