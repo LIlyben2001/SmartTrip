@@ -1,42 +1,54 @@
-// src/components/Hero.jsx
+import React from "react";
+
 export default function Hero() {
   return (
     <section
-      className="relative w-full"
+      className="relative text-center px-4"
       style={{
-        backgroundImage: "url('/og-image.jpg')", // you already have this asset
+        backgroundImage:
+          "linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.35)), url('/og-image.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
-      {/* overlay */}
-      <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
-
-      <div className="relative max-w-5xl mx-auto px-4 md:px-6 py-16 md:py-24 text-center text-white">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-          Plan Your Perfect Trip—In Minutes
+      <div className="max-w-6xl mx-auto py-12 md:py-20 relative">
+        <img
+          src="/logo.png"
+          alt="SmartTrip Logo"
+          className="mx-auto mb-6 h-20 w-auto drop-shadow"
+        />
+        <h1
+          className="text-4xl md:text-5xl font-extrabold tracking-tight text-white inline-block px-4 py-2 rounded-lg"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.4)",
+            textShadow: "2px 2px 6px rgba(0,0,0,0.8)",
+          }}
+        >
+          Personalized Travel Planner + AI Trip Builder
         </h1>
-        <p className="mt-3 md:mt-4 text-lg md:text-xl text-white/90">
-          AI‑powered itineraries, tailored to your style, budget, and pace.
+        <p
+          className="mt-4 text-lg md:text-xl font-medium max-w-2xl mx-auto text-white/90 px-4 py-3 rounded-lg"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.4)",
+            textShadow: "1px 1px 4px rgba(0,0,0,0.8)",
+          }}
+        >
+          Plan smarter, travel better. Create customized itineraries, get instant budgets,
+          and explore hidden gems — for China and worldwide adventures.
         </p>
-        <div className="mt-6 flex items-center justify-center gap-3">
+        <div className="mt-6">
           <a
-            href="#trip-form"
-            className="inline-flex items-center rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700 transition"
+            href="#planner"
+            className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full transition"
+            style={{ textShadow: "1px 1px 3px rgba(0,0,0,0.6)" }}
           >
-            Generate My Trip
-          </a>
-          <a
-            href="#how-it-works"
-            className="inline-flex items-center rounded-lg bg-white/10 px-5 py-3 font-semibold text-white backdrop-blur hover:bg-white/20 transition"
-          >
-            How it works
+            Plan My Trip Now
           </a>
         </div>
       </div>
 
-      {/* soft gradient bottom fade into page bg */}
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-white" />
+      {/* bottom fade into page background for a smooth transition */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 md:h-16 bg-gradient-to-b from-transparent to-[#F9F9F9]" />
     </section>
   );
 }
