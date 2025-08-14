@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.RESEND_API_KEY;
-    const from = process.env.EMAIL_FROM || "SmartTrip <itinerary@your-domain.com>";
+    const from = process.env.EMAIL_FROM || "SmartTrip <onboarding@resend.dev>";
     if (!apiKey) {
       return res.status(500).json({
         error: "Missing RESEND_API_KEY env variable. Add it to .env.local and Vercel env.",
@@ -38,15 +38,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "'html' content is required." });
     }
 
-    // Build a plain-text fallback
-    const text = html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<\/(p|div|li|h[1-6]|br|tr)>/gi, "\n")
-      .replace(/<li>/gi, "• ")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
+    // Optional debug:
+    console.log("send-itinerary hit", { hasKey: !!apiKey, from });
 
     const resend = new Resend(apiKey);
     const resp = await resend.emails.send({
@@ -54,12 +47,19 @@ export default async function handler(req, res) {
       to,
       subject: subject || "Your SmartTrip Itinerary",
       html,
-      text,
+      // plain-text fallback (not required, but nice)
+      text: html
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+        .replace(/<\/(p|div|li|h[1-6]|br|tr)>/gi, "\n")
+        .replace(/<li>/gi, "• ")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim(),
       reply_to: replyTo || undefined,
     });
 
     if (resp?.error) {
-      // Common Resend error: unverified "from" address/domain
       return res.status(500).json({
         error: resp.error?.message || "Email send failed (Resend error).",
       });
@@ -67,6 +67,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ok: true, id: resp?.data?.id || null });
   } catch (err) {
+    console.error("send-itinerary unhandled error:", err);
     return res.status(500).json({ error: err?.message || "Unhandled error" });
   }
 }
