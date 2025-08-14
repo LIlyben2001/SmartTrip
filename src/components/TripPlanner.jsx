@@ -1,9 +1,9 @@
-// src/components/TripPlanner.jsx
 import { useRef, useState, useEffect } from "react";
 import Itinerary from "./Itinerary";
 import BudgetCard from "./BudgetCard";
 import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
+import { useLanguage } from "../i18n";
 
 /* ---------- URL toggle: ?live=1 -> OpenAI; otherwise mock ---------- */
 function resolveUseLiveFromURL() {
@@ -60,13 +60,16 @@ const defaultForm = {
   days: "",
   travelers: "",
   style: "",
-  budgetLevel: "", // derived from budgetUSD if empty
-  budgetUSD: 3000, // numeric budget slider
+  budgetLevel: "",
+  budgetUSD: 3000,
   pace: "",
   email: "",
+  language: "en",
 };
 
 export default function TripPlanner() {
+  const { t, lang } = useLanguage();
+
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -90,7 +93,7 @@ export default function TripPlanner() {
       ${useLive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"}`}
       title={useLive ? "Using OpenAI live endpoint" : "Using mock endpoint"}
     >
-      {useLive ? "Live AI" : "Mock"}
+      {t("planner.live")}
     </span>
   );
 
@@ -155,6 +158,11 @@ export default function TripPlanner() {
     };
   }, [form.country]);
 
+  // Keep form.language in sync with global lang (used for API translation)
+  useEffect(() => {
+    setForm((f) => ({ ...f, language: lang }));
+  }, [lang]);
+
   function onChange(e) {
     const { name, value } = e.target;
     setForm((f) => {
@@ -178,7 +186,7 @@ export default function TripPlanner() {
     setError("");
 
     if (!form.country || !form.city) {
-      setError("Please select both a country and a city.");
+      setError(t("form.needCountryCity"));
       return;
     }
 
@@ -201,6 +209,7 @@ export default function TripPlanner() {
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
         pace: form.pace || undefined,
         email: form.email || undefined,
+        language: form.language || "en",
       };
 
       const liveEndpoint = "/api/generate-itinerary-live";
@@ -213,11 +222,9 @@ export default function TripPlanner() {
         body: JSON.stringify(payload),
       });
 
-      // fallback to mock if live errors
       if (!res.ok && useLive) {
         try {
-          const text = await res.text();
-          console.warn("Live failed, falling back to mock. Live response:", text);
+          await res.text();
         } catch {}
         res = await fetch(mockEndpoint, {
           method: "POST",
@@ -251,15 +258,12 @@ export default function TripPlanner() {
         tripTitle: data?.title || titleBits.join(" — "),
         days,
         budget,
-        travelers: form.travelers ? Number(form.travelers) : null, // for per-person toggle
-        // context for BudgetCard accommodation calc
+        travelers: form.travelers ? Number(form.travelers) : null,
         daysCount: days.length,
         budgetTier: resolvedBudgetLevel || null,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
+        language: form.language || "en",
       });
-
-      // (optional) clear inputs after generate:
-      // setForm({ ...defaultForm });
     } catch (err) {
       console.error(err);
       setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
@@ -285,7 +289,6 @@ export default function TripPlanner() {
     }
   }, [itinerary]);
 
-  // Slider bounds
   const BUDGET_MIN = 500;
   const BUDGET_MAX = 20000;
   const BUDGET_STEP = 100;
@@ -295,7 +298,7 @@ export default function TripPlanner() {
       <Card className="shadow-md">
         <div className="px-6 pt-6 text-center">
           <h2 className="text-3xl font-semibold inline-flex items-center gap-2 justify-center">
-            Plan Your Trip <ModeBadge />
+            {t("planner.title")} <ModeBadge />
           </h2>
         </div>
 
@@ -312,7 +315,7 @@ export default function TripPlanner() {
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="" disabled hidden>
-                  {loadingCountries ? "Loading countries..." : "Select Country"}
+                  {loadingCountries ? `${t("form.country")}…` : t("form.country")}
                 </option>
                 {countries.map((c) => (
                   <option key={c} value={c}>
@@ -322,7 +325,7 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* City (type or pick) */}
+            {/* City */}
             <div className="col-span-12 md:col-span-6">
               <input
                 list="city-options"
@@ -331,7 +334,7 @@ export default function TripPlanner() {
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 autoComplete="off"
-                placeholder={!form.country ? "Select Country First" : "Type or pick a city"}
+                placeholder={!form.country ? t("form.cityPickFirst") : t("form.cityTypeOrPick")}
                 className={`w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                   !form.country ? "opacity-60 cursor-not-allowed" : ""
                 }`}
@@ -352,7 +355,7 @@ export default function TripPlanner() {
                 onChange={onChange}
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="mm/dd/yyyy"
+                placeholder={t("form.startDate")}
               />
             </div>
 
@@ -365,7 +368,7 @@ export default function TripPlanner() {
                 inputMode="numeric"
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Number of Days"
+                placeholder={t("form.days")}
               />
             </div>
 
@@ -379,14 +382,13 @@ export default function TripPlanner() {
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="" disabled hidden>
-                  Travel Style
+                  {t("form.style")}
                 </option>
-                <option>Foodies</option>
-                <option>Culture</option>
-                <option>Nature</option>
-                <option>Luxury</option>
-                <option>Budget</option>
-                <option>Family</option>
+                {["Foodies", "Culture", "Nature", "Luxury", "Budget", "Family"].map((opt) => (
+                  <option key={opt} value={opt}>
+                    {t(`style.${opt}`)}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -399,22 +401,23 @@ export default function TripPlanner() {
                 inputMode="numeric"
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Number of Travelers"
+                placeholder={t("form.travelers")}
               />
             </div>
 
-            {/* Budget (Slider + Number input) */}
+            {/* Budget */}
             <div className="col-span-12 md:col-span-6">
               <label htmlFor="budgetUSD" className="block text-sm font-medium text-gray-700 mb-1">
-                Total Budget: <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
+                {t("form.budgetLabel")}:{" "}
+                <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
               </label>
               <input
                 id="budgetUSD"
                 type="range"
                 name="budgetUSD"
-                min={BUDGET_MIN}
-                max={BUDGET_MAX}
-                step={BUDGET_STEP}
+                min={500}
+                max={20000}
+                step={100}
                 value={Number(form.budgetUSD || 0)}
                 onChange={onChange}
                 className="w-full"
@@ -423,20 +426,22 @@ export default function TripPlanner() {
                 <input
                   type="number"
                   name="budgetUSD"
-                  min={BUDGET_MIN}
-                  max={BUDGET_MAX}
-                  step={BUDGET_STEP}
+                  min={500}
+                  max={20000}
+                  step={100}
                   value={form.budgetUSD}
                   onChange={onChange}
                   className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="Enter total budget in USD"
+                  placeholder={t("form.budgetLabel")}
                 />
               </div>
               <div className="mt-1 text-xs text-gray-500">
-                {currencyFmt.format(BUDGET_MIN)} – {currencyFmt.format(BUDGET_MAX)} • Step {currencyFmt.format(BUDGET_STEP)}
+                {currencyFmt.format(500)} – {currencyFmt.format(20000)} • {t("form.budgetRange")}{" "}
+                {currencyFmt.format(100)}
               </div>
               <div className="mt-1 text-xs text-gray-600">
-                Estimated tier: <span className="font-medium">{budgetLevelFromAmount(form.budgetUSD) || "—"}</span>
+                {t("form.tier")}:{" "}
+                <span className="font-medium">{budgetLevelFromAmount(form.budgetUSD) || "—"}</span>
               </div>
             </div>
 
@@ -450,15 +455,17 @@ export default function TripPlanner() {
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="" disabled hidden>
-                  Trip Pace
+                  {t("form.pace")}
                 </option>
-                <option>Relaxed</option>
-                <option>Balanced</option>
-                <option>Fast</option>
+                {["Relaxed", "Balanced", "Fast"].map((p) => (
+                  <option key={p} value={p}>
+                    {t(`pace.${p}`)}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Email (optional) */}
+            {/* Email */}
             <div className="col-span-12 md:col-span-6">
               <input
                 type="email"
@@ -469,7 +476,7 @@ export default function TripPlanner() {
                 autoCorrect="off"
                 autoCapitalize="none"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Email (optional)"
+                placeholder={t("form.email")}
               />
             </div>
 
@@ -481,22 +488,26 @@ export default function TripPlanner() {
                 disabled={loading}
                 className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition"
               >
-                {loading ? "Generating..." : "Generate My Trip"}
+                {loading ? "…" : t("form.generate")}
               </button>
             </div>
 
             {/* Sample Itinerary Preview */}
             <div className="col-span-12">
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
-                <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
+                <h3 className="font-semibold mb-1">{t("form.sampleTitle")}</h3>
                 <p className="text-gray-700">
-                  Your {form.days || 5}-day {form.style || "Cultural"} Adventure in {form.city || "Beijing"} with a budget of{" "}
-                  {currencyFmt.format(form.budgetUSD || 3000)} includes iconic sites, neighborhood dining, and a local experience!
+                  {t("form.sampleLine", {
+                    days: form.days || 5,
+                    style: form.style || t("style.Culture"),
+                    city: form.city || "Beijing",
+                    budget: currencyFmt.format(form.budgetUSD || 3000),
+                  })}
                 </p>
               </div>
             </div>
           </form>
-          {/* <<<<<<<<<<<<<< END FORM — keep this! */}
+
           {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
         </CardContent>
       </Card>
