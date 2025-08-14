@@ -21,16 +21,19 @@ export default function LandingPage() {
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       {/* Header */}
-      <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
+      <header
+        className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4"
+        role="banner"
+      >
         <div className="text-2xl font-bold text-[#1F2F46]">SmartTrip</div>
-        <nav className="flex flex-wrap justify-center gap-4">
+        <nav className="flex flex-wrap justify-center gap-4" aria-label="Primary">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
           <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
         </nav>
       </header>
 
-      {/* HERO (updated with background image + overlay) */}
+      {/* HERO (background image + overlay) */}
       <section
         className="relative text-center px-4"
         style={{
@@ -69,9 +72,9 @@ export default function LandingPage() {
       </section>
 
       {/* Trip Planner anchor target */}
-      <div id="planner">
+      <main id="planner" className="contents">
         <TripPlanner />
-      </div>
+      </main>
 
       {/* Features */}
       <section id="features" className="py-20 px-4 max-w-6xl mx-auto">
@@ -89,7 +92,7 @@ export default function LandingPage() {
           ].map((f, i) => (
             <Card key={i} className="shadow-md text-center">
               <CardContent className="p-6">
-                <div className="text-4xl mb-3">{f.icon}</div>
+                <div className="text-4xl mb-3" aria-hidden="true">{f.icon}</div>
                 <h3 className="text-xl font-semibold text-primary">{f.title}</h3>
                 <p className="text-text mt-2">{f.desc}</p>
               </CardContent>
@@ -107,12 +110,15 @@ export default function LandingPage() {
             type="email"
             placeholder="Enter your email"
             className="px-4 py-2 rounded-full border border-gray-300 text-black"
+            aria-label="Email address"
           />
-          <button className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full">
+        <button className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full">
             Notify Me
           </button>
         </div>
-        <p className="text-xs text-white mt-6">© {new Date().getFullYear()} SmartTrip. All rights reserved.</p>
+        <p className="text-xs text-white mt-6">
+          © {new Date().getFullYear()} SmartTrip. All rights reserved.
+        </p>
       </footer>
     </div>
   );
