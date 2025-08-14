@@ -4,7 +4,7 @@ import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
 
 export default function LandingPage() {
-  // Smooth scroll for any in-page anchor links as a fallback
+  // Fallback smooth scroll for any in-page anchors
   useEffect(() => {
     const handleClick = (e) => {
       const a = e.target.closest("a[href^='#']");
@@ -19,12 +19,11 @@ export default function LandingPage() {
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
-  // Explicit helpers for top/planner (more reliable than global listener)
+  // Explicit helpers (more reliable than delegation)
   const scrollToTop = (e) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
   const scrollToPlanner = (e) => {
     e.preventDefault();
     const target = document.getElementById("planner");
@@ -35,7 +34,7 @@ export default function LandingPage() {
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
-        {/* Logo + brand (clickable to scroll to top) */}
+        {/* Brand: click to top */}
         <a
           href="#top"
           onClick={scrollToTop}
@@ -51,6 +50,7 @@ export default function LandingPage() {
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
+          <a href="#faq" className="text-[#1F2F46] font-medium">FAQ</a>
           <a
             href="#planner"
             onClick={scrollToPlanner}
@@ -64,7 +64,7 @@ export default function LandingPage() {
       {/* HERO */}
       <Hero />
 
-      {/* Trip Planner anchor target */}
+      {/* Trip Planner */}
       <div id="planner">
         <TripPlanner />
       </div>
@@ -85,12 +85,84 @@ export default function LandingPage() {
           ].map((f, i) => (
             <Card key={i} className="shadow-md text-center">
               <CardContent className="p-6">
-                <div className="text-4xl mb-3">{f.icon}</div>
+                <div className="text-4xl mb-3" aria-hidden="true">{f.icon}</div>
                 <h3 className="text-xl font-semibold text-primary">{f.title}</h3>
                 <p className="text-text mt-2">{f.desc}</p>
               </CardContent>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* FAQ (Accordion) */}
+      <section id="faq" className="py-16 px-4 max-w-4xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-8">
+          Frequently Asked Questions
+        </h2>
+
+        <div className="space-y-4">
+          <details className="group rounded-lg border bg-white p-5 open:shadow-md">
+            <summary className="flex cursor-pointer list-none items-center justify-between">
+              <span className="text-lg font-semibold text-[#1F2F46]">
+                What is SmartTrip?
+              </span>
+              <span
+                className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </summary>
+            <p className="mt-3 text-[#333333]">
+              SmartTrip is an AI-powered travel planning tool that helps you create personalized
+              itineraries, estimate budgets, and discover hidden gems for destinations worldwide.
+            </p>
+          </details>
+
+          <details className="group rounded-lg border bg-white p-5 open:shadow-md">
+            <summary className="flex cursor-pointer list-none items-center justify-between">
+              <span className="text-lg font-semibold text-[#1F2F46]">
+                Is SmartTrip free to use?
+              </span>
+              <span
+                className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </summary>
+            <p className="mt-3 text-[#333333]">
+              Yes, SmartTrip offers a free beta experience. Some advanced features may become
+              part of premium plans in the future.
+            </p>
+          </details>
+
+          <details className="group rounded-lg border bg-white p-5 open:shadow-md">
+            <summary className="flex cursor-pointer list-none items-center justify-between">
+              <span className="text-lg font-semibold text-[#1F2F46]">
+                Can SmartTrip plan trips outside of China?
+              </span>
+              <span
+                className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </summary>
+            <p className="mt-3 text-[#333333]">
+              Absolutely. SmartTrip is designed for both China and international destinations.
+            </p>
+          </details>
+        </div>
+
+        <div className="text-center mt-8">
+          <a
+            href="#planner"
+            onClick={scrollToPlanner}
+            className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-3 rounded-lg transition"
+          >
+            Start Planning
+          </a>
         </div>
       </section>
 
@@ -103,6 +175,7 @@ export default function LandingPage() {
             type="email"
             placeholder="Enter your email"
             className="px-4 py-2 rounded-full border border-gray-300 text-black"
+            aria-label="Email address"
           />
           <button className="bg-[#f97316] hover:bg-[#ea580c] text-white px-4 py-2 rounded-full">
             Notify Me
