@@ -1,12 +1,12 @@
 // /api/send-itinerary.js
-module.exports = async function (req, res) {
+async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  // --- TEMP: debug GET ---
+  // Debug GET
   if (req.method === "GET") {
     return res.status(200).json({
       ok: true,
@@ -15,7 +15,6 @@ module.exports = async function (req, res) {
       from: process.env.EMAIL_FROM || null,
     });
   }
-  // -----------------------
 
   try {
     if (req.method !== "POST") {
@@ -79,3 +78,6 @@ module.exports = async function (req, res) {
     return res.status(500).json({ error: err?.message || "Unhandled error" });
   }
 }
+
+// ✅ This is what Vercel will detect:
+module.exports = handler;
