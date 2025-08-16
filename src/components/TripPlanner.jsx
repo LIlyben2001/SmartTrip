@@ -55,7 +55,7 @@ const defaultForm = {
   startDate: "",
   days: "",
   travelers: "",
-  styles: [],          // ✅ array now
+  style: [],
   budgetLevel: "",
   budgetUSD: 3000,
   pace: "",
@@ -143,7 +143,7 @@ export default function TripPlanner() {
   }, [form.country]);
 
   function onChange(e) {
-    const { name, value } = e.target;
+    const { name, value, options } = e.target;
     setForm((f) => {
       if (name === "country") {
         const map = countryCityMap || COUNTRY_CITIES_FALLBACK;
@@ -155,6 +155,10 @@ export default function TripPlanner() {
         const val = value === "" ? "" : Math.max(0, Number(value));
         const derived = budgetLevelFromAmount(val);
         return { ...f, budgetUSD: val, budgetLevel: f.budgetLevel || derived };
+      }
+      if (name === "style") {
+        const selected = Array.from(options).filter(o => o.selected).map(o => o.value);
+        return { ...f, style: selected };
       }
       return { ...f, [name]: value };
     });
@@ -196,7 +200,7 @@ export default function TripPlanner() {
         endDate: endDate || undefined,
         days: form.days ? Number(form.days) : undefined,
         travelers: form.travelers ? Number(form.travelers) : undefined,
-        styles: form.styles || [],   // ✅ array
+        style: Array.isArray(form.style) ? form.style : [form.style],
         budgetLevel: resolvedBudgetLevel || undefined,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
         pace: form.pace || undefined,
@@ -237,7 +241,7 @@ export default function TripPlanner() {
       const titleBits = [
         destination || "Your Trip",
         form.days ? `${form.days} days` : "",
-        form.styles.length ? form.styles.join(", ") : "",
+        Array.isArray(form.style) ? form.style.join(", ") : form.style,
         resolvedBudgetLevel,
         form.pace,
         form.budgetUSD ? `~${currencyFmt.format(form.budgetUSD)}` : "",
@@ -367,30 +371,24 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* Travel Style - multi select */}
+            {/* Travel Style (multi-select) */}
             <div className="col-span-12 md:col-span-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Travel Styles</label>
               <select
-                name="styles"
+                name="style"
+                value={form.style}
+                onChange={onChange}
                 multiple
-                value={form.styles}
-                onChange={(e) => {
-                  const options = Array.from(e.target.selectedOptions, (o) => o.value);
-                  setForm((f) => ({ ...f, styles: options }));
-                }}
                 autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 h-32"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option>Foodies</option>
-                <option>Culture</option>
-                <option>Nature</option>
-                <option>Luxury</option>
-                <option>Budget</option>
-                <option>Family</option>
+                <option value="Foodies">Foodies</option>
+                <option value="Culture">Culture</option>
+                <option value="Nature">Nature</option>
+                <option value="Luxury">Luxury</option>
+                <option value="Budget">Budget</option>
+                <option value="Family">Family</option>
               </select>
-              <p className="mt-1 text-xs text-gray-500">
-                Hold Ctrl (Windows) / Command (Mac) to select multiple.
-              </p>
+              <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</p>
             </div>
 
             {/* Travelers */}
@@ -459,4 +457,77 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* Email (send me
+            {/* Email (send me my itinerary) */}
+            <div className="col-span-12 md:col-span-6">
+              <label htmlFor="plannerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                Email me my itinerary (optional)
+              </label>
+              <input
+                id="plannerEmail"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={onChange}
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="none"
+                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="you@example.com"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                We’ll email a copy after it’s generated. No marketing unless you sign up below.
+              </p>
+            </div>
+
+            {/* CTA */}
+            <div className="col-span-12">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition"
+              >
+                {loading ? "Generating..." : "Generate My Trip"}
+              </button>
+            </div>
+
+            {/* Sample Preview */}
+            <div className="col-span-12">
+              <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
+                <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
+                <p className="text-gray-700">
+                  Your {form.days || 5}-day {Array.isArray(form.style) && form.style.length ? form.style.join(", ") : "Cultural"} Adventure in {form.city || "Beijing"} with a budget of{" "}
+                  {currencyFmt.format(form.budgetUSD || 3000)} includes iconic sites, neighborhood dining, and a local experience!
+                </p>
+              </div>
+            </div>
+          </form>
+          {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
+        </CardContent>
+      </Card>
+
+      <div ref={resultRef} />
+
+      {itinerary && (
+        <>
+          <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} />
+          {itinerary.budget?.rows?.length ? (
+            <div className="mt-4">
+              <BudgetCard
+                budget={itinerary.budget}
+                travelers={itinerary.travelers}
+                daysCount={itinerary.daysCount}
+                budgetTier={itinerary.budgetTier}
+                budgetUSD={itinerary.budgetUSD}
+              />
+            </div>
+          ) : null}
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
+              Download HTML
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
