@@ -34,4 +34,8 @@ export default function DaySection({ index = 0, title = "", location = "", bulle
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54

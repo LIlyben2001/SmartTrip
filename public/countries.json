@@ -1,4 +1,19 @@
 [
+<<<<<<< HEAD
   "United States","Canada","United Kingdom","France","Italy",
   "Spain","Germany","Australia","Japan","China","Greece","Turkey"
+=======
+  "United States",
+  "Canada",
+  "United Kingdom",
+  "France",
+  "Italy",
+  "Spain",
+  "Germany",
+  "Australia",
+  "Japan",
+  "China",
+  "Greece",
+  "Turkey"
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
 ]

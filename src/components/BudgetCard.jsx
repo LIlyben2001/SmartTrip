@@ -293,4 +293,8 @@ export default function BudgetCard({
       </CardContent>
     </Card>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54

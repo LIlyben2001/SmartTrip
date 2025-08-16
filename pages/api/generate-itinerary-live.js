@@ -12,13 +12,21 @@ export default async function handler(req, res) {
   }
 
   try {
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
     const {
+=======
+    let {
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
       destination = "",
       startDate,
       endDate,
       days,
       travelers,
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
       style = "",
+=======
+      styles = [],
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
       budgetLevel = "",
       pace = "",
       email,
@@ -26,6 +34,12 @@ export default async function handler(req, res) {
       city,
     } = req.body || {};
 
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
+=======
+    // Ensure styles is always an array
+    if (!Array.isArray(styles)) styles = styles ? [styles] : [];
+
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
     const resolvedDestination =
       (city && country) ? `${city}, ${country}` :
       destination || "Your Destination";
@@ -43,12 +57,21 @@ export default async function handler(req, res) {
 Return STRICT JSON only, no extra commentary. 
 JSON schema:
 {
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
   "title": string,              // e.g., "Paris Trip — 5 days — Culture — Mid-range — Balanced"
   "days": [                     // length exactly = n days
     {
       "title": string,          // e.g., "Day 1: Historic Core in Paris"
       "location": string,       // city, country
       "items": string[]         // 3–6 concise bullets, morning/afternoon/evening style
+=======
+  "title": string,
+  "days": [
+    {
+      "title": string,
+      "location": string,
+      "items": string[]
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
     }
   ],
   "budget": {
@@ -62,10 +85,17 @@ JSON schema:
   }
 }
 Rules:
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
 - Keep day titles descriptive (e.g., "Day 2: Neighborhoods & Markets in Tokyo").
 - Always set "location" to "City, Country".
 - Numbers in budget are daily totals in USD (integers).
 - Do not include currency symbols in numbers (we format on the client).
+=======
+- Days length must equal ${n}.
+- Keep day titles descriptive (e.g., "Day 2: Neighborhoods & Markets in Tokyo").
+- Always set "location" to "City, Country".
+- Numbers in budget are daily totals in USD (integers, no symbols).
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
 - Output must be valid JSON only.`;
 
     const user = {
@@ -76,14 +106,22 @@ Rules:
       endDate: endDate || null,
       days: n,
       travelers: travelers ? Number(travelers) : null,
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
       style,
+=======
+      styles, // already ensured array
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
       budgetLevel,
       pace,
       email: email || null,
       note: "Focus on iconic highlights + local flavor. Keep bullets concise."
     };
 
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
     // --- Call OpenAI (Responses API via fetch; avoids extra deps) ---
+=======
+    // --- Call OpenAI ---
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
     const resp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -91,7 +129,11 @@ Rules:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
         model: "gpt-4o-mini",         // cost-effective & good quality
+=======
+        model: "gpt-4o-mini",
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
         temperature: 0.7,
         max_output_tokens: 1200,
         input: [
@@ -108,7 +150,10 @@ Rules:
 
     const data = await resp.json();
 
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
     // Responses API returns output in 'output_text' or in structured content; normalize:
+=======
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
     const rawText =
       data.output_text ||
       (Array.isArray(data.output) ? data.output.map(x => x.content?.[0]?.text || "").join("\n") : "");
@@ -117,7 +162,10 @@ Rules:
     try {
       out = JSON.parse(rawText);
     } catch {
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
       // Try to salvage JSON if model added backticks or prose
+=======
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
       const cleaned = rawText
         .replace(/^```json\s*/i, "")
         .replace(/```$/i, "")
@@ -125,7 +173,11 @@ Rules:
       out = JSON.parse(cleaned);
     }
 
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
     // Post-process: ensure day count and build a nice title if missing
+=======
+    // Days safety
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
     const safeDays = Array.isArray(out.days) ? out.days.slice(0, n) : [];
     while (safeDays.length < n) {
       const i = safeDays.length + 1;
@@ -143,15 +195,27 @@ Rules:
     const titleParts = [
       `${resolvedDestination} Trip`,
       `${n} days`,
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
       style || null,
       budgetLevel || null,
       pace || null,
     ].filter(Boolean);
+=======
+      styles.join(", "),
+      budgetLevel || null,
+      pace || null,
+    ].filter(Boolean);
+
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
     const finalTitle = out.title && String(out.title).trim()
       ? out.title
       : titleParts.join(" — ");
 
+<<<<<<< HEAD:pages/api/generate-itinerary-live.js
     // Budget sanity
+=======
+    // Budget fallback
+>>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54:api/generate-itinerary-live.js
     const budget = out.budget && Array.isArray(out.budget.rows) && out.budget.rows.length
       ? out.budget
       : {
