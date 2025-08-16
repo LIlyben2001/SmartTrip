@@ -1,6 +1,4 @@
 // /api/generate-itinerary-live.js
-// Live AI-powered itinerary generator (keeps your mock file untouched)
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -30,6 +28,10 @@ export default async function handler(req, res) {
       (city && country) ? `${city}, ${country}` :
       destination || "Your Destination";
 
+    // normalize style (allow array or string)
+    const styleList = Array.isArray(style) ? style : (style ? [style] : []);
+    const styleText = styleList.join(", ");
+
     // derive # of days if not provided (from dates)
     let n = Number(days) || 0;
     if (!n && startDate && endDate) {
@@ -43,29 +45,24 @@ export default async function handler(req, res) {
 Return STRICT JSON only, no extra commentary. 
 JSON schema:
 {
-  "title": string,              // e.g., "Paris Trip — 5 days — Culture — Mid-range — Balanced"
-  "days": [                     // length exactly = n days
-    {
-      "title": string,          // e.g., "Day 1: Historic Core in Paris"
-      "location": string,       // city, country
-      "items": string[]         // 3–6 concise bullets, morning/afternoon/evening style
-    }
+  "title": string,
+  "days": [
+    { "title": string, "location": string, "items": string[] }
   ],
   "budget": {
     "rows": [
       { "category": "Accommodation", "budget": number, "mid": number, "luxury": number },
-      { "category": "Food",          "budget": number, "mid": number, "luxury": number },
+      { "category": "Food", "budget": number, "mid": number, "luxury": number },
       { "category": "Transportation","budget": number, "mid": number, "luxury": number },
-      { "category": "Activities",    "budget": number, "mid": number, "luxury": number },
-      { "category": "Souvenirs",     "budget": number, "mid": number, "luxury": number }
+      { "category": "Activities", "budget": number, "mid": number, "luxury": number },
+      { "category": "Souvenirs", "budget": number, "mid": number, "luxury": number }
     ]
   }
 }
 Rules:
-- Keep day titles descriptive (e.g., "Day 2: Neighborhoods & Markets in Tokyo").
+- Day count must be exactly ${n}.
 - Always set "location" to "City, Country".
-- Numbers in budget are daily totals in USD (integers).
-- Do not include currency symbols in numbers (we format on the client).
+- Budget numbers are daily totals in USD (integers).
 - Output must be valid JSON only.`;
 
     const user = {
@@ -76,14 +73,14 @@ Rules:
       endDate: endDate || null,
       days: n,
       travelers: travelers ? Number(travelers) : null,
-      style,
+      style: styleText || null,   // ← pass text, not array
       budgetLevel,
       pace,
       email: email || null,
       note: "Focus on iconic highlights + local flavor. Keep bullets concise."
     };
 
-    // --- Call OpenAI (Responses API via fetch; avoids extra deps) ---
+    // --- Call OpenAI ---
     const resp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -91,7 +88,7 @@ Rules:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",         // cost-effective & good quality
+        model: "gpt-4o-mini",
         temperature: 0.7,
         max_output_tokens: 1200,
         input: [
@@ -107,8 +104,6 @@ Rules:
     }
 
     const data = await resp.json();
-
-    // Responses API returns output in 'output_text' or in structured content; normalize:
     const rawText =
       data.output_text ||
       (Array.isArray(data.output) ? data.output.map(x => x.content?.[0]?.text || "").join("\n") : "");
@@ -117,15 +112,11 @@ Rules:
     try {
       out = JSON.parse(rawText);
     } catch {
-      // Try to salvage JSON if model added backticks or prose
-      const cleaned = rawText
-        .replace(/^```json\s*/i, "")
-        .replace(/```$/i, "")
-        .trim();
+      const cleaned = rawText.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
       out = JSON.parse(cleaned);
     }
 
-    // Post-process: ensure day count and build a nice title if missing
+    // ensure correct # of days
     const safeDays = Array.isArray(out.days) ? out.days.slice(0, n) : [];
     while (safeDays.length < n) {
       const i = safeDays.length + 1;
@@ -143,7 +134,7 @@ Rules:
     const titleParts = [
       `${resolvedDestination} Trip`,
       `${n} days`,
-      style || null,
+      styleText || null,
       budgetLevel || null,
       pace || null,
     ].filter(Boolean);
