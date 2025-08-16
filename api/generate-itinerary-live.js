@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       endDate,
       days,
       travelers,
-      style = "",
+      style = [],       // <-- now supports array
       budgetLevel = "",
       pace = "",
       email,
@@ -30,11 +30,6 @@ export default async function handler(req, res) {
       (city && country) ? `${city}, ${country}` :
       destination || "Your Destination";
 
-    // normalize style: join array into string
-    const resolvedStyle = Array.isArray(style)
-      ? style.join(" + ")
-      : (style || "");
-
     // derive # of days if not provided (from dates)
     let n = Number(days) || 0;
     if (!n && startDate && endDate) {
@@ -43,17 +38,21 @@ export default async function handler(req, res) {
     }
     if (!n) n = 5;
 
+    // Ensure style is always a string for AI but allow multiple
+    const styleList = Array.isArray(style) ? style : [style].filter(Boolean);
+    const styleStr = styleList.join(" + ");
+
     // Build a strong, structured prompt
     const sys = `You are SmartTrip, a precise travel-planning assistant.
 Return STRICT JSON only, no extra commentary. 
 JSON schema:
 {
-  "title": string,
-  "days": [
+  "title": string,              // e.g., "Paris Trip — 5 days — Culture + Foodies — Mid-range — Balanced"
+  "days": [                     // length exactly = n days
     {
-      "title": string,
-      "location": string,
-      "items": string[]
+      "title": string,          // e.g., "Day 1: Historic Core in Paris"
+      "location": string,       // city, country
+      "items": string[]         // 3–6 concise bullets, morning/afternoon/evening style
     }
   ],
   "budget": {
@@ -67,10 +66,10 @@ JSON schema:
   }
 }
 Rules:
-- Keep day titles descriptive.
+- Keep day titles descriptive (e.g., "Day 2: Neighborhoods & Markets in Tokyo").
 - Always set "location" to "City, Country".
 - Numbers in budget are daily totals in USD (integers).
-- Do not include currency symbols.
+- Do not include currency symbols in numbers (we format on the client).
 - Output must be valid JSON only.`;
 
     const user = {
@@ -81,14 +80,14 @@ Rules:
       endDate: endDate || null,
       days: n,
       travelers: travelers ? Number(travelers) : null,
-      style: resolvedStyle,
+      styles: styleList,   // <-- pass as array
       budgetLevel,
       pace,
       email: email || null,
       note: "Focus on iconic highlights + local flavor. Keep bullets concise."
     };
 
-    // --- Call OpenAI ---
+    // --- Call OpenAI (Responses API via fetch; avoids extra deps) ---
     const resp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -113,6 +112,7 @@ Rules:
 
     const data = await resp.json();
 
+    // Responses API returns output in 'output_text' or in structured content; normalize:
     const rawText =
       data.output_text ||
       (Array.isArray(data.output) ? data.output.map(x => x.content?.[0]?.text || "").join("\n") : "");
@@ -128,7 +128,7 @@ Rules:
       out = JSON.parse(cleaned);
     }
 
-    // Post-process: ensure day count
+    // Post-process: ensure day count and build a nice title if missing
     const safeDays = Array.isArray(out.days) ? out.days.slice(0, n) : [];
     while (safeDays.length < n) {
       const i = safeDays.length + 1;
@@ -146,7 +146,7 @@ Rules:
     const titleParts = [
       `${resolvedDestination} Trip`,
       `${n} days`,
-      resolvedStyle || null,
+      styleStr || null,   // <-- multi-styles displayed
       budgetLevel || null,
       pace || null,
     ].filter(Boolean);
@@ -154,6 +154,7 @@ Rules:
       ? out.title
       : titleParts.join(" — ");
 
+    // Budget sanity
     const budget = out.budget && Array.isArray(out.budget.rows) && out.budget.rows.length
       ? out.budget
       : {
