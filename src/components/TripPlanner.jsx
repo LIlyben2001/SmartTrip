@@ -55,7 +55,7 @@ const defaultForm = {
   startDate: "",
   days: "",
   travelers: "",
-  style: [],         // now an array
+  style: [],   // now an array
   budgetLevel: "",
   budgetUSD: 3000,
   pace: "",
@@ -88,7 +88,7 @@ export default function TripPlanner() {
     </span>
   );
 
-  /* ---------- Load countries (dynamic JSON if available) ---------- */
+  /* ---------- Load countries ---------- */
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -100,7 +100,7 @@ export default function TripPlanner() {
         if (mounted && Array.isArray(data) && data.length) {
           setCountries(data);
         }
-      } catch (e) {
+      } catch {
         setCountries(COUNTRIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCountries(false);
@@ -109,16 +109,14 @@ export default function TripPlanner() {
     return () => { mounted = false; };
   }, []);
 
-  /* ---------- Load city map or filter cities when country changes ---------- */
+  /* ---------- Load city map ---------- */
   useEffect(() => {
     let mounted = true;
-
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
       setCities(list);
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
-
     (async () => {
       if (!form.country) { setCities([]); return; }
       try {
@@ -131,17 +129,17 @@ export default function TripPlanner() {
           updateCitiesFromMap(map);
           return;
         }
-      } catch (e) {
+      } catch {
         setCountryCityMap(COUNTRY_CITIES_FALLBACK);
         updateCitiesFromMap(COUNTRY_CITIES_FALLBACK);
       } finally {
         if (mounted) setLoadingCities(false);
       }
     })();
-
     return () => { mounted = false; };
   }, [form.country]);
 
+  /* ---------- Handle changes ---------- */
   function onChange(e) {
     const { name, value, options } = e.target;
     setForm((f) => {
@@ -157,14 +155,16 @@ export default function TripPlanner() {
         return { ...f, budgetUSD: val, budgetLevel: f.budgetLevel || derived };
       }
       if (name === "style") {
-        const selected = Array.from(options).filter(o => o.selected).map(o => o.value);
+        const selected = Array.from(options)
+          .filter((o) => o.selected)
+          .map((o) => o.value);
         return { ...f, style: selected };
       }
       return { ...f, [name]: value };
     });
   }
 
-  /* ---------- Helper: email the itinerary HTML ---------- */
+  /* ---------- Email itinerary ---------- */
   async function sendItineraryEmail({ html, to, subject = "Your SmartTrip Itinerary" }) {
     try {
       await fetch("/api/send-itinerary", {
@@ -177,6 +177,7 @@ export default function TripPlanner() {
     }
   }
 
+  /* ---------- Generate itinerary ---------- */
   async function handleGenerate(e) {
     e?.preventDefault?.();
     setError("");
@@ -200,7 +201,7 @@ export default function TripPlanner() {
         endDate: endDate || undefined,
         days: form.days ? Number(form.days) : undefined,
         travelers: form.travelers ? Number(form.travelers) : undefined,
-        style: form.style && form.style.length ? form.style : undefined, // array
+        styles: Array.isArray(form.style) ? form.style : [form.style].filter(Boolean),
         budgetLevel: resolvedBudgetLevel || undefined,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
         pace: form.pace || undefined,
@@ -211,19 +212,18 @@ export default function TripPlanner() {
       const mockEndpoint = "/api/generate-itinerary";
       const primary = useLive ? liveEndpoint : mockEndpoint;
 
-      let res = await fetch(primary, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok && useLive) {
-        try { console.warn("Live failed, falling back to mock. Live response:", await res.text()); } catch {}
-        res = await fetch(mockEndpoint, {
+      let res;
+      try {
+        res = await fetch(primary, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+      } catch (err) {
+        console.error("Network error:", err);
+        setError("Could not reach the itinerary server.");
+        setLoading(false);
+        return;
       }
 
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -241,7 +241,7 @@ export default function TripPlanner() {
       const titleBits = [
         destination || "Your Trip",
         form.days ? `${form.days} days` : "",
-        form.style.length ? form.style.join(" + ") : "",
+        form.style.join(", "),
         resolvedBudgetLevel,
         form.pace,
         form.budgetUSD ? `~${currencyFmt.format(form.budgetUSD)}` : "",
@@ -370,7 +370,7 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* Travel Style */}
+            {/* Travel Style (multi-select) */}
             <div className="col-span-12 md:col-span-6">
               <select
                 name="style"
@@ -378,9 +378,8 @@ export default function TripPlanner() {
                 value={form.style}
                 onChange={onChange}
                 autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 h-32"
               >
-                <option disabled hidden>Travel Style</option>
                 <option>Foodies</option>
                 <option>Culture</option>
                 <option>Nature</option>
@@ -388,9 +387,7 @@ export default function TripPlanner() {
                 <option>Budget</option>
                 <option>Family</option>
               </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Tip: Hold Ctrl (Windows) or Cmd (Mac) to select multiple
-              </p>
+              <p className="mt-1 text-xs text-gray-500">Hold Ctrl (Windows) or Cmd (Mac) to select multiple styles.</p>
             </div>
 
             {/* Travelers */}
@@ -406,7 +403,7 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* Budget (Slider + Number input) */}
+            {/* Budget (slider + number) */}
             <div className="col-span-12 md:col-span-6">
               <label htmlFor="budgetUSD" className="block text-sm font-medium text-gray-700 mb-1">
                 Total Budget: <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
@@ -443,7 +440,7 @@ export default function TripPlanner() {
               </div>
             </div>
 
-            {/* Trip Pace */}
+            {/* Pace */}
             <div className="col-span-12 md:col-span-6">
               <select
                 name="pace"
@@ -497,9 +494,7 @@ export default function TripPlanner() {
               <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
                 <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
                 <p className="text-gray-700">
-                  Your {form.days || 5}-day{" "}
-                  {form.style.length > 0 ? form.style.join(" + ") : "Cultural"} Adventure in{" "}
-                  {form.city || "Beijing"} with a budget of{" "}
+                  Your {form.days || 5}-day {form.style.join(", ") || "Cultural"} Adventure in {form.city || "Beijing"} with a budget of{" "}
                   {currencyFmt.format(form.budgetUSD || 3000)} includes iconic sites, neighborhood dining, and a local experience!
                 </p>
               </div>
