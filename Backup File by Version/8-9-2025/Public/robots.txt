@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://smart-trip-six.vercel.app/sitemap.xml
