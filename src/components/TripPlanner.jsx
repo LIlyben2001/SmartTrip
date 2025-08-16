@@ -370,26 +370,28 @@ export default function TripPlanner() {
                 placeholder="Number of Days"
               />
             </div>
-
-            {/* Travel Style (multi-select) */}
-            <div className="col-span-12 md:col-span-6">
-              <select
-                name="style"
-                value={form.style}
-                onChange={onChange}
-                multiple
-                autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="Foodies">Foodies</option>
-                <option value="Culture">Culture</option>
-                <option value="Nature">Nature</option>
-                <option value="Luxury">Luxury</option>
-                <option value="Budget">Budget</option>
-                <option value="Family">Family</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</p>
-            </div>
+            
+                {/* Travel Style (multi-select) */}
+                <div className="col-span-12 md:col-span-6">
+                  <select
+                    name="style"
+                    multiple
+                    value={form.style || []}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.selectedOptions, opt => opt.value);
+                      setForm((f) => ({ ...f, style: selected }));
+                    }}
+                    className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 h-32"
+                  >
+                    <option>Foodies</option>
+                    <option>Culture</option>
+                    <option>Nature</option>
+                    <option>Luxury</option>
+                    <option>Budget</option>
+                    <option>Family</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</p>
+                </div>
 
             {/* Travelers */}
             <div className="col-span-12 md:col-span-6">
