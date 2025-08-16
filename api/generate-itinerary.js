@@ -5,16 +5,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
+    let {
       destination: destRaw = "",
       startDate,
       endDate,
       days,
       travelers = "",
-      style = "",
+      styles = [],
       budgetLevel = "",
       pace = "",
     } = req.body || {};
+
+    // Ensure styles is always an array
+    if (!Array.isArray(styles)) styles = styles ? [styles] : [];
 
     const destination = (destRaw || "").trim() || "Your Destination";
 
@@ -66,7 +69,7 @@ export default async function handler(req, res) {
     const tripTitle = [
       `${destination} Trip`,
       `${n} days`,
-      style,
+      styles.join(", "),
       budgetLevel,
       pace,
     ].filter(Boolean).join(" — ");
@@ -85,3 +88,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
