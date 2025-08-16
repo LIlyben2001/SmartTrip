@@ -12,19 +12,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
+    let {
       destination = "",
       startDate,
       endDate,
       days,
       travelers,
-      styles = [],   // <--- plural now
+      styles = [],
       budgetLevel = "",
       pace = "",
       email,
       country,
       city,
     } = req.body || {};
+
+    // Ensure styles is always an array
+    if (!Array.isArray(styles)) styles = styles ? [styles] : [];
 
     const resolvedDestination =
       (city && country) ? `${city}, ${country}` :
@@ -76,7 +79,7 @@ Rules:
       endDate: endDate || null,
       days: n,
       travelers: travelers ? Number(travelers) : null,
-      styles: Array.isArray(styles) ? styles : [styles].filter(Boolean), // ensure array
+      styles, // already ensured array
       budgetLevel,
       pace,
       email: email || null,
@@ -141,7 +144,7 @@ Rules:
     const titleParts = [
       `${resolvedDestination} Trip`,
       `${n} days`,
-      (Array.isArray(styles) ? styles.join(", ") : styles) || null,
+      styles.join(", "),
       budgetLevel || null,
       pace || null,
     ].filter(Boolean);
