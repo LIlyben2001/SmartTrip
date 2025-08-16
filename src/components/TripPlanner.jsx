@@ -15,7 +15,7 @@ function resolveUseLiveFromURL() {
   return false; // default mock
 }
 
-/* ---------- Static fallback (used if JSON not found) ---------- */
+/* ---------- Static fallback ---------- */
 const COUNTRY_CITIES_FALLBACK = {
   "United States": ["New York","Los Angeles","San Francisco","Chicago","Miami"],
   Canada: ["Toronto","Vancouver","Montreal","Calgary","Ottawa"],
@@ -88,7 +88,7 @@ export default function TripPlanner() {
     </span>
   );
 
-  /* ---------- Load countries (dynamic JSON if available) ---------- */
+  /* ---------- Load countries ---------- */
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -109,10 +109,9 @@ export default function TripPlanner() {
     return () => { mounted = false; };
   }, []);
 
-  /* ---------- Load city map or filter cities when country changes ---------- */
+  /* ---------- Load city map ---------- */
   useEffect(() => {
     let mounted = true;
-
     const updateCitiesFromMap = (map) => {
       const list = form.country ? map[form.country] || [] : [];
       setCities(list);
@@ -138,7 +137,6 @@ export default function TripPlanner() {
         if (mounted) setLoadingCities(false);
       }
     })();
-
     return () => { mounted = false; };
   }, [form.country]);
 
@@ -164,7 +162,6 @@ export default function TripPlanner() {
     });
   }
 
-  /* ---------- Helper: email the itinerary HTML (POST /api/send-itinerary) ---------- */
   async function sendItineraryEmail({ html, to, subject = "Your SmartTrip Itinerary" }) {
     try {
       await fetch("/api/send-itinerary", {
@@ -200,12 +197,14 @@ export default function TripPlanner() {
         endDate: endDate || undefined,
         days: form.days ? Number(form.days) : undefined,
         travelers: form.travelers ? Number(form.travelers) : undefined,
-        styles: Array.isArray(form.style) ? form.style : [form.style], // ✅ FIXED here
+        styles: Array.isArray(form.style) ? form.style : [form.style], // ✅ always array
         budgetLevel: resolvedBudgetLevel || undefined,
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
         pace: form.pace || undefined,
         email: form.email || undefined,
       };
+
+      console.log("Payload being sent:", payload);
 
       const liveEndpoint = "/api/generate-itinerary-live";
       const mockEndpoint = "/api/generate-itinerary";
@@ -228,7 +227,16 @@ export default function TripPlanner() {
 
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
-      const data = await res.json();
+      // Safer JSON parsing
+      let data;
+      try {
+        const text = await res.text();
+        console.log("Raw response:", text);
+        data = JSON.parse(text);
+      } catch (parseErr) {
+        console.error("Failed to parse response JSON:", parseErr);
+        throw new Error("The server returned invalid JSON.");
+      }
 
       const days = (data?.days || []).map((d, i) => ({
         title: d.title || `Day ${i + 1}`,
@@ -257,7 +265,6 @@ export default function TripPlanner() {
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
       };
 
-      // Email the itinerary HTML if a valid email was provided
       if (form.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
         const html = itineraryTextToHtml({
           tripTitle: itineraryObj.tripTitle,
@@ -306,7 +313,6 @@ export default function TripPlanner() {
             Plan Your Trip <ModeBadge />
           </h2>
         </div>
-
         <CardContent className="p-6 md:p-8">
           <form onSubmit={handleGenerate} autoComplete="off" className="grid grid-cols-12 gap-4">
             {/* Country */}
@@ -328,7 +334,7 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* City (type or pick) */}
+            {/* City */}
             <div className="col-span-12 md:col-span-6">
               <input
                 list="city-options"
@@ -354,7 +360,6 @@ export default function TripPlanner() {
                 onChange={onChange}
                 autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="mm/dd/yyyy"
               />
             </div>
 
@@ -370,8 +375,8 @@ export default function TripPlanner() {
                 placeholder="Number of Days"
               />
             </div>
-            
-            {/* Travel Style (multi-select) */}
+
+            {/* Travel Style */}
             <div className="col-span-12 md:col-span-6">
               <select
                 name="style"
@@ -406,13 +411,12 @@ export default function TripPlanner() {
               />
             </div>
 
-            {/* Budget (Slider + Number input) */}
+            {/* Budget */}
             <div className="col-span-12 md:col-span-6">
-              <label htmlFor="budgetUSD" className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Total Budget: <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
               </label>
               <input
-                id="budgetUSD"
                 type="range"
                 name="budgetUSD"
                 min={BUDGET_MIN}
@@ -443,13 +447,12 @@ export default function TripPlanner() {
               </div>
             </div>
 
-            {/* Trip Pace */}
+            {/* Pace */}
             <div className="col-span-12 md:col-span-6">
               <select
                 name="pace"
                 value={form.pace}
                 onChange={onChange}
-                autoComplete="off"
                 className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="" disabled hidden>Trip Pace</option>
@@ -459,26 +462,19 @@ export default function TripPlanner() {
               </select>
             </div>
 
-            {/* Email (send me my itinerary) */}
+            {/* Email */}
             <div className="col-span-12 md:col-span-6">
-              <label htmlFor="plannerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email me my itinerary (optional)
               </label>
               <input
-                id="plannerEmail"
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={onChange}
-                autoComplete="new-password"
-                autoCorrect="off"
-                autoCapitalize="none"
                 className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="you@example.com"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                We’ll email a copy after it’s generated. No marketing unless you sign up below.
-              </p>
             </div>
 
             {/* CTA */}
