@@ -4,7 +4,7 @@ import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
 
 export default function LandingPage() {
-  // Smooth scroll for in-page anchor links
+  // Smooth scroll handler for anchor links
   useEffect(() => {
     const handleClick = (e) => {
       const a = e.target.closest("a[href^='#']");
@@ -19,7 +19,7 @@ export default function LandingPage() {
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
-  // Explicit scroll helpers
+  // Helpers
   const scrollToTop = (e) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -30,7 +30,7 @@ export default function LandingPage() {
     if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // --- Footer "Notify Me" subscribe form state/handler ---
+  // Subscribe state
   const [submitting, setSubmitting] = useState(false);
   const [subEmail, setSubEmail] = useState("");
   const [subMsg, setSubMsg] = useState("");
@@ -38,7 +38,6 @@ export default function LandingPage() {
   async function handleSubscribe(e) {
     e.preventDefault();
     setSubMsg("");
-    // simple email check
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(subEmail);
     if (!valid) {
       setSubMsg("Please enter a valid email.");
@@ -54,7 +53,7 @@ export default function LandingPage() {
       if (!res.ok) throw new Error(await res.text());
       setSubMsg("You're on the list! Check your inbox for a confirmation.");
       setSubEmail("");
-    } catch (err) {
+    } catch {
       setSubMsg("Sorry, something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
@@ -65,7 +64,6 @@ export default function LandingPage() {
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
-        {/* Brand: click to top */}
         <a
           href="#top"
           onClick={scrollToTop}
@@ -92,7 +90,7 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      {/* HERO */}
+      {/* Hero Section */}
       <Hero />
 
       {/* Trip Planner */}
@@ -125,7 +123,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FAQ (Accordion) */}
+      {/* FAQ */}
       <section id="faq" className="py-16 px-4 max-w-4xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-8">
           Frequently Asked Questions
@@ -137,10 +135,7 @@ export default function LandingPage() {
               <span className="text-lg font-semibold text-[#1F2F46]">
                 What is SmartTrip?
               </span>
-              <span
-                className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45"
-                aria-hidden="true"
-              >
+              <span className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45">
                 +
               </span>
             </summary>
@@ -155,10 +150,7 @@ export default function LandingPage() {
               <span className="text-lg font-semibold text-[#1F2F46]">
                 Is SmartTrip free to use?
               </span>
-              <span
-                className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45"
-                aria-hidden="true"
-              >
+              <span className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45">
                 +
               </span>
             </summary>
@@ -173,10 +165,7 @@ export default function LandingPage() {
               <span className="text-lg font-semibold text-[#1F2F46]">
                 Can SmartTrip plan trips outside of China?
               </span>
-              <span
-                className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45"
-                aria-hidden="true"
-              >
+              <span className="ml-4 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[#1F2F46] transition-transform group-open:rotate-45">
                 +
               </span>
             </summary>
@@ -185,24 +174,13 @@ export default function LandingPage() {
             </p>
           </details>
         </div>
-
-        <div className="text-center mt-8">
-          <a
-            href="#planner"
-            onClick={scrollToPlanner}
-            className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-3 rounded-lg transition"
-          >
-            Start Planning
-          </a>
-        </div>
       </section>
 
-      {/* Footer / Signup */}
+      {/* Footer */}
       <footer className="bg-[#1f2a44] text-white py-10 text-center" id="signup">
         <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
         <p className="mb-4">Be the first to access the app and get travel-ready perks.</p>
 
-        {/* Subscribe form */}
         <form onSubmit={handleSubscribe} className="flex justify-center gap-2">
           <input
             type="email"
@@ -210,7 +188,6 @@ export default function LandingPage() {
             onChange={(e) => setSubEmail(e.target.value)}
             placeholder="Enter your email"
             className="px-4 py-2 rounded-full border border-gray-300 text-black"
-            aria-label="Email for product updates"
             required
           />
           <button
@@ -222,15 +199,10 @@ export default function LandingPage() {
           </button>
         </form>
 
-        {/* Helper + status message */}
         <p className="text-xs text-white mt-2 opacity-80">
           Occasional product updates only. Unsubscribe anytime.
         </p>
-        {subMsg && (
-          <p className="text-xs text-white mt-2">
-            {subMsg}
-          </p>
-        )}
+        {subMsg && <p className="text-xs text-white mt-2">{subMsg}</p>}
 
         <p className="text-xs text-white mt-6">
           © {new Date().getFullYear()} SmartTrip. All rights reserved.
