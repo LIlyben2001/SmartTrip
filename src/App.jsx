@@ -1,19 +1,10 @@
-<<<<<<< HEAD
-import React, { useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import TripPlanner from "./components/TripPlanner";
-
-export default function LandingPage() {
-  // Smooth scroll for in-page anchor links (e.g., #planner, #features, #signup)
-=======
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
 
 export default function LandingPage() {
-  // Fallback smooth scroll for any in-page anchors
->>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
+  // Smooth scroll for in-page anchor links
   useEffect(() => {
     const handleClick = (e) => {
       const a = e.target.closest("a[href^='#']");
@@ -22,19 +13,13 @@ export default function LandingPage() {
       const el = document.getElementById(id);
       if (!el) return;
       e.preventDefault();
-<<<<<<< HEAD
-      el.scrollIntoView({ behavior: "smooth" });
-=======
       el.scrollIntoView({ behavior: "smooth", block: "start" });
->>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
-<<<<<<< HEAD
-=======
-  // Explicit helpers (more reliable than delegation)
+  // Explicit scroll helpers
   const scrollToTop = (e) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -76,7 +61,6 @@ export default function LandingPage() {
     }
   }
 
->>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       {/* Header */}
@@ -97,9 +81,6 @@ export default function LandingPage() {
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
-<<<<<<< HEAD
-          <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
-=======
           <a href="#faq" className="text-[#1F2F46] font-medium">FAQ</a>
           <a
             href="#planner"
@@ -108,37 +89,13 @@ export default function LandingPage() {
           >
             Get Started
           </a>
->>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
         </nav>
       </header>
 
       {/* HERO */}
-<<<<<<< HEAD
-      <section className="text-center py-8 px-4 bg-white">
-        <img src="/logo.png" alt="SmartTrip Logo" className="mx-auto mb-6 h-20 w-auto" />
-        <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
-          Personalized Travel Planner + AI Trip Builder
-        </h1>
-        <p className="mt-4 text-lg md:text-xl text-text font-medium max-w-2xl mx-auto">
-          Plan smarter, travel better. Create customized itineraries, get instant budgets,
-          and explore hidden gems — for China and worldwide adventures.
-        </p>
-        <div className="mt-4">
-          <a
-            href="#planner"
-            className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full transition"
-          >
-            Plan My Trip Now
-          </a>
-        </div>
-      </section>
-
-      {/* Trip Planner anchor target */}
-=======
       <Hero />
 
       {/* Trip Planner */}
->>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
       <div id="planner">
         <TripPlanner />
       </div>
@@ -168,8 +125,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-<<<<<<< HEAD
-=======
       {/* FAQ (Accordion) */}
       <section id="faq" className="py-16 px-4 max-w-4xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-8">
@@ -242,7 +197,6 @@ export default function LandingPage() {
         </div>
       </section>
 
->>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
       {/* Footer / Signup */}
       <footer className="bg-[#1f2a44] text-white py-10 text-center" id="signup">
         <h2 className="text-lg font-bold mb-2">Join Our Beta List</h2>
