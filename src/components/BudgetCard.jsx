@@ -31,7 +31,7 @@ function fmt(amount, code) {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: code,
-      maximumFractionDigits: code === "JPY" ? 0 : 0, // keep whole numbers for table
+      maximumFractionDigits: 0, // keep whole numbers for clarity
     }).format(amount);
   } catch {
     return `${CURRENCY_LABELS[code] || code} ${Math.round(amount).toLocaleString()}`;
@@ -47,10 +47,8 @@ const DEFAULT_NIGHTLY_USD = {
 
 /** Choose nightly rates, optionally nudged by an overall budget tier or USD total */
 function deriveNightlyUSD(budgetTier, budgetUSD) {
-  // Start with defaults
   let rates = { ...DEFAULT_NIGHTLY_USD };
 
-  // If a tier is provided, bias toward that tier (keeps all three for display/columns)
   if (typeof budgetTier === "string") {
     const t = budgetTier.toLowerCase();
     if (t.includes("lux")) {
@@ -62,10 +60,8 @@ function deriveNightlyUSD(budgetTier, budgetUSD) {
     }
   }
 
-  // Very light nudge if an overall numeric budget is known (optional)
   const total = Number(budgetUSD || 0);
   if (total > 0) {
-    // crude heuristic: scale ±10% based on bands
     let scale = 1;
     if (total <= 1500) scale = 0.9;
     else if (total >= 8000) scale = 1.1;
@@ -81,13 +77,11 @@ function deriveNightlyUSD(budgetTier, budgetUSD) {
 
 /** Fuzzy check whether a row is "Accommodation" */
 function isAccommodation(label = "") {
-  const s = String(label).toLowerCase();
-  return /(accom|hotel|lodg|stay)/i.test(s);
+  return /(accom|hotel|lodg|stay)/i.test(String(label).toLowerCase());
 }
 
-/** Normalize your incoming rows to a consistent shape */
+/** Normalize incoming rows */
 function normalizeRows(rows = []) {
-  // Expected incoming shape: { category, budget, mid, luxury }
   return rows
     .map((r) => {
       const category = r.category || r.label || r.name || "";
@@ -105,10 +99,10 @@ function normalizeRows(rows = []) {
 
 export default function BudgetCard({
   budget,
-  travelers,      // number (can be undefined/null)
-  daysCount,      // number of days (used for nights)
-  budgetTier,     // string like "Budget" | "Mid-range" | "Luxury" (optional)
-  budgetUSD,      // overall USD budget number (optional)
+  travelers,  // number
+  daysCount,  // number of days
+  budgetTier, // "Budget" | "Mid-range" | "Luxury"
+  budgetUSD,  // overall budget (optional)
 }) {
   const rows = budget?.rows || [];
   const [currency, setCurrency] = useState("USD");
@@ -118,61 +112,44 @@ export default function BudgetCard({
   const people = Math.max(1, Number(travelers || 1));
   const divisor = perPerson ? people : 1;
 
-  // Derived lodging context
-  const nights = Math.max(1, Math.max(1, Number(daysCount || 1)) - 1);
+  const nights = Math.max(1, Number(daysCount || 1) - 1);
   const rooms = Math.max(1, Math.ceil(Math.max(1, Number(travelers || 2)) / 2));
   const nightlyUSD = deriveNightlyUSD(budgetTier, budgetUSD);
 
-  /** Preprocess rows in USD:
-   *  - Find (or insert) Accommodation
-   *  - Override its amounts with nightly * nights * rooms (USD)
-   */
+  /** Compute accommodation row (USD baseline) */
   const processedUSD = useMemo(() => {
     const norm = normalizeRows(rows);
-
-    // Clone
     const out = norm.map((r) => ({ ...r, __note: "" }));
 
-    // Find accommodation
-    let idx = out.findIndex((r) => isAccommodation(r.category));
     const accomTotals = {
       budget: nightlyUSD.budget * nights * rooms,
       mid: nightlyUSD.mid * nights * rooms,
       luxury: nightlyUSD.luxury * nights * rooms,
     };
-
     const noteUSD = `${nights} night${nights !== 1 ? "s" : ""} × ${rooms} room${rooms !== 1 ? "s" : ""}`;
 
+    const idx = out.findIndex((r) => isAccommodation(r.category));
     if (idx >= 0) {
-      out[idx].budget = accomTotals.budget;
-      out[idx].mid = accomTotals.mid;
-      out[idx].luxury = accomTotals.luxury;
-      out[idx].__note = noteUSD;
+      out[idx] = { ...out[idx], ...accomTotals, __note: noteUSD };
     } else {
-      // If no accommodation row exists, insert one at the top
-      out.unshift({
-        category: "Accommodation",
-        budget: accomTotals.budget,
-        mid: accomTotals.mid,
-        luxury: accomTotals.luxury,
-        __note: noteUSD,
-      });
+      out.unshift({ category: "Accommodation", ...accomTotals, __note: noteUSD });
     }
 
     return out;
   }, [rows, nightlyUSD, nights, rooms]);
 
-  // Convert + optionally divide per person
+  /** Convert to chosen currency & per-person basis */
   const convertedRows = useMemo(() => {
     return processedUSD.map((r) => ({
       category: r.category,
       budget: (r.budget * factor) / divisor,
       mid: (r.mid * factor) / divisor,
       luxury: (r.luxury * factor) / divisor,
-      __note: r.__note, // keep note (not currency-specific)
+      __note: r.__note,
     }));
   }, [processedUSD, factor, divisor]);
 
+  /** Totals across all rows */
   const totals = useMemo(() => {
     return convertedRows.reduce(
       (acc, r) => ({
@@ -186,7 +163,6 @@ export default function BudgetCard({
 
   if (!rows.length) return null;
 
-  // Build a friendly note line for the Accommodation row that also shows nightly rates in the current currency.
   const nightlyNoteForCurrency = () => {
     const b = nightlyUSD.budget * factor;
     const m = nightlyUSD.mid * factor;
@@ -196,10 +172,9 @@ export default function BudgetCard({
 
   return (
     <Card className="shadow-md">
-      {/* Header with currency + per-person controls */}
+      {/* Header */}
       <div className="px-6 pt-6 pb-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3 flex-wrap">
         <h3 className="text-lg font-bold text-gray-800">Estimated Trip Budget</h3>
-
         <div className="flex items-center gap-4 flex-wrap">
           {/* Per person toggle */}
           <label className="flex items-center gap-2 text-sm select-none">
@@ -210,11 +185,11 @@ export default function BudgetCard({
               className="h-4 w-4"
             />
             <span>
-              Per person
+              Per person{" "}
               {travelers > 0 ? (
-                <span className="text-gray-500"> (÷ {Math.max(1, Number(travelers))})</span>
+                <span className="text-gray-500">(÷ {Math.max(1, Number(travelers))})</span>
               ) : (
-                <span className="text-gray-400"> (set travelers above)</span>
+                <span className="text-gray-400">(set travelers above)</span>
               )}
             </span>
           </label>
@@ -240,8 +215,8 @@ export default function BudgetCard({
       <CardContent className="p-6">
         {/* Disclaimer */}
         <p className="text-xs text-gray-500 mb-4 italic">
-          * These amounts are rough estimates. Accommodation is computed as nightly × nights × rooms.
-          Original figures are in USD and converted using approximate rates for display only.
+          * Rough estimates only. Accommodation = nightly × nights × rooms.
+          Base figures are in USD, converted with approximate FX rates.
         </p>
 
         {/* Table */}
@@ -249,10 +224,10 @@ export default function BudgetCard({
           <table className="min-w-full border border-gray-200 text-sm">
             <thead className="bg-gray-100">
               <tr>
-                  <th className="px-4 py-2 border text-left whitespace-nowrap">Category</th>
-                  <th className="px-4 py-2 border text-right whitespace-nowrap">Budget (2–3★)</th>
-                  <th className="px-4 py-2 border text-right whitespace-nowrap">Mid-range (3★)</th>
-                  <th className="px-4 py-2 border text-right whitespace-nowrap">Luxury (4–5★)</th>
+                <th className="px-4 py-2 border text-left">Category</th>
+                <th className="px-4 py-2 border text-right">Budget (2–3★)</th>
+                <th className="px-4 py-2 border text-right">Mid-range (3★)</th>
+                <th className="px-4 py-2 border text-right">Luxury (4–5★)</th>
               </tr>
             </thead>
             <tbody>
@@ -262,7 +237,6 @@ export default function BudgetCard({
                     {row.category}
                     {isAccommodation(row.category) && (
                       <div className="text-xs text-gray-500 mt-1">
-                        {/* Carry the nights/rooms note (from USD calc) + currency-specific nightly rates */}
                         {processedUSD.find((r) => isAccommodation(r.category))?.__note}
                         {" • "}
                         {nightlyNoteForCurrency()}
@@ -286,15 +260,11 @@ export default function BudgetCard({
           </table>
         </div>
 
-        {/* Small rate note */}
+        {/* FX note */}
         <p className="text-[11px] text-gray-400 mt-3">
-          Rates used (USD→{currency}): {CURRENCY_LABELS[currency] || currency} × {RATES[currency]}. Update later or wire to a live FX API.
+          Rates used: USD→{currency} × {RATES[currency]}. Replace with live API for accuracy.
         </p>
       </CardContent>
     </Card>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 1074d6a388cc5c4669705f34610de80ef887fd54
