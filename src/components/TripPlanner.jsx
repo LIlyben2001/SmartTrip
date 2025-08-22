@@ -1,3 +1,5 @@
+"use client"
+
 // src/components/TripPlanner.jsx
 import { useRef, useState, useEffect, Fragment } from "react";
 import Itinerary from "./Itinerary";
