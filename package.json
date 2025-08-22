@@ -10,7 +10,9 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "resend": "^6.0.1"
+    "resend": "^6.0.1",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",
