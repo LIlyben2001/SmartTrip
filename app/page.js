@@ -1,5 +1,5 @@
-import LandingPage from "./components/LandingPage";
+import TripPlanner from "../src/components/TripPlanner";
 
 export default function Page() {
-  return <LandingPage />;
+  return <TripPlanner />;
 }
