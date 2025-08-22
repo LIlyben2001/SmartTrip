@@ -17,7 +17,7 @@ export default function Hero() {
         backgroundPosition: "center",
       }}
     >
-      {/* Subtle dark overlay */}
+      {/* Subtle dark overlay to improve text contrast */}
       <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
 
       {/* Content */}
@@ -45,8 +45,8 @@ export default function Hero() {
             textShadow: "1px 1px 4px rgba(0,0,0,0.8)",
           }}
         >
-          Plan smarter, travel better. Create customized itineraries, get instant
-          budgets, and explore hidden gems — for China and worldwide adventures.
+          Plan smarter, travel better. Create customized itineraries, get instant budgets,
+          and explore hidden gems — for China and worldwide adventures.
         </p>
 
         <div className="mt-6">

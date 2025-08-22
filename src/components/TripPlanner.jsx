@@ -1,43 +1,37 @@
 // src/components/TripPlanner.jsx
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, Fragment } from "react";
 import Itinerary from "./Itinerary";
 import BudgetCard from "./BudgetCard";
 import { Card, CardContent } from "./ui/card";
 import { itineraryTextToHtml, downloadHtml } from "../utils/downloadHtml";
-
-/* ---------- URL toggle: ?live=1 -> OpenAI; otherwise mock ---------- */
-function resolveUseLiveFromURL() {
-  if (typeof window === "undefined") return false;
-  const qs = new URLSearchParams(window.location.search);
-  const v = qs.get("live");
-  if (v === "1" || v === "true") return true;
-  if (v === "0" || v === "false") return false;
-  return false; // default mock
-}
+import { generateMockItinerary } from "./generate-itinerary";
+import { Listbox, Transition } from "@headlessui/react";
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
 const COUNTRY_CITIES_FALLBACK = {
-  "United States": ["New York","Los Angeles","San Francisco","Chicago","Miami"],
-  Canada: ["Toronto","Vancouver","Montreal","Calgary","Ottawa"],
-  "United Kingdom": ["London","Edinburgh","Manchester","Bath","York"],
-  France: ["Paris","Nice","Lyon","Marseille","Bordeaux"],
-  Italy: ["Rome","Florence","Venice","Milan","Naples"],
-  Spain: ["Barcelona","Madrid","Seville","Valencia","Granada"],
-  Germany: ["Berlin","Munich","Hamburg"],
-  Australia: ["Sydney","Melbourne","Brisbane","Perth","Adelaide"],
-  Japan: ["Tokyo","Kyoto","Osaka","Sapporo","Hiroshima"],
-  China: ["Beijing","Shanghai","Shenzhen","Guangzhou","Xi'an"],
-  Greece: ["Athens","Santorini","Thessaloniki"],
-  Turkey: ["Istanbul","Cappadocia","Antalya"],
+  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami", "Texas", "Boston", "Alaska", "Colorado"],
+  Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton", "Winnipeg", "Quebec City" ],
+  "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York", "Birmingham", "Glasgow", "Liverpool", "Leeds", "Bristo", "Coventry", "Nottingham"],
+  France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux", "Toulouse", "Nantes", "Montpellier", "Strasbourg", "Bordeaux", "Lille"],
+  Italy: ["Rome", "Florence", "Venice", "Milan", "Naples", "Bologna", "Verona", "Siena", "Cinque Terre", "Amalfi Coast"],
+  Spain: ["Barcelona", "Madrid", "Seville", "Valencia", "Granada", "Bilbao", "Malaga", "Granada", "Santiago de Compostela", "Alicante", "San Sebastian"],
+  Germany: ["Berlin", "Munich", "Hamburg", "Cologne", "Frankfurt", "Dusseldorf", "Stuttgart", "Dresden", "Nuremberg", "Leipzig" ],
+  Australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Newcastle", "Canberra", "Sunshine Coast", "Central Coast"],
+  Japan: ["Tokyo", "Kyoto", "Osaka", "Sapporo", "Hiroshima", "Nara", "Fukuoka", "Kobe", "Nagoya", "Okinawa"],
+  China: [
+    "Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Xi'an",
+    "Hangzhou", "Nanjing", "Suzhou", "Chengdu", "Chongqing",
+    "Wuhan", "Tianjin", "Harbin", "Qingdao", "Dalian",
+    "Zhangjiajie", "Guilin", "Lhasa", "Kunming"
+  ],
+  Greece: ["Athens", "Santorini", "Thessaloniki", "Heraklion", "Chania", "Rhodes", "Corfu", "Nafplio", "Delphi", "Kalamata", "Volos"],
+  Turkey: ["Istanbul", "Cappadocia", "Antalya", "Ankara", "Izmir", "Bursa", "Konya", "Adana", "Gaziantep"],
 };
 const COUNTRIES_FALLBACK = Object.keys(COUNTRY_CITIES_FALLBACK).sort();
 
 /* ---------- Helpers ---------- */
-const currencyFmt = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
+const currencyFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 function addDaysISO(isoDate, n) {
   if (!isoDate || !n) return "";
   const d = new Date(isoDate);
@@ -59,7 +53,7 @@ const defaultForm = {
   startDate: "",
   days: "",
   travelers: "",
-  style: [], // ✅ array for multi-select
+  style: [],
   budgetLevel: "",
   budgetUSD: 3000,
   pace: "",
@@ -71,27 +65,15 @@ export default function TripPlanner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [itinerary, setItinerary] = useState(null);
+  const [emailStatus, setEmailStatus] = useState(""); // ✅ added
 
-  // Dynamic lists
   const [countries, setCountries] = useState(COUNTRIES_FALLBACK);
   const [countryCityMap, setCountryCityMap] = useState(COUNTRY_CITIES_FALLBACK);
   const [cities, setCities] = useState([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
-  // Live/Mock toggle
-  const [useLive] = useState(resolveUseLiveFromURL());
   const resultRef = useRef(null);
-
-  const ModeBadge = () => (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-      ${useLive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"}`}
-      title={useLive ? "Using OpenAI live endpoint" : "Using mock endpoint"}
-    >
-      {useLive ? "Live AI" : "Mock"}
-    </span>
-  );
 
   /* ---------- Load countries ---------- */
   useEffect(() => {
@@ -118,7 +100,11 @@ export default function TripPlanner() {
   useEffect(() => {
     let mounted = true;
     const updateCitiesFromMap = (map) => {
-      const list = form.country ? map[form.country] || [] : [];
+      const matchKey = Object.keys(map).find(
+        (c) => c.toLowerCase() === form.country.toLowerCase()
+      );
+      const key = matchKey || form.country;
+      const list = key ? map[key] || [] : [];
       setCities(list);
       setForm((f) => (list.includes(f.city) ? f : { ...f, city: "" }));
     };
@@ -142,6 +128,7 @@ export default function TripPlanner() {
         if (mounted) setLoadingCities(false);
       }
     })();
+
     return () => { mounted = false; };
   }, [form.country]);
 
@@ -150,9 +137,13 @@ export default function TripPlanner() {
     setForm((f) => {
       if (name === "country") {
         const map = countryCityMap || COUNTRY_CITIES_FALLBACK;
-        const list = map[value] || [];
+        const matchKey = Object.keys(map).find(
+          (c) => c.toLowerCase() === value.toLowerCase()
+        );
+        const normalizedCountry = matchKey || value;
+        const list = map[normalizedCountry] || [];
         const nextCity = list.includes(f.city) ? f.city : "";
-        return { ...f, country: value, city: nextCity };
+        return { ...f, country: normalizedCountry, city: nextCity };
       }
       if (name === "budgetUSD") {
         const val = value === "" ? "" : Math.max(0, Number(value));
@@ -167,21 +158,10 @@ export default function TripPlanner() {
     });
   }
 
-  async function sendItineraryEmail({ html, to, subject = "Your SmartTrip Itinerary" }) {
-    try {
-      await fetch("/api/send-itinerary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, html }),
-      });
-    } catch (e) {
-      console.warn("Email send failed:", e);
-    }
-  }
-
   async function handleGenerate(e) {
     e?.preventDefault?.();
     setError("");
+    setEmailStatus("");
 
     if (!form.country || !form.city) {
       setError("Please select both a country and a city.");
@@ -194,51 +174,16 @@ export default function TripPlanner() {
       const endDate = addDaysISO(form.startDate, form.days);
       const resolvedBudgetLevel = form.budgetLevel || budgetLevelFromAmount(form.budgetUSD);
 
-      const payload = {
+      const data = generateMockItinerary({
         destination,
-        country: form.country,
-        city: form.city,
-        startDate: form.startDate || undefined,
-        endDate: endDate || undefined,
-        days: form.days ? Number(form.days) : undefined,
-        travelers: form.travelers ? Number(form.travelers) : undefined,
-        styles: Array.isArray(form.style) ? form.style : [form.style],
-        budgetLevel: resolvedBudgetLevel || undefined,
-        budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
-        pace: form.pace || undefined,
-        email: form.email || undefined,
-      };
-
-      const liveEndpoint = "/api/generate-itinerary-live";
-      const mockEndpoint = "/api/generate-itinerary";
-      const primary = useLive ? liveEndpoint : mockEndpoint;
-
-      let res = await fetch(primary, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        startDate: form.startDate,
+        endDate,
+        days: form.days,
+        travelers: form.travelers,
+        styles: form.style,
+        budgetLevel: resolvedBudgetLevel,
+        pace: form.pace,
       });
-
-      // fallback to mock if live fails
-      if (!res.ok && useLive) {
-        try { console.warn("Live failed, falling back. Resp:", await res.text()); } catch {}
-        res = await fetch(mockEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-
-      let data;
-      try {
-        const text = await res.text();
-        console.log("Raw response:", text);
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Invalid server response.");
-      }
 
       const days = (data?.days || []).map((d, i) => ({
         title: d.title || `Day ${i + 1}`,
@@ -257,7 +202,7 @@ export default function TripPlanner() {
         form.budgetUSD ? `~${currencyFmt.format(form.budgetUSD)}` : "",
       ].filter(Boolean);
 
-      const itineraryObj = {
+      const newItinerary = {
         tripTitle: data?.title || titleBits.join(" — "),
         days,
         budget,
@@ -267,16 +212,33 @@ export default function TripPlanner() {
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
       };
 
-      if (form.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setItinerary(newItinerary);
+
+      // ✅ Send email if provided
+      if (form.email) {
         const html = itineraryTextToHtml({
-          tripTitle: itineraryObj.tripTitle,
-          days: itineraryObj.days,
-          budgetRows: itineraryObj.budget?.rows || [],
+          tripTitle: newItinerary.tripTitle,
+          days: newItinerary.days,
+          budgetRows: newItinerary.budget?.rows || [],
         });
-        sendItineraryEmail({ html, to: form.email });
+
+        try {
+          const resp = await fetch("/api/send-itinerary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: form.email,
+              subject: "Your SmartTrip Itinerary",
+              html,
+            }),
+          });
+          if (resp.ok) setEmailStatus("✅ Itinerary sent to your email!");
+          else setEmailStatus("❌ Failed to send itinerary via email.");
+        } catch {
+          setEmailStatus("❌ Error sending itinerary email.");
+        }
       }
 
-      setItinerary(itineraryObj);
     } catch (err) {
       console.error(err);
       setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
@@ -311,28 +273,26 @@ export default function TripPlanner() {
     <div className="max-w-4xl mx-auto px-4 md:px-6 space-y-6">
       <Card className="shadow-md">
         <div className="px-6 pt-6 text-center">
-          <h2 className="text-3xl font-semibold inline-flex items-center gap-2 justify-center">
-            Plan Your Trip <ModeBadge />
-          </h2>
+          <h2 className="text-3xl font-semibold">Plan Your Trip</h2>
         </div>
+
         <CardContent className="p-6 md:p-8">
           <form onSubmit={handleGenerate} autoComplete="off" className="grid grid-cols-12 gap-4">
+
             {/* Country */}
             <div className="col-span-12 md:col-span-6">
-              <select
+              <input
+                list="country-options"
                 name="country"
                 value={form.country}
                 onChange={onChange}
                 disabled={loadingCountries}
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="" disabled hidden>
-                  {loadingCountries ? "Loading countries..." : "Select Country"}
-                </option>
-                {countries.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                placeholder="Select or type a country"
+                className="w-full rounded-lg border p-3"
+              />
+              <datalist id="country-options">
+                {countries.map((c) => <option key={c} value={c} />)}
+              </datalist>
             </div>
 
             {/* City */}
@@ -344,156 +304,91 @@ export default function TripPlanner() {
                 onChange={onChange}
                 disabled={!form.country || loadingCities}
                 placeholder={!form.country ? "Select Country First" : "Type or pick a city"}
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full rounded-lg border p-3"
               />
               <datalist id="city-options">
-                {cities.map((c) => (<option key={c} value={c} />))}
+                {cities.map((c) => <option key={c} value={c} />)}
               </datalist>
             </div>
 
             {/* Start Date */}
             <div className="col-span-12 md:col-span-6">
-              <input
-                type="date"
-                name="startDate"
-                value={form.startDate}
-                onChange={onChange}
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              <input type="date" name="startDate" value={form.startDate} onChange={onChange} className="w-full rounded-lg border p-3" />
             </div>
 
             {/* Days */}
             <div className="col-span-12 md:col-span-6">
-              <input
-                name="days"
-                value={form.days}
-                onChange={onChange}
-                inputMode="numeric"
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Number of Days"
-              />
+              <input name="days" value={form.days} onChange={onChange} inputMode="numeric" placeholder="Number of Days" className="w-full rounded-lg border p-3" />
             </div>
 
-            {/* Travel Style (multi) */}
+            {/* Travel Style (multi-select w/ checkboxes) */}
             <div className="col-span-12 md:col-span-6">
-              <select
-                name="style"
-                multiple
-                value={form.style}
-                onChange={onChange}
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 h-32"
-              >
-                <option>Foodies</option>
-                <option>Culture</option>
-                <option>Nature</option>
-                <option>Luxury</option>
-                <option>Budget</option>
-                <option>Family</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</p>
+              <Listbox value={form.style} onChange={(selected) => setForm((f) => ({ ...f, style: selected }))} multiple>
+                {({ open }) => (
+                  <div className="relative">
+                    <Listbox.Button className="w-full rounded-lg border p-3 flex justify-between">
+                      <span>{form.style.length > 0 ? form.style.join(", ") : "Select Travel Style(s)"}</span>
+                      <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+                    </Listbox.Button>
+                    <Transition as={Fragment}>
+                      <Listbox.Options className="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-auto border">
+                        {["Foodies", "Culture", "Nature", "Luxury", "Budget", "Family"].map((style) => (
+                          <Listbox.Option key={style} value={style} className="cursor-pointer select-none relative py-2 pl-10 pr-4">
+                            {({ selected }) => (
+                              <>
+                                <span className={selected ? "font-medium" : "font-normal"}>{style}</span>
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                  {selected ? (
+                                    <div className="h-4 w-4 flex items-center justify-center rounded border bg-orange-500 text-white">
+                                      <CheckIcon className="h-3 w-3" />
+                                    </div>
+                                  ) : (
+                                    <div className="h-4 w-4 border rounded bg-white" />
+                                  )}
+                                </span>
+                              </>
+                            )}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </Transition>
+                  </div>
+                )}
+              </Listbox>
             </div>
 
             {/* Travelers */}
             <div className="col-span-12 md:col-span-6">
-              <input
-                name="travelers"
-                value={form.travelers}
-                onChange={onChange}
-                inputMode="numeric"
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Number of Travelers"
-              />
+              <input name="travelers" value={form.travelers} onChange={onChange} inputMode="numeric" placeholder="Number of Travelers" className="w-full rounded-lg border p-3" />
             </div>
 
-            {/* Budget */}
+            {/* Budget (left) */}
             <div className="col-span-12 md:col-span-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total Budget: <span className="font-semibold">{currencyFmt.format(form.budgetUSD || 0)}</span>
-              </label>
-              <input
-                type="range"
-                name="budgetUSD"
-                min={BUDGET_MIN}
-                max={BUDGET_MAX}
-                step={BUDGET_STEP}
-                value={Number(form.budgetUSD || 0)}
-                onChange={onChange}
-                className="w-full"
-              />
-              <div className="mt-2 flex items-center gap-2">
-                <input
-                  type="number"
-                  name="budgetUSD"
-                  min={BUDGET_MIN}
-                  max={BUDGET_MAX}
-                  step={BUDGET_STEP}
-                  value={form.budgetUSD}
-                  onChange={onChange}
-                  className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="Enter total budget in USD"
-                />
-              </div>
-              <div className="mt-1 text-xs text-gray-500">
-                {currencyFmt.format(BUDGET_MIN)} – {currencyFmt.format(BUDGET_MAX)} • Step {currencyFmt.format(BUDGET_STEP)}
-              </div>
-              <div className="mt-1 text-xs text-gray-600">
-                Estimated tier: <span className="font-medium">{budgetLevelFromAmount(form.budgetUSD) || "—"}</span>
-              </div>
+              <label>Total Budget: <span>{currencyFmt.format(form.budgetUSD || 0)}</span></label>
+              <input type="range" name="budgetUSD" min={BUDGET_MIN} max={BUDGET_MAX} step={BUDGET_STEP} value={Number(form.budgetUSD || 0)} onChange={onChange} className="w-full" />
+              <input type="number" name="budgetUSD" value={form.budgetUSD} onChange={onChange} className="w-full rounded-lg border p-3 mt-2" />
             </div>
 
-            {/* Pace */}
-            <div className="col-span-12 md:col-span-6">
-              <select
-                name="pace"
-                value={form.pace}
-                onChange={onChange}
-                className="w-full rounded-lg border border-gray-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
+            {/* Right: Trip Pace + Email */}
+            <div className="col-span-12 md:col-span-6 space-y-4">
+              <select name="pace" value={form.pace} onChange={onChange} className="w-full rounded-lg border p-3">
                 <option value="" disabled hidden>Trip Pace</option>
                 <option>Relaxed</option>
                 <option>Balanced</option>
                 <option>Fast</option>
               </select>
-            </div>
-
-            {/* Email */}
-            <div className="col-span-12 md:col-span-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email me my itinerary (optional)
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={onChange}
-                className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="you@example.com"
-              />
+              <input type="email" name="email" value={form.email} onChange={onChange} placeholder="Email (optional)" className="w-full rounded-lg border p-3" />
             </div>
 
             {/* CTA */}
             <div className="col-span-12">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition"
-              >
+              <button type="submit" disabled={loading} className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg">
                 {loading ? "Generating..." : "Generate My Trip"}
               </button>
             </div>
-
-            {/* Preview */}
-            <div className="col-span-12">
-              <div className="bg-gray-100 text-center rounded-lg p-4 mt-2">
-                <h3 className="font-semibold mb-1">Sample Itinerary Preview</h3>
-                <p className="text-gray-700">
-                  Your {form.days || 5}-day {form.style.length ? form.style.join(", ") : "Cultural"} Adventure in {form.city || "Beijing"} with a budget of{" "}
-                  {currencyFmt.format(form.budgetUSD || 3000)} includes iconic sites, neighborhood dining, and a local experience!
-                </p>
-              </div>
-            </div>
           </form>
           {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
+          {emailStatus && <p className="mt-3 text-center text-sm">{emailStatus}</p>}
         </CardContent>
       </Card>
 
@@ -502,22 +397,8 @@ export default function TripPlanner() {
       {itinerary && (
         <>
           <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} />
-          {itinerary.budget?.rows?.length ? (
-            <div className="mt-4">
-              <BudgetCard
-                budget={itinerary.budget}
-                travelers={itinerary.travelers}
-                daysCount={itinerary.daysCount}
-                budgetTier={itinerary.budgetTier}
-                budgetUSD={itinerary.budgetUSD}
-              />
-            </div>
-          ) : null}
-          <div className="flex flex-wrap gap-2 mt-2">
-            <button onClick={handleDownloadHtml} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
-              Download HTML
-            </button>
-          </div>
+          {itinerary.budget?.rows?.length ? <BudgetCard budget={itinerary.budget} travelers={itinerary.travelers} daysCount={itinerary.daysCount} budgetTier={itinerary.budgetTier} budgetUSD={itinerary.budgetUSD} /> : null}
+          <button onClick={handleDownloadHtml} className="mt-2 px-4 py-2 bg-gray-800 text-white rounded-lg">Download HTML</button>
         </>
       )}
     </div>
