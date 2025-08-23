@@ -14,11 +14,17 @@ const robotoMono = Roboto_Mono({
 export const metadata = {
   title: "SmartTrip",
   description: "AI-powered personalized travel planner",
+  icons: {
+    icon: "/favicon.ico", // ✅ Favicon from /public folder
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" /> {/* ✅ fallback in case metadata doesn’t render */}
+      </head>
       <body
         className={`${inter.variable} ${robotoMono.variable} antialiased bg-[#F9F9F9] text-[#333]`}
       >
