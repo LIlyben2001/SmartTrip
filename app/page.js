@@ -1,5 +1,6 @@
 "use client";
-import TripPlanner from "../src/components/TripPlanner";
+import App from "../src/App";
+
 export default function Page() {
-  return <TripPlanner />;
+  return <App />;
 }
