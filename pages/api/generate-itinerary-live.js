@@ -87,21 +87,21 @@ Rules:
     };
 
     // --- Call OpenAI ---
-    const resp = await fetch("https://api.openai.com/v1/responses", {
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.7,
-        max_output_tokens: 1200,
-        input: [
-          { role: "system", content: sys },
-          { role: "user", content: JSON.stringify(user) },
-        ],
-      }),
+     body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: JSON.stringify(user) }
+      ],
+      temperature: 0.7,
+      max_tokens: 1200
+    }),
     });
 
     if (!resp.ok) {
