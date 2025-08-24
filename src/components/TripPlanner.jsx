@@ -67,7 +67,8 @@ export default function TripPlanner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [itinerary, setItinerary] = useState(null);
-  const [emailStatus, setEmailStatus] = useState(""); // ✅ added
+  const [emailStatus, setEmailStatus] = useState("");
+  const [showForm, setShowForm] = useState(false);
 
   const [countries, setCountries] = useState(COUNTRIES_FALLBACK);
   const [countryCityMap, setCountryCityMap] = useState(COUNTRY_CITIES_FALLBACK);
@@ -216,7 +217,7 @@ export default function TripPlanner() {
 
       setItinerary(newItinerary);
 
-      // ✅ Send email if provided
+      // Send email if provided
       if (form.email) {
         const html = itineraryTextToHtml({
           tripTitle: newItinerary.tripTitle,
@@ -243,7 +244,7 @@ export default function TripPlanner() {
 
     } catch (err) {
       console.error(err);
-      setError(`Sorry—couldn’t generate the itinerary. ${err.message || "Please try again."}`);
+      setError(`Sorry—couldn't generate the itinerary. ${err.message || "Please try again."}`);
       setItinerary(null);
     } finally {
       setLoading(false);
@@ -271,138 +272,275 @@ export default function TripPlanner() {
   const BUDGET_MAX = 20000;
   const BUDGET_STEP = 100;
 
-  return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 space-y-6">
-      <Card className="shadow-md">
-        <div className="px-6 pt-6 text-center">
-          <h2 className="text-3xl font-semibold">Plan Your Trip</h2>
+  // If form is not shown, display landing page
+  if (!showForm && !itinerary) {
+    return (
+      <div className="min-h-screen bg-white">
+        {/* Navigation */}
+        <nav className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <span className="text-2xl font-bold text-orange-600">SmartTrip</span>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="ml-10 flex items-baseline space-x-4">
+                  <a href="#features" className="text-gray-900 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                  <a href="#demo" className="text-gray-900 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium">Demo</a>
+                  <a href="#faq" className="text-gray-900 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
+                  <button 
+                    onClick={() => setShowForm(true)}
+                    className="bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-700"
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <div className="relative bg-gray-900 min-h-screen flex items-center justify-center">
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-70"
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')"
+            }}
+          ></div>
+          
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black opacity-50"></div>
+          
+          {/* Content */}
+          <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+              Personalized Travel Planner + AI Trip Builder
+            </h1>
+            <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">
+              Plan smarter, travel better. Create customized itineraries, get instant budgets, and explore hidden gems — for China and worldwide adventures.
+            </p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300"
+            >
+              Plan My Trip Now
+            </button>
+          </div>
         </div>
 
-        <CardContent className="p-6 md:p-8">
-          <form onSubmit={handleGenerate} autoComplete="off" className="grid grid-cols-12 gap-4">
-
-            {/* Country */}
-            <div className="col-span-12 md:col-span-6">
-              <input
-                list="country-options"
-                name="country"
-                value={form.country}
-                onChange={onChange}
-                disabled={loadingCountries}
-                placeholder="Select or type a country"
-                className="w-full rounded-lg border p-3"
-              />
-              <datalist id="country-options">
-                {countries.map((c) => <option key={c} value={c} />)}
-              </datalist>
+        {/* Core Features */}
+        <div id="features" className="bg-white py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900">Core Features</h2>
             </div>
-
-            {/* City */}
-            <div className="col-span-12 md:col-span-6">
-              <input
-                list="city-options"
-                name="city"
-                value={form.city}
-                onChange={onChange}
-                disabled={!form.country || loadingCities}
-                placeholder={!form.country ? "Select Country First" : "Type or pick a city"}
-                className="w-full rounded-lg border p-3"
-              />
-              <datalist id="city-options">
-                {cities.map((c) => <option key={c} value={c} />)}
-              </datalist>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">AI Trip Builder</h3>
+                <p className="text-gray-600">Generate trips with smart AI in 60 seconds.</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">Real-Time Budget</h3>
+                <p className="text-gray-600">Know how much your trip will cost as you plan.</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">Ticketing Alerts</h3>
+                <p className="text-gray-600">Get notified of deals that match your bookings or permits.</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">Custom Itineraries</h3>
+                <p className="text-gray-600">Save, share or download your personalized trip plan.</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">Offline Access</h3>
+                <p className="text-gray-600">Export your itinerary as PDF for travel use.</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">China Ready</h3>
+                <p className="text-gray-600">Handles real-time bookings, permits & local travel.</p>
+              </div>
             </div>
+          </div>
+        </div>
 
-            {/* Start Date */}
-            <div className="col-span-12 md:col-span-6">
-              <input type="date" name="startDate" value={form.startDate} onChange={onChange} className="w-full rounded-lg border p-3" />
+        {/* Footer */}
+        <footer className="bg-gray-900 text-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold mb-4">Join Our Beta List</h3>
+              <p className="text-gray-400 mb-6">Be the first to access the app and get travel-ready perks.</p>
+              <div className="max-w-md mx-auto flex">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="flex-1 px-4 py-3 rounded-l-lg text-gray-900"
+                />
+                <button className="bg-orange-600 hover:bg-orange-700 px-6 py-3 rounded-r-lg font-medium">
+                  Notify Me
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-6">© 2025 SmartTrip. All rights reserved.</p>
             </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
 
-            {/* Days */}
-            <div className="col-span-12 md:col-span-6">
-              <input name="days" value={form.days} onChange={onChange} inputMode="numeric" placeholder="Number of Days" className="w-full rounded-lg border p-3" />
-            </div>
+  // Show the actual form and results
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Simple header for form view */}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <span className="text-2xl font-bold text-orange-600">SmartTrip</span>
+            <button 
+              onClick={() => {setShowForm(false); setItinerary(null);}}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
 
-            {/* Travel Style (multi-select w/ checkboxes) */}
-            <div className="col-span-12 md:col-span-6">
-              <Listbox value={form.style} onChange={(selected) => setForm((f) => ({ ...f, style: selected }))} multiple>
-                {({ open }) => (
-                  <div className="relative">
-                    <Listbox.Button className="w-full rounded-lg border p-3 flex justify-between">
-                      <span>{form.style.length > 0 ? form.style.join(", ") : "Select Travel Style(s)"}</span>
-                      <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
-                    </Listbox.Button>
-                    <Transition as={Fragment}>
-                      <Listbox.Options className="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-auto border">
-                        {["Foodies", "Culture", "Nature", "Luxury", "Budget", "Family"].map((style) => (
-                          <Listbox.Option key={style} value={style} className="cursor-pointer select-none relative py-2 pl-10 pr-4">
-                            {({ selected }) => (
-                              <>
-                                <span className={selected ? "font-medium" : "font-normal"}>{style}</span>
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                                  {selected ? (
-                                    <div className="h-4 w-4 flex items-center justify-center rounded border bg-orange-500 text-white">
-                                      <CheckIcon className="h-3 w-3" />
-                                    </div>
-                                  ) : (
-                                    <div className="h-4 w-4 border rounded bg-white" />
-                                  )}
-                                </span>
-                              </>
-                            )}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </Transition>
-                  </div>
-                )}
-              </Listbox>
-            </div>
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 space-y-6">
+        <Card className="shadow-md">
+          <div className="px-6 pt-6 text-center">
+            <h2 className="text-3xl font-semibold">Plan Your Trip</h2>
+          </div>
 
-            {/* Travelers */}
-            <div className="col-span-12 md:col-span-6">
-              <input name="travelers" value={form.travelers} onChange={onChange} inputMode="numeric" placeholder="Number of Travelers" className="w-full rounded-lg border p-3" />
-            </div>
+          <CardContent className="p-6 md:p-8">
+            <form onSubmit={handleGenerate} autoComplete="off" className="grid grid-cols-12 gap-4">
 
-            {/* Budget (left) */}
-            <div className="col-span-12 md:col-span-6">
-              <label>Total Budget: <span>{currencyFmt.format(form.budgetUSD || 0)}</span></label>
-              <input type="range" name="budgetUSD" min={BUDGET_MIN} max={BUDGET_MAX} step={BUDGET_STEP} value={Number(form.budgetUSD || 0)} onChange={onChange} className="w-full" />
-              <input type="number" name="budgetUSD" value={form.budgetUSD} onChange={onChange} className="w-full rounded-lg border p-3 mt-2" />
-            </div>
+              {/* Country */}
+              <div className="col-span-12 md:col-span-6">
+                <input
+                  list="country-options"
+                  name="country"
+                  value={form.country}
+                  onChange={onChange}
+                  disabled={loadingCountries}
+                  placeholder="Select or type a country"
+                  className="w-full rounded-lg border p-3"
+                />
+                <datalist id="country-options">
+                  {countries.map((c) => <option key={c} value={c} />)}
+                </datalist>
+              </div>
 
-            {/* Right: Trip Pace + Email */}
-            <div className="col-span-12 md:col-span-6 space-y-4">
-              <select name="pace" value={form.pace} onChange={onChange} className="w-full rounded-lg border p-3">
-                <option value="" disabled hidden>Trip Pace</option>
-                <option>Relaxed</option>
-                <option>Balanced</option>
-                <option>Fast</option>
-              </select>
-              <input type="email" name="email" value={form.email} onChange={onChange} placeholder="Email (optional)" className="w-full rounded-lg border p-3" />
-            </div>
+              {/* City */}
+              <div className="col-span-12 md:col-span-6">
+                <input
+                  list="city-options"
+                  name="city"
+                  value={form.city}
+                  onChange={onChange}
+                  disabled={!form.country || loadingCities}
+                  placeholder={!form.country ? "Select Country First" : "Type or pick a city"}
+                  className="w-full rounded-lg border p-3"
+                />
+                <datalist id="city-options">
+                  {cities.map((c) => <option key={c} value={c} />)}
+                </datalist>
+              </div>
 
-            {/* CTA */}
-            <div className="col-span-12">
-              <button type="submit" disabled={loading} className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg">
-                {loading ? "Generating..." : "Generate My Trip"}
-              </button>
-            </div>
-          </form>
-          {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
-          {emailStatus && <p className="mt-3 text-center text-sm">{emailStatus}</p>}
-        </CardContent>
-      </Card>
+              {/* Start Date */}
+              <div className="col-span-12 md:col-span-6">
+                <input type="date" name="startDate" value={form.startDate} onChange={onChange} className="w-full rounded-lg border p-3" />
+              </div>
 
-      <div ref={resultRef} />
+              {/* Days */}
+              <div className="col-span-12 md:col-span-6">
+                <input name="days" value={form.days} onChange={onChange} inputMode="numeric" placeholder="Number of Days" className="w-full rounded-lg border p-3" />
+              </div>
 
-      {itinerary && (
-        <>
-          <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} />
-          {itinerary.budget?.rows?.length ? <BudgetCard budget={itinerary.budget} travelers={itinerary.travelers} daysCount={itinerary.daysCount} budgetTier={itinerary.budgetTier} budgetUSD={itinerary.budgetUSD} /> : null}
-          <button onClick={handleDownloadHtml} className="mt-2 px-4 py-2 bg-gray-800 text-white rounded-lg">Download HTML</button>
-        </>
-      )}
+              {/* Travel Style (multi-select w/ checkboxes) */}
+              <div className="col-span-12 md:col-span-6">
+                <Listbox value={form.style} onChange={(selected) => setForm((f) => ({ ...f, style: selected }))} multiple>
+                  {({ open }) => (
+                    <div className="relative">
+                      <Listbox.Button className="w-full rounded-lg border p-3 flex justify-between">
+                        <span>{form.style.length > 0 ? form.style.join(", ") : "Select Travel Style(s)"}</span>
+                        <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+                      </Listbox.Button>
+                      <Transition as={Fragment}>
+                        <Listbox.Options className="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-auto border">
+                          {["Foodies", "Culture", "Nature", "Luxury", "Budget", "Family"].map((style) => (
+                            <Listbox.Option key={style} value={style} className="cursor-pointer select-none relative py-2 pl-10 pr-4">
+                              {({ selected }) => (
+                                <>
+                                  <span className={selected ? "font-medium" : "font-normal"}>{style}</span>
+                                  <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                    {selected ? (
+                                      <div className="h-4 w-4 flex items-center justify-center rounded border bg-orange-500 text-white">
+                                        <CheckIcon className="h-3 w-3" />
+                                      </div>
+                                    ) : (
+                                      <div className="h-4 w-4 border rounded bg-white" />
+                                    )}
+                                  </span>
+                                </>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </Transition>
+                    </div>
+                  )}
+                </Listbox>
+              </div>
+
+              {/* Travelers */}
+              <div className="col-span-12 md:col-span-6">
+                <input name="travelers" value={form.travelers} onChange={onChange} inputMode="numeric" placeholder="Number of Travelers" className="w-full rounded-lg border p-3" />
+              </div>
+
+              {/* Budget (left) */}
+              <div className="col-span-12 md:col-span-6">
+                <label>Total Budget: <span>{currencyFmt.format(form.budgetUSD || 0)}</span></label>
+                <input type="range" name="budgetUSD" min={BUDGET_MIN} max={BUDGET_MAX} step={BUDGET_STEP} value={Number(form.budgetUSD || 0)} onChange={onChange} className="w-full" />
+                <input type="number" name="budgetUSD" value={form.budgetUSD} onChange={onChange} className="w-full rounded-lg border p-3 mt-2" />
+              </div>
+
+              {/* Right: Trip Pace + Email */}
+              <div className="col-span-12 md:col-span-6 space-y-4">
+                <select name="pace" value={form.pace} onChange={onChange} className="w-full rounded-lg border p-3">
+                  <option value="" disabled hidden>Trip Pace</option>
+                  <option>Relaxed</option>
+                  <option>Balanced</option>
+                  <option>Fast</option>
+                </select>
+                <input type="email" name="email" value={form.email} onChange={onChange} placeholder="Email (optional)" className="w-full rounded-lg border p-3" />
+              </div>
+
+              {/* CTA */}
+              <div className="col-span-12">
+                <button type="submit" disabled={loading} className="w-full px-5 py-3 bg-orange-600 text-white rounded-lg">
+                  {loading ? "Generating..." : "Generate My Trip"}
+                </button>
+              </div>
+            </form>
+            {error && <p className="mt-3 text-red-600 text-center">{error}</p>}
+            {emailStatus && <p className="mt-3 text-center text-sm">{emailStatus}</p>}
+          </CardContent>
+        </Card>
+
+        <div ref={resultRef} />
+
+        {itinerary && (
+          <>
+            <Itinerary tripTitle={itinerary.tripTitle} days={itinerary.days} />
+            {itinerary.budget?.rows?.length ? <BudgetCard budget={itinerary.budget} travelers={itinerary.travelers} daysCount={itinerary.daysCount} budgetTier={itinerary.budgetTier} budgetUSD={itinerary.budgetUSD} /> : null}
+            <button onClick={handleDownloadHtml} className="mt-2 px-4 py-2 bg-gray-800 text-white rounded-lg">Download HTML</button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
