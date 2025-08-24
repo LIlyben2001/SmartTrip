@@ -1,9 +1,11 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "./components/ui/card";
 import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
 
-export default function LandingPage() {
+export default function App() {
   // Smooth scroll
   useEffect(() => {
     const handleClick = (e) => {
