@@ -117,11 +117,18 @@ Content guidelines:
     }
 
     const data = await resp.json();
-    const rawText =
+
+    // --- Existing logic ---
+    let rawText =
       data.output_text ||
       (Array.isArray(data.output)
         ? data.output.map((x) => x.content?.[0]?.text || "").join("\n")
         : "");
+
+    // --- NEW fallback for OpenAI chat responses ---
+    if (!rawText && data.choices?.length) {
+      rawText = data.choices[0].message?.content || "";
+    }
 
     let out;
     try {
