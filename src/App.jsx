@@ -80,7 +80,6 @@ export default function App() {
         <nav className="flex flex-wrap justify-center gap-4">
           <a href="#features" className="text-[#1F2F46] font-medium">Features</a>
           <a href="#planner" className="text-[#1F2F46] font-medium">Demo</a>
-          <a href="#signup" className="text-[#FF6B35] font-semibold">Get Started</a>
           <a href="#faq" className="text-[#1F2F46] font-medium">FAQ</a>
           <a
             href="#planner"
