@@ -70,11 +70,13 @@ Rules:
 - Numbers in budget are daily totals in USD (integers).
 - Do not include currency symbols.
 - Output must be valid JSON only.
-🔎 Content guidelines:
+Content guidelines:
 - Include REAL, well-known attractions, landmarks, museums, markets, neighborhoods, restaurants, and cultural highlights for the chosen city and country.
 - Each day should feature 3–6 realistic activities in "Morning / Afternoon / Evening" format.
 - Prefer famous highlights but also mix in some local flavor (markets, food streets, parks, neighborhoods).
-- Make it practical for travelers, not generic placeholders.`; // 👈 Added stronger instructions
+- Adjust activities based on the selected travel style(s).
+- If multiple styles are selected, blend them across days (e.g. Foodies + Culture → food tours, local markets, plus museums and galleries).
+- Make it practical for travelers, not generic placeholders.`; // 👈 added blending rules
 
     const user = {
       destination: resolvedDestination,
