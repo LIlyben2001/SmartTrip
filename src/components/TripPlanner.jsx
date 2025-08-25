@@ -176,16 +176,41 @@ export default function TripPlanner() {
       const endDate = addDaysISO(form.startDate, form.days);
       const resolvedBudgetLevel = form.budgetLevel || budgetLevelFromAmount(form.budgetUSD);
 
-      const data = generateMockItinerary({
-        destination,
-        startDate: form.startDate,
-        endDate,
-        days: form.days,
-        travelers: form.travelers,
-        styles: form.style,
-        budgetLevel: resolvedBudgetLevel,
-        pace: form.pace,
-      });
+      // ✅ Try AI-powered generation first
+      let data;
+      try {
+        const resp = await fetch("/api/generate-itinerary-live", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            destination,
+            country: form.country,
+            city: form.city,
+            startDate: form.startDate || undefined,
+            endDate: endDate || undefined,
+            days: form.days ? Number(form.days) : undefined,
+            travelers: form.travelers ? Number(form.travelers) : undefined,
+            style: form.style,
+            budgetLevel: resolvedBudgetLevel,
+            budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : undefined,
+            pace: form.pace || undefined,
+          }),
+        });
+        if (!resp.ok) throw new Error(`AI request failed: ${resp.status}`);
+        data = await resp.json();
+      } catch (aiErr) {
+        console.warn("AI itinerary failed, falling back to mock:", aiErr);
+        data = generateMockItinerary({
+          destination,
+          startDate: form.startDate,
+          endDate,
+          days: form.days,
+          travelers: form.travelers,
+          styles: form.style,
+          budgetLevel: resolvedBudgetLevel,
+          pace: form.pace,
+        });
+      }
 
       const days = (data?.days || []).map((d, i) => ({
         title: d.title || `Day ${i + 1}`,
@@ -234,8 +259,13 @@ export default function TripPlanner() {
               html,
             }),
           });
-          if (resp.ok) setEmailStatus("✅ Itinerary sent to your email!");
-          else setEmailStatus("❌ Failed to send itinerary via email.");
+          if (resp.ok) {
+            const data = await resp.json();
+            console.log("✅ Email sent:", data?.id);
+            setEmailStatus("✅ Itinerary sent to your email!");
+          } else {
+            setEmailStatus("❌ Failed to send itinerary via email.");
+          }
         } catch {
           setEmailStatus("❌ Error sending itinerary email.");
         }
