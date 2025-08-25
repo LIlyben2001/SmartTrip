@@ -50,25 +50,36 @@ async function handler(req, res) {
     console.log("send-itinerary hit", { hasKey: !!apiKey, from });
 
     const resend = new Resend(apiKey);
-    const resp = await resend.emails.send({
-      from,
-      to,
-      subject: subject || "Your SmartTrip Itinerary",
-      html,
-      text: html
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-        .replace(/<\/(p|div|li|h[1-6]|br|tr)>/gi, "\n")
-        .replace(/<li>/gi, "• ")
-        .replace(/<[^>]+>/g, "")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim(),
-      reply_to: replyTo || undefined,
-    });
+
+    let resp;
+    try {
+      resp = await resend.emails.send({
+        from,
+        to,
+        subject: subject || "Your SmartTrip Itinerary",
+        html,
+        text: html
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+          .replace(/<\/(p|div|li|h[1-6]|br|tr)>/gi, "\n")
+          .replace(/<li>/gi, "• ")
+          .replace(/<[^>]+>/g, "")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim(),
+        reply_to: replyTo || undefined,
+      });
+    } catch (err) {
+      console.error("Resend API call threw error:", err);
+      return res.status(500).json({ error: err?.message || "Resend API call failed" });
+    }
+
+    // 🔎 Added logging so you can see what Resend returns
+    console.log("Resend response:", JSON.stringify(resp, null, 2));
 
     if (resp?.error) {
       return res.status(500).json({
         error: resp.error?.message || "Email send failed (Resend error).",
+        details: resp.error,
       });
     }
 
@@ -81,3 +92,4 @@ async function handler(req, res) {
 
 // Export for Vercel
 export default handler;
+
