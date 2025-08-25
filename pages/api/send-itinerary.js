@@ -8,10 +8,12 @@ async function handler(req, res) {
 
   // Debug GET
   if (req.method === "GET") {
+    const apiKey = process.env.RESEND_API_KEY || "";
     return res.status(200).json({
       ok: true,
       method: "GET",
-      hasKey: !!process.env.RESEND_API_KEY,
+      hasKey: !!apiKey,
+      keyPrefix: apiKey ? apiKey.slice(0, 6) + "..." : null, // 👈 added
       from: process.env.EMAIL_FROM || null,
     });
   }
@@ -47,7 +49,11 @@ async function handler(req, res) {
       return res.status(400).json({ error: "'html' content is required." });
     }
 
-    console.log("send-itinerary hit", { hasKey: !!apiKey, from });
+    console.log("send-itinerary hit", { 
+      hasKey: !!apiKey, 
+      keyPrefix: apiKey ? apiKey.slice(0, 6) + "..." : null, // 👈 added
+      from 
+    });
 
     const resend = new Resend(apiKey);
 
@@ -80,16 +86,19 @@ async function handler(req, res) {
       return res.status(500).json({
         error: resp.error?.message || "Email send failed (Resend error).",
         details: resp.error,
+        keyPrefix: apiKey ? apiKey.slice(0, 6) + "..." : null, // 👈 also return key prefix in error
       });
     }
 
     return res.status(200).json({ ok: true, id: resp?.data?.id || null });
   } catch (err) {
     console.error("send-itinerary unhandled error:", err);
-    return res.status(500).json({ error: err?.message || "Unhandled error" });
+    return res.status(500).json({ 
+      error: err?.message || "Unhandled error",
+      keyPrefix: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.slice(0, 6) + "..." : null // 👈 added
+    });
   }
 }
 
 // Export for Vercel
 export default handler;
-
