@@ -130,6 +130,9 @@ Content guidelines:
       rawText = data.choices[0].message?.content || "";
     }
 
+    // 👈 NEW LOGGING: show exactly what the model sent
+    console.log("🔎 RAW TEXT BEFORE PARSE:", rawText);
+
     let out;
     try {
       out = JSON.parse(rawText);
