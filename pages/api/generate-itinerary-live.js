@@ -1,6 +1,29 @@
 // src/api/generate-itinerary-live.js
 // Live AI-powered itinerary generator (keeps your mock file untouched)
 
+// 👈 NEW: Hybrid baseline datasets
+const CITY_COSTS = {
+  "Los Angeles": { food: 70, transport: 25, accommodation: 180 },
+  "New York": { food: 80, transport: 30, accommodation: 220 },
+  "Tokyo": { food: 60, transport: 20, accommodation: 150 },
+  "Paris": { food: 65, transport: 20, accommodation: 170 },
+  "Bangkok": { food: 25, transport: 10, accommodation: 60 },
+};
+
+const REGION_DEFAULTS = {
+  USA: { food: 60, transport: 25, accommodation: 150 },
+  Europe: { food: 50, transport: 20, accommodation: 120 },
+  Asia: { food: 30, transport: 10, accommodation: 80 },
+};
+
+// 👈 NEW: Helper function to scale baseline numbers by tier
+function scaleBudget(base, tier) {
+  if (tier === "Budget") return Math.round(base * 0.7);
+  if (tier === "Mid-range") return Math.round(base * 1.2);
+  if (tier === "Luxury") return Math.round(base * 2.5);
+  return base;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -144,6 +167,43 @@ Content guidelines:
       out = JSON.parse(cleaned);
     }
 
+    // 👈 NEW: Hybrid budget logic
+    const baseCosts =
+      (city && CITY_COSTS[city]) ||
+      (country && REGION_DEFAULTS[country]) ||
+      { food: 40, transport: 15, accommodation: 100 };
+
+    const hybridBudget = {
+      rows: [
+        {
+          category: "Accommodation",
+          budget: scaleBudget(baseCosts.accommodation, "Budget"),
+          mid: scaleBudget(baseCosts.accommodation, "Mid-range"),
+          luxury: scaleBudget(baseCosts.accommodation, "Luxury"),
+        },
+        {
+          category: "Food",
+          budget: scaleBudget(baseCosts.food, "Budget"),
+          mid: scaleBudget(baseCosts.food, "Mid-range"),
+          luxury: scaleBudget(baseCosts.food, "Luxury"),
+        },
+        {
+          category: "Transportation",
+          budget: scaleBudget(baseCosts.transport, "Budget"),
+          mid: scaleBudget(baseCosts.transport, "Mid-range"),
+          luxury: scaleBudget(baseCosts.transport, "Luxury"),
+        },
+        {
+          category: "Activities",
+          budget: 50, mid: 120, luxury: 250,
+        },
+        {
+          category: "Souvenirs",
+          budget: 20, mid: 60, luxury: 120,
+        },
+      ],
+    };
+
     // Post-process: ensure correct number of days
     const safeDays = Array.isArray(out.days) ? out.days.slice(0, n) : [];
     while (safeDays.length < n) {
@@ -171,18 +231,11 @@ Content guidelines:
         ? out.title
         : titleParts.join(" — ");
 
+    // 👈 NEW: Use AI budget if valid, otherwise hybrid
     const budget =
       out.budget && Array.isArray(out.budget.rows) && out.budget.rows.length
         ? out.budget
-        : {
-            rows: [
-              { category: "Accommodation", budget: 200, mid: 300, luxury: 500 },
-              { category: "Food", budget: 150, mid: 250, luxury: 400 },
-              { category: "Transportation", budget: 50, mid: 100, luxury: 200 },
-              { category: "Activities", budget: 100, mid: 200, luxury: 300 },
-              { category: "Souvenirs", budget: 50, mid: 100, luxury: 200 },
-            ],
-          };
+        : hybridBudget;
 
     return res.status(200).json({
       title: finalTitle,
@@ -191,7 +244,7 @@ Content guidelines:
       travelers: travelers ? Number(travelers) : null,
       startDate: startDate || null,
       endDate: endDate || null,
-      source: "openai",
+      source: "openai+hybrid",
     });
   } catch (err) {
     console.error("AI API error:", err);
