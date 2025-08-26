@@ -130,15 +130,13 @@ Return STRICT JSON only, no extra commentary.
     const data = await resp.json();
     console.log("🌐 OpenAI raw JSON response:", data);
 
+    // ✅ FIX: Always prefer OpenAI’s message content
     let rawText =
+      (data.choices?.[0]?.message?.content) ||
       data.output_text ||
       (Array.isArray(data.output)
         ? data.output.map((x) => x.content?.[0]?.text || "").join("\n")
         : "");
-
-    if (!rawText && data.choices?.length) {
-      rawText = data.choices[0].message?.content || "";
-    }
 
     console.log("🔎 RAW TEXT BEFORE PARSE:", rawText);
 
@@ -178,7 +176,7 @@ Return STRICT JSON only, no extra commentary.
         },
         {
           category: "Transportation",
-          // 👈 NEW: Subcategories
+          // 👇 Subcategories + roll-up
           subcategories: [
             {
               category: "Car / Rideshare",
@@ -199,6 +197,10 @@ Return STRICT JSON only, no extra commentary.
               luxury: adjustForTravelers(40, "Train", travelers),
             },
           ],
+          // 👇 Roll-up totals
+          budget: adjustForTravelers(20 + 5 + 10, "Transportation", travelers),
+          mid: adjustForTravelers(40 + 10 + 20, "Transportation", travelers),
+          luxury: adjustForTravelers(80 + 15 + 40, "Transportation", travelers),
         },
         {
           category: "Activities",
