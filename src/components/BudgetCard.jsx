@@ -291,8 +291,8 @@ export default function BudgetCard({
             <tbody>
               {convertedRows.map((row) => (
                 <Fragment key={row.category}>
-                  <tr className="align-top">
-                    <td className="px-4 py-2 border font-medium">
+                  <tr className="align-top font-semibold bg-gray-50"> {/* 👈 NEW bold & highlight */}
+                    <td className="px-4 py-2 border">
                       {row.category}
                       {isAccommodation(row.category) && (
                         <div className="text-xs text-gray-500 mt-1">
