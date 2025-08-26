@@ -81,9 +81,49 @@ export default async function handler(req, res) {
 
     console.log("📅 Trip length resolved to:", n, "days");
 
+    // 👇 UPDATED SCHEMA for Transportation w/ subcategories
     const sys = `You are SmartTrip, a precise travel-planning assistant.
 Return STRICT JSON only, no extra commentary. 
-...`; // Keeping your schema & rules as-is
+JSON schema:
+{
+  "title": string,
+  "days": [
+    {
+      "title": string,
+      "location": string,
+      "items": string[]
+    }
+  ],
+  "budget": {
+    "rows": [
+      { "category": "Accommodation", "budget": number, "mid": number, "luxury": number },
+      { "category": "Food",          "budget": number, "mid": number, "luxury": number },
+      { 
+        "category": "Transportation",
+        "subcategories": [
+          { "category": "Car / Rideshare", "budget": number, "mid": number, "luxury": number },
+          { "category": "Bus",             "budget": number, "mid": number, "luxury": number },
+          { "category": "Train",           "budget": number, "mid": number, "luxury": number }
+        ]
+      },
+      { "category": "Activities",    "budget": number, "mid": number, "luxury": number },
+      { "category": "Souvenirs",     "budget": number, "mid": number, "luxury": number }
+    ]
+  }
+}
+Rules:
+- Keep day titles descriptive.
+- Always set "location" to "City, Country".
+- Numbers in budget are daily totals in USD (integers).
+- Do not include currency symbols.
+- Output must be valid JSON only.
+Content guidelines:
+- Include REAL, well-known attractions, landmarks, museums, markets, neighborhoods, restaurants, and cultural highlights for the chosen city and country.
+- Each day should feature 3–6 realistic activities in "Morning / Afternoon / Evening" format.
+- Prefer famous highlights but also mix in some local flavor (markets, food streets, parks, neighborhoods).
+- Adjust activities based on the selected travel style(s).
+- If multiple styles are selected, blend them across days (e.g. Foodies + Culture → food tours, local markets, plus museums and galleries).
+- Make it practical for travelers, not generic placeholders.`;
 
     const user = {
       destination: resolvedDestination,
@@ -130,13 +170,15 @@ Return STRICT JSON only, no extra commentary.
     const data = await resp.json();
     console.log("🌐 OpenAI raw JSON response:", data);
 
-    // ✅ FIX: Always prefer OpenAI’s message content
     let rawText =
-      (data.choices?.[0]?.message?.content) ||
       data.output_text ||
       (Array.isArray(data.output)
         ? data.output.map((x) => x.content?.[0]?.text || "").join("\n")
         : "");
+
+    if (!rawText && data.choices?.length) {
+      rawText = data.choices[0].message?.content || "";
+    }
 
     console.log("🔎 RAW TEXT BEFORE PARSE:", rawText);
 
@@ -176,7 +218,6 @@ Return STRICT JSON only, no extra commentary.
         },
         {
           category: "Transportation",
-          // 👇 Subcategories + roll-up
           subcategories: [
             {
               category: "Car / Rideshare",
@@ -197,10 +238,6 @@ Return STRICT JSON only, no extra commentary.
               luxury: adjustForTravelers(40, "Train", travelers),
             },
           ],
-          // 👇 Roll-up totals
-          budget: adjustForTravelers(20 + 5 + 10, "Transportation", travelers),
-          mid: adjustForTravelers(40 + 10 + 20, "Transportation", travelers),
-          luxury: adjustForTravelers(80 + 15 + 40, "Transportation", travelers),
         },
         {
           category: "Activities",
@@ -219,18 +256,22 @@ Return STRICT JSON only, no extra commentary.
 
     console.log("💰 Final hybrid budget generated:", hybridBudget);
 
-    const safeDays = Array.isArray(out.days) ? out.days.slice(0, n) : [];
-    while (safeDays.length < n) {
-      const i = safeDays.length + 1;
-      safeDays.push({
-        title: `Day ${i}: Highlights in ${resolvedDestination}`,
-        location: resolvedDestination,
-        items: [
-          "Morning: Iconic landmark visit",
-          "Afternoon: Local market & museum",
-          "Evening: Neighborhood stroll & dinner",
-        ],
-      });
+    // 👇 SAFER FALLBACK — only overwrite if AI failed
+    let safeDays = [];
+    if (Array.isArray(out.days) && out.days.length > 0) {
+      safeDays = out.days.slice(0, n);
+    } else {
+      for (let i = 0; i < n; i++) {
+        safeDays.push({
+          title: `Day ${i + 1}: Highlights in ${resolvedDestination}`,
+          location: resolvedDestination,
+          items: [
+            "Morning: Iconic landmark visit",
+            "Afternoon: Local market & museum",
+            "Evening: Neighborhood stroll & dinner",
+          ],
+        });
+      }
     }
 
     const titleParts = [
@@ -268,3 +309,4 @@ Return STRICT JSON only, no extra commentary.
     return res.status(500).json({ error: "Failed to generate itinerary." });
   }
 }
+
