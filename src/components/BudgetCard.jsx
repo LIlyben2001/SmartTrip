@@ -1,5 +1,5 @@
 // src/components/BudgetCard.jsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react"; // 👈 NEW: added useEffect
 import { Card, CardContent } from "./ui/card";
 
 // Static, approx conversion rates (USD -> target)
@@ -114,7 +114,26 @@ export default function BudgetCard({
   const [currency, setCurrency] = useState("USD");
   const [perPerson, setPerPerson] = useState(false);
 
-  const factor = RATES[currency] ?? 1;
+  // 👈 NEW: make rates dynamic
+  const [rates, setRates] = useState(RATES);
+
+  useEffect(() => {
+    async function fetchRates() {
+      try {
+        const res = await fetch("/api/exchange-rates"); // calls your backend proxy
+        if (!res.ok) throw new Error("Failed to fetch rates");
+        const data = await res.json();
+        if (data?.rates) {
+          setRates({ ...RATES, ...data.rates }); // merge live with fallback
+        }
+      } catch (err) {
+        console.warn("⚠️ Using static fallback rates:", err.message);
+      }
+    }
+    fetchRates();
+  }, []);
+
+  const factor = rates[currency] ?? 1;
   const people = Math.max(1, Number(travelers || 1));
   const divisor = perPerson ? people : 1;
 
@@ -265,7 +284,6 @@ export default function BudgetCard({
                     {row.category}
                     {isAccommodation(row.category) && (
                       <div className="text-xs text-gray-500 mt-1">
-                        {/* Carry the nights/rooms note (from USD calc) + currency-specific nightly rates */}
                         {processedUSD.find((r) => isAccommodation(r.category))?.__note}
                         {" • "}
                         {nightlyNoteForCurrency()}
@@ -297,7 +315,7 @@ export default function BudgetCard({
 
         {/* Small rate note */}
         <p className="text-[11px] text-gray-400 mt-3">
-          Rates used (USD→{currency}): {CURRENCY_LABELS[currency] || currency} × {RATES[currency]}. Update later or wire to a live FX API.
+          Rates used (USD→{currency}): {CURRENCY_LABELS[currency] || currency} × {rates[currency]}. Live values fetched from API when available.
         </p>
       </CardContent>
     </Card>
