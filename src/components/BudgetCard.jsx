@@ -350,7 +350,7 @@ export default function BudgetCard({
                     ))}
                 </Fragment>
               ))}
-              <tr className="font-bold bg-gray-50">
+              <tr className="font-bold bg-orange-100 text-lg border-t-2 border-orange-400">
                 <td className="px-4 py-2 border">
                   Total{perPerson && travelers > 0 ? " (per person)" : ""}
                 </td>
