@@ -1,39 +1,40 @@
 // src/api/generate-itinerary-live.js
 // Live AI-powered itinerary generator (keeps your mock file untouched)
 
-// 👈 NEW: Hybrid baseline datasets
+// 👈 UPDATED: Hybrid baseline datasets (raised accommodation costs for realism)
 const CITY_COSTS = {
-  "Los Angeles": { food: 70, transport: 25, accommodation: 180 },
-  "New York": { food: 80, transport: 30, accommodation: 220 },
-  "Tokyo": { food: 60, transport: 20, accommodation: 150 },
-  "Paris": { food: 65, transport: 20, accommodation: 170 },
-  "Bangkok": { food: 25, transport: 10, accommodation: 60 },
+  "Los Angeles": { food: 70, transport: 25, accommodation: 250 }, // was 180
+  "New York": { food: 80, transport: 30, accommodation: 320 },    // was 220
+  "Tokyo": { food: 60, transport: 20, accommodation: 200 },       // was 150
+  "Paris": { food: 65, transport: 20, accommodation: 280 },       // was 170
+  "Bangkok": { food: 25, transport: 10, accommodation: 90 },      // was 60
 };
 
 const REGION_DEFAULTS = {
-  USA: { food: 60, transport: 25, accommodation: 150 },
-  Europe: { food: 50, transport: 20, accommodation: 120 },
-  Asia: { food: 30, transport: 10, accommodation: 80 },
+  USA: { food: 60, transport: 25, accommodation: 200 },      // was 150
+  Europe: { food: 50, transport: 20, accommodation: 180 },   // was 120
+  Asia: { food: 30, transport: 10, accommodation: 120 },     // was 80
 };
 
-// 👈 NEW: Helper function to scale baseline numbers by tier
+// 👈 Helper function to scale baseline numbers by tier
 function scaleBudget(base, tier) {
   if (tier === "Budget") return Math.round(base * 0.7);
-  if (tier === "Mid-range") return Math.round(base * 1.2);
-  if (tier === "Luxury") return Math.round(base * 2.5);
+  if (tier === "Mid-range") return Math.round(base * 1.3); // bumped from 1.2
+  if (tier === "Luxury") return Math.round(base * 3.0);    // bumped from 2.5
   return base;
 }
 
-// 👈 NEW: Helper to adjust costs by number of travelers
+// 👈 Helper to adjust costs by number of travelers
 function adjustForTravelers(value, category, travelers = 1) {
   if (!travelers || travelers < 1) return value;
   if (category === "Food" || category === "Transportation" || category === "Car" || category === "Bus" || category === "Train") {
     return value * travelers;
   }
   if (category === "Accommodation") {
+    // scaled up slightly for realism in shared rooms
     if (travelers === 1) return value;
-    if (travelers === 2) return Math.round(value * 1.4);
-    return Math.round(value * (1 + (travelers - 1) * 0.5));
+    if (travelers === 2) return Math.round(value * 1.6); // was 1.4
+    return Math.round(value * (1 + (travelers - 1) * 0.7)); // was 0.5 per extra
   }
   return Math.round(value * (1 + (travelers - 1) * 0.7));
 }
@@ -198,7 +199,7 @@ Content guidelines:
     const baseCosts =
       (city && CITY_COSTS[city]) ||
       (country && REGION_DEFAULTS[country]) ||
-      { food: 40, transport: 15, accommodation: 100 };
+      { food: 40, transport: 15, accommodation: 150 };
 
     console.log("💰 Base costs selected:", baseCosts);
 
@@ -309,4 +310,3 @@ Content guidelines:
     return res.status(500).json({ error: "Failed to generate itinerary." });
   }
 }
-
