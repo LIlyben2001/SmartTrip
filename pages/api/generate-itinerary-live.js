@@ -252,12 +252,8 @@ Content guidelines:
         ? out.title
         : titleParts.join(" — ");
 
-    // 👈 NEW: Use AI budget if valid, otherwise hybrid
-    const budget =
-      out.budget && Array.isArray(out.budget.rows) && out.budget.rows.length
-        ? out.budget
-        : hybridBudget;
-
+    // 👈 NEW: Always use hybrid for budget
+    const budget = hybridBudget;
     return res.status(200).json({
       title: finalTitle,
       days: safeDays,
