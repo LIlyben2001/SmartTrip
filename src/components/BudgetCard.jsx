@@ -120,7 +120,7 @@ export default function BudgetCard({
   useEffect(() => {
     async function fetchRates() {
       try {
-        const res = await fetch("/api/exchange-rates"); // calls your backend proxy
+        const res = await fetch("/api/exchange-rate"); // ✅ corrected path (singular)
         if (!res.ok) throw new Error("Failed to fetch rates");
         const data = await res.json();
         if (data?.rates) {
