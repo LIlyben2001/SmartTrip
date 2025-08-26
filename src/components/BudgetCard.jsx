@@ -31,7 +31,7 @@ function fmt(amount, code) {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: code,
-      maximumFractionDigits: code === "JPY" ? 0 : 0,
+      maximumFractionDigits: code === "JPY" ? 0 : 0, // keep whole numbers for table
     }).format(amount);
   } catch {
     return `${CURRENCY_LABELS[code] || code} ${Math.round(amount).toLocaleString()}`;
@@ -47,8 +47,10 @@ const DEFAULT_NIGHTLY_USD = {
 
 /** Choose nightly rates, optionally nudged by an overall budget tier or USD total */
 function deriveNightlyUSD(budgetTier, budgetUSD) {
+  // Start with defaults
   let rates = { ...DEFAULT_NIGHTLY_USD };
 
+  // If a tier is provided, bias toward that tier (keeps all three for display/columns)
   if (typeof budgetTier === "string") {
     const t = budgetTier.toLowerCase();
     if (t.includes("lux")) {
@@ -60,8 +62,10 @@ function deriveNightlyUSD(budgetTier, budgetUSD) {
     }
   }
 
+  // Very light nudge if an overall numeric budget is known (optional)
   const total = Number(budgetUSD || 0);
   if (total > 0) {
+    // crude heuristic: scale ±10% based on bands
     let scale = 1;
     if (total <= 1500) scale = 0.9;
     else if (total >= 8000) scale = 1.1;
@@ -71,24 +75,19 @@ function deriveNightlyUSD(budgetTier, budgetUSD) {
       luxury: Math.round(rates.luxury * scale),
     };
   }
+
   return rates;
 }
 
+/** Fuzzy check whether a row is "Accommodation" */
 function isAccommodation(label = "") {
   const s = String(label).toLowerCase();
   return /(accom|hotel|lodg|stay)/i.test(s);
 }
 
-// 👇 NEW: Helpers for transport grouping
-function isTransport(label = "") {
-  return String(label).toLowerCase() === "transportation";
-}
-function isTransportSub(label = "") {
-  const s = String(label).toLowerCase();
-  return ["car", "bus", "train"].includes(s);
-}
-
+/** Normalize your incoming rows to a consistent shape */
 function normalizeRows(rows = []) {
+  // Expected incoming shape: { category, budget, mid, luxury, subcategories? }
   return rows
     .map((r) => {
       const category = r.category || r.label || r.name || "";
@@ -98,6 +97,7 @@ function normalizeRows(rows = []) {
             budget: Number(r.budget ?? 0),
             mid: Number(r.mid ?? 0),
             luxury: Number(r.luxury ?? 0),
+            subcategories: r.subcategories || [], // 👈 NEW: keep subcategories
           }
         : null;
     })
@@ -106,27 +106,28 @@ function normalizeRows(rows = []) {
 
 export default function BudgetCard({
   budget,
-  travelers,
-  daysCount,
-  budgetTier,
-  budgetUSD,
+  travelers,      // number (can be undefined/null)
+  daysCount,      // number of days (used for nights)
+  budgetTier,     // string like "Budget" | "Mid-range" | "Luxury" (optional)
+  budgetUSD,      // overall USD budget number (optional)
 }) {
   const rows = budget?.rows || [];
   const [currency, setCurrency] = useState("USD");
   const [perPerson, setPerPerson] = useState(false);
 
+  // 👈 NEW: make rates dynamic
   const [rates, setRates] = useState(RATES);
 
   useEffect(() => {
     async function fetchRates() {
       try {
         console.log("🌍 Fetching live exchange rates...");
-        const res = await fetch("/api/exchange-rate");
+        const res = await fetch("/api/exchange-rate"); // ✅ corrected path (singular)
         if (!res.ok) throw new Error("Failed to fetch rates");
         const data = await res.json();
         console.log("✅ Live rates received:", data);
         if (data?.rates) {
-          setRates({ ...RATES, ...data.rates });
+          setRates({ ...RATES, ...data.rates }); // merge live with fallback
         }
       } catch (err) {
         console.warn("⚠️ Using static fallback rates:", err.message);
@@ -139,20 +140,29 @@ export default function BudgetCard({
   const people = Math.max(1, Number(travelers || 1));
   const divisor = perPerson ? people : 1;
 
+  // Derived lodging context
   const nights = Math.max(1, Math.max(1, Number(daysCount || 1)) - 1);
   const rooms = Math.max(1, Math.ceil(Math.max(1, Number(travelers || 2)) / 2));
   const nightlyUSD = deriveNightlyUSD(budgetTier, budgetUSD);
 
+  /** Preprocess rows in USD:
+   *  - Find (or insert) Accommodation
+   *  - Override its amounts with nightly * nights * rooms (USD)
+   */
   const processedUSD = useMemo(() => {
     const norm = normalizeRows(rows);
+
+    // Clone
     const out = norm.map((r) => ({ ...r, __note: "" }));
 
+    // Find accommodation
     let idx = out.findIndex((r) => isAccommodation(r.category));
     const accomTotals = {
       budget: nightlyUSD.budget * nights * rooms,
       mid: nightlyUSD.mid * nights * rooms,
       luxury: nightlyUSD.luxury * nights * rooms,
     };
+
     const noteUSD = `${nights} night${nights !== 1 ? "s" : ""} × ${rooms} room${rooms !== 1 ? "s" : ""}`;
 
     if (idx >= 0) {
@@ -161,24 +171,34 @@ export default function BudgetCard({
       out[idx].luxury = accomTotals.luxury;
       out[idx].__note = noteUSD;
     } else {
+      // If no accommodation row exists, insert one at the top
       out.unshift({
         category: "Accommodation",
         budget: accomTotals.budget,
         mid: accomTotals.mid,
         luxury: accomTotals.luxury,
         __note: noteUSD,
+        subcategories: [],
       });
     }
+
     return out;
   }, [rows, nightlyUSD, nights, rooms]);
 
+  // Convert + optionally divide per person
   const convertedRows = useMemo(() => {
     return processedUSD.map((r) => ({
       category: r.category,
       budget: (r.budget * factor) / divisor,
       mid: (r.mid * factor) / divisor,
       luxury: (r.luxury * factor) / divisor,
-      __note: r.__note,
+      __note: r.__note, // keep note (not currency-specific)
+      subcategories: (r.subcategories || []).map((s) => ({
+        ...s,
+        budget: (s.budget * factor) / divisor,
+        mid: (s.mid * factor) / divisor,
+        luxury: (s.luxury * factor) / divisor,
+      })),
     }));
   }, [processedUSD, factor, divisor]);
 
@@ -195,6 +215,7 @@ export default function BudgetCard({
 
   if (!rows.length) return null;
 
+  // Build a friendly note line for the Accommodation row that also shows nightly rates in the current currency.
   const nightlyNoteForCurrency = () => {
     const b = nightlyUSD.budget * factor;
     const m = nightlyUSD.mid * factor;
@@ -204,9 +225,12 @@ export default function BudgetCard({
 
   return (
     <Card className="shadow-md">
+      {/* Header with currency + per-person controls */}
       <div className="px-6 pt-6 pb-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3 flex-wrap">
         <h3 className="text-lg font-bold text-gray-800">Estimated Trip Budget</h3>
+
         <div className="flex items-center gap-4 flex-wrap">
+          {/* Per person toggle */}
           <label className="flex items-center gap-2 text-sm select-none">
             <input
               type="checkbox"
@@ -223,6 +247,8 @@ export default function BudgetCard({
               )}
             </span>
           </label>
+
+          {/* Currency selector */}
           <label className="flex items-center gap-2 text-sm">
             <span className="text-gray-600">Currency</span>
             <select
@@ -241,63 +267,55 @@ export default function BudgetCard({
       </div>
 
       <CardContent className="p-6">
+        {/* Disclaimer */}
         <p className="text-xs text-gray-500 mb-4 italic">
           * These amounts are rough estimates. Accommodation is computed as nightly × nights × rooms.{" "}
           Shown values are <strong>per day for the total group</strong>. Use the “Per Person” checkbox above to view daily costs per traveler. 
           Original figures are in USD and converted using approximate rates for display only.
         </p>
 
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200 text-sm">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-2 border text-left whitespace-nowrap">Category</th>
-                <th className="px-4 py-2 border text-right whitespace-nowrap">Budget (2–3★)</th>
-                <th className="px-4 py-2 border text-right whitespace-nowrap">Mid-range (3★)</th>
-                <th className="px-4 py-2 border text-right whitespace-nowrap">Luxury (4–5★)</th>
-                <th className="px-4 py-2 border text-right whitespace-nowrap">Total (Trip)</th>
+                  <th className="px-4 py-2 border text-left whitespace-nowrap">Category</th>
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Budget (2–3★)</th>
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Mid-range (3★)</th>
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Luxury (4–5★)</th>
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Total (Trip)</th>
               </tr>
             </thead>
             <tbody>
-              {convertedRows.map((row, i) => (
-                <Fragment key={`${row.category}-${i}`}>
-                  {isTransport(row.category) ? (
-                    // Parent Transport row (bold)
-                    <tr className="font-semibold bg-gray-50">
-                      <td className="px-4 py-2 border">{row.category}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
+              {convertedRows.map((row) => (
+                <Fragment key={row.category}>
+                  <tr className="align-top">
+                    <td className="px-4 py-2 border font-medium">
+                      {row.category}
+                      {isAccommodation(row.category) && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {processedUSD.find((r) => isAccommodation(r.category))?.__note}
+                          {" • "}
+                          {nightlyNoteForCurrency()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
+                    <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
+                    <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
+                    <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
+                  </tr>
+
+                  {/* 👇 NEW: Render subcategories if present */}
+                  {row.subcategories && row.subcategories.length > 0 && row.subcategories.map((sub) => (
+                    <tr key={sub.category} className="align-top bg-gray-50">
+                      <td className="px-8 py-2 border text-gray-600">↳ {sub.category}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(sub.budget, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(sub.mid, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(sub.luxury, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(sub.budget + sub.mid + sub.luxury, currency)}</td>
                     </tr>
-                  ) : isTransportSub(row.category) ? (
-                    // Sub-rows for Car/Bus/Train (indented)
-                    <tr className="text-gray-600">
-                      <td className="px-4 py-2 border pl-10">{row.category}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
-                    </tr>
-                  ) : (
-                    // Normal rows
-                    <tr className="align-top">
-                      <td className="px-4 py-2 border font-medium">
-                        {row.category}
-                        {isAccommodation(row.category) && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {processedUSD.find((r) => isAccommodation(r.category))?.__note}
-                            {" • "}
-                            {nightlyNoteForCurrency()}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
-                      <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
-                    </tr>
-                  )}
+                  ))}
                 </Fragment>
               ))}
               <tr className="font-bold bg-gray-50">
@@ -307,12 +325,15 @@ export default function BudgetCard({
                 <td className="px-4 py-2 border text-right">{fmt(totals.budget, currency)}</td>
                 <td className="px-4 py-2 border text-right">{fmt(totals.mid, currency)}</td>
                 <td className="px-4 py-2 border text-right">{fmt(totals.luxury, currency)}</td>
-                <td className="px-4 py-2 border text-right">{fmt(totals.budget + totals.mid + totals.luxury, currency)}</td>
+                <td className="px-4 py-2 border text-right">
+                  {fmt(totals.budget + totals.mid + totals.luxury, currency)}
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
+        {/* Small rate note */}
         <p className="text-[11px] text-gray-400 mt-3">
           Rates used (USD→{currency}): {CURRENCY_LABELS[currency] || currency} × {rates[currency]}. Live values fetched from API when available.
         </p>
