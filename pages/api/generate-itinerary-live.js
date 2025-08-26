@@ -24,6 +24,23 @@ function scaleBudget(base, tier) {
   return base;
 }
 
+// 👈 NEW: Helper to adjust costs by number of travelers
+function adjustForTravelers(value, category, travelers = 1) {
+  if (!travelers || travelers < 1) return value;
+  // Food and Transport scale per person
+  if (category === "Food" || category === "Transportation") {
+    return value * travelers;
+  }
+  // Accommodation is shared → scale less aggressively
+  if (category === "Accommodation") {
+    if (travelers === 1) return value;
+    if (travelers === 2) return Math.round(value * 1.4); // double room
+    return Math.round(value * (1 + (travelers - 1) * 0.5)); // add half cost per extra traveler
+  }
+  // Activities and Souvenirs scale loosely with travelers
+  return Math.round(value * (1 + (travelers - 1) * 0.7));
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -177,29 +194,33 @@ Content guidelines:
       rows: [
         {
           category: "Accommodation",
-          budget: scaleBudget(baseCosts.accommodation, "Budget"),
-          mid: scaleBudget(baseCosts.accommodation, "Mid-range"),
-          luxury: scaleBudget(baseCosts.accommodation, "Luxury"),
+          budget: adjustForTravelers(scaleBudget(baseCosts.accommodation, "Budget"), "Accommodation", travelers),
+          mid: adjustForTravelers(scaleBudget(baseCosts.accommodation, "Mid-range"), "Accommodation", travelers),
+          luxury: adjustForTravelers(scaleBudget(baseCosts.accommodation, "Luxury"), "Accommodation", travelers),
         },
         {
           category: "Food",
-          budget: scaleBudget(baseCosts.food, "Budget"),
-          mid: scaleBudget(baseCosts.food, "Mid-range"),
-          luxury: scaleBudget(baseCosts.food, "Luxury"),
+          budget: adjustForTravelers(scaleBudget(baseCosts.food, "Budget"), "Food", travelers),
+          mid: adjustForTravelers(scaleBudget(baseCosts.food, "Mid-range"), "Food", travelers),
+          luxury: adjustForTravelers(scaleBudget(baseCosts.food, "Luxury"), "Food", travelers),
         },
         {
           category: "Transportation",
-          budget: scaleBudget(baseCosts.transport, "Budget"),
-          mid: scaleBudget(baseCosts.transport, "Mid-range"),
-          luxury: scaleBudget(baseCosts.transport, "Luxury"),
+          budget: adjustForTravelers(scaleBudget(baseCosts.transport, "Budget"), "Transportation", travelers),
+          mid: adjustForTravelers(scaleBudget(baseCosts.transport, "Mid-range"), "Transportation", travelers),
+          luxury: adjustForTravelers(scaleBudget(baseCosts.transport, "Luxury"), "Transportation", travelers),
         },
         {
           category: "Activities",
-          budget: 50, mid: 120, luxury: 250,
+          budget: adjustForTravelers(50, "Activities", travelers),
+          mid: adjustForTravelers(120, "Activities", travelers),
+          luxury: adjustForTravelers(250, "Activities", travelers),
         },
         {
           category: "Souvenirs",
-          budget: 20, mid: 60, luxury: 120,
+          budget: adjustForTravelers(20, "Souvenirs", travelers),
+          mid: adjustForTravelers(60, "Souvenirs", travelers),
+          luxury: adjustForTravelers(120, "Souvenirs", travelers),
         },
       ],
     };
