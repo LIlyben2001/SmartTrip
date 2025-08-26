@@ -281,9 +281,13 @@ export default function BudgetCard({
 
       <CardContent className="p-6">
         {/* 👇 NEW concise disclaimer */}
-        <p className="text-xs text-gray-500 mb-4 italic">
-          * Estimates are <strong>per day for the total group</strong>. Use the “Per Person” checkbox above to view daily costs per traveler. Figures are in USD, converted to your currency using real-time exchange rates.
-        </p>
+           <p className="text-xs text-gray-500 mb-4 italic">
+            * Estimates are{" "}
+            <span className="bg-orange-100 text-orange-700 font-semibold px-1 rounded">
+              per day for the total group
+            </span>
+            . Use the “Per Person” checkbox above to view daily costs per traveler. Figures are in USD, converted to your currency using real-time exchange rates.
+          </p>
 
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200 text-sm">
