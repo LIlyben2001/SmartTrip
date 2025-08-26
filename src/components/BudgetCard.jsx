@@ -240,7 +240,8 @@ export default function BudgetCard({
       <CardContent className="p-6">
         {/* Disclaimer */}
         <p className="text-xs text-gray-500 mb-4 italic">
-          * These amounts are rough estimates. Accommodation is computed as nightly × nights × rooms.
+          * These amounts are rough estimates. Accommodation is computed as nightly × nights × rooms.{" "}
+          Shown values are <strong>per day for the total group</strong>. Use the “Per Person” checkbox above to view daily costs per traveler. 
           Original figures are in USD and converted using approximate rates for display only.
         </p>
 
@@ -253,6 +254,8 @@ export default function BudgetCard({
                   <th className="px-4 py-2 border text-right whitespace-nowrap">Budget (2–3★)</th>
                   <th className="px-4 py-2 border text-right whitespace-nowrap">Mid-range (3★)</th>
                   <th className="px-4 py-2 border text-right whitespace-nowrap">Luxury (4–5★)</th>
+                  {/* 👇 NEW: Total Column */}
+                  <th className="px-4 py-2 border text-right whitespace-nowrap">Total (Trip)</th>
               </tr>
             </thead>
             <tbody>
@@ -272,6 +275,8 @@ export default function BudgetCard({
                   <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
                   <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
                   <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
+                  {/* 👇 NEW: Per-row Total */}
+                  <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
                 </tr>
               ))}
               <tr className="font-bold bg-gray-50">
@@ -281,6 +286,10 @@ export default function BudgetCard({
                 <td className="px-4 py-2 border text-right">{fmt(totals.budget, currency)}</td>
                 <td className="px-4 py-2 border text-right">{fmt(totals.mid, currency)}</td>
                 <td className="px-4 py-2 border text-right">{fmt(totals.luxury, currency)}</td>
+                {/* 👇 NEW: Grand Total */}
+                <td className="px-4 py-2 border text-right">
+                  {fmt(totals.budget + totals.mid + totals.luxury, currency)}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -294,4 +303,3 @@ export default function BudgetCard({
     </Card>
   );
 }
-
