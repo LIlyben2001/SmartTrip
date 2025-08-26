@@ -66,6 +66,8 @@ export default async function handler(req, res) {
       city,
     } = req.body || {};
 
+    console.log("📩 API Request body:", req.body);
+
     const resolvedDestination =
       city && country ? `${city}, ${country}` : destination || "Your Destination";
 
@@ -80,6 +82,8 @@ export default async function handler(req, res) {
         n = Math.max(1, Math.round((ed - sd) / 86400000) + 1);
     }
     if (!n) n = 5;
+
+    console.log("📅 Trip length resolved to:", n, "days");
 
     // Build structured system + user prompt
     const sys = `You are SmartTrip, a precise travel-planning assistant.
@@ -116,7 +120,7 @@ Content guidelines:
 - Prefer famous highlights but also mix in some local flavor (markets, food streets, parks, neighborhoods).
 - Adjust activities based on the selected travel style(s).
 - If multiple styles are selected, blend them across days (e.g. Foodies + Culture → food tours, local markets, plus museums and galleries).
-- Make it practical for travelers, not generic placeholders.`; // 👈 added blending rules
+- Make it practical for travelers, not generic placeholders.`;
 
     const user = {
       destination: resolvedDestination,
@@ -132,6 +136,8 @@ Content guidelines:
       email: email || null,
       note: "Focus on iconic highlights + local flavor. Keep bullets concise.",
     };
+
+    console.log("📝 Prompt user object sent to OpenAI:", user);
 
     // --- Call OpenAI ---
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -151,12 +157,16 @@ Content guidelines:
     }),
     });
 
+    console.log("🌐 OpenAI API status:", resp.status);
+
     if (!resp.ok) {
       const text = await resp.text();
+      console.error("❌ OpenAI API Error response:", text);
       throw new Error(`OpenAI error ${resp.status}: ${text}`);
     }
 
     const data = await resp.json();
+    console.log("🌐 OpenAI raw JSON response:", data);
 
     // --- Existing logic ---
     let rawText =
@@ -170,7 +180,6 @@ Content guidelines:
       rawText = data.choices[0].message?.content || "";
     }
 
-    // 👈 NEW LOGGING: show exactly what the model sent
     console.log("🔎 RAW TEXT BEFORE PARSE:", rawText);
 
     let out;
@@ -184,11 +193,15 @@ Content guidelines:
       out = JSON.parse(cleaned);
     }
 
+    console.log("✅ Parsed AI itinerary object:", out);
+
     // 👈 NEW: Hybrid budget logic
     const baseCosts =
       (city && CITY_COSTS[city]) ||
       (country && REGION_DEFAULTS[country]) ||
       { food: 40, transport: 15, accommodation: 100 };
+
+    console.log("💰 Base costs selected:", baseCosts);
 
     const hybridBudget = {
       rows: [
@@ -225,6 +238,8 @@ Content guidelines:
       ],
     };
 
+    console.log("💰 Final hybrid budget generated:", hybridBudget);
+
     // Post-process: ensure correct number of days
     const safeDays = Array.isArray(out.days) ? out.days.slice(0, n) : [];
     while (safeDays.length < n) {
@@ -254,6 +269,14 @@ Content guidelines:
 
     // 👈 NEW: Always use hybrid for budget
     const budget = hybridBudget;
+
+    console.log("📤 Sending final API response:", {
+      title: finalTitle,
+      days: safeDays.length,
+      budget,
+      travelers,
+    });
+
     return res.status(200).json({
       title: finalTitle,
       days: safeDays,
@@ -264,7 +287,7 @@ Content guidelines:
       source: "openai+hybrid",
     });
   } catch (err) {
-    console.error("AI API error:", err);
+    console.error("❌ AI API error (top-level):", err);
     return res.status(500).json({ error: "Failed to generate itinerary." });
   }
 }
