@@ -170,38 +170,56 @@ export default function BudgetCard({
   }, [rows, nightlyUSD, nights, rooms]);
 
   const convertedRows = useMemo(() => {
-    return processedUSD.map((r) => ({
-      category: r.category,
-      budget: (r.budget * factor) / divisor,
-      mid: (r.mid * factor) / divisor,
-      luxury: (r.luxury * factor) / divisor,
-      __note: r.__note,
-      subcategories: (r.subcategories || []).map((s) => ({
-        ...s,
-        budget: (s.budget * factor) / divisor,
-        mid: (s.mid * factor) / divisor,
-        luxury: (s.luxury * factor) / divisor,
-      })),
-    }));
-  }, [processedUSD, factor, divisor]);
-
-  const totals = useMemo(() => {
-    return convertedRows.reduce(
-      (acc, r) => {
-        const subTotals = (r.subcategories || []).reduce(
-          (sAcc, s) => ({
-            budget: sAcc.budget + s.budget,
-            mid: sAcc.mid + s.mid,
-            luxury: sAcc.luxury + s.luxury,
+    return processedUSD.map((r) => {
+      // 👇 NEW: aggregate Transportation parent totals from subcategories
+      if (r.category === "Transportation" && r.subcategories?.length > 0) {
+        const totals = r.subcategories.reduce(
+          (acc, s) => ({
+            budget: acc.budget + s.budget,
+            mid: acc.mid + s.mid,
+            luxury: acc.luxury + s.luxury,
           }),
           { budget: 0, mid: 0, luxury: 0 }
         );
         return {
-          budget: acc.budget + r.budget + subTotals.budget,
-          mid: acc.mid + r.mid + subTotals.mid,
-          luxury: acc.luxury + r.luxury + subTotals.luxury,
+          ...r,
+          budget: (totals.budget * factor) / divisor,
+          mid: (totals.mid * factor) / divisor,
+          luxury: (totals.luxury * factor) / divisor,
+          __note: r.__note,
+          subcategories: r.subcategories.map((s) => ({
+            ...s,
+            budget: (s.budget * factor) / divisor,
+            mid: (s.mid * factor) / divisor,
+            luxury: (s.luxury * factor) / divisor,
+          })),
         };
-      },
+      }
+
+      return {
+        category: r.category,
+        budget: (r.budget * factor) / divisor,
+        mid: (r.mid * factor) / divisor,
+        luxury: (r.luxury * factor) / divisor,
+        __note: r.__note,
+        subcategories: (r.subcategories || []).map((s) => ({
+          ...s,
+          budget: (s.budget * factor) / divisor,
+          mid: (s.mid * factor) / divisor,
+          luxury: (s.luxury * factor) / divisor,
+        })),
+      };
+    });
+  }, [processedUSD, factor, divisor]);
+
+  // 👇 NEW: only sum parent categories (ignore subcategories for grand total)
+  const totals = useMemo(() => {
+    return convertedRows.reduce(
+      (acc, r) => ({
+        budget: acc.budget + r.budget,
+        mid: acc.mid + r.mid,
+        luxury: acc.luxury + r.luxury,
+      }),
       { budget: 0, mid: 0, luxury: 0 }
     );
   }, [convertedRows]);
@@ -262,12 +280,9 @@ export default function BudgetCard({
       </div>
 
       <CardContent className="p-6">
+        {/* 👇 NEW concise disclaimer */}
         <p className="text-xs text-gray-500 mb-4 italic">
-          * These amounts are rough estimates. Accommodation is computed as
-          nightly × nights × rooms. Shown values are{" "}
-          <strong>per day for the total group</strong>. Use the “Per Person”
-          checkbox above to view daily costs per traveler. Original figures are
-          in USD and converted using approximate rates for display only.
+          * Estimates are <strong>per day for the total group</strong>. Use the “Per Person” checkbox above to view daily costs per traveler. Figures are in USD, converted to your currency using real-time exchange rates.
         </p>
 
         <div className="overflow-x-auto">
@@ -291,7 +306,7 @@ export default function BudgetCard({
             <tbody>
               {convertedRows.map((row) => (
                 <Fragment key={row.category}>
-                  <tr className="align-top font-semibold bg-gray-50"> {/* 👈 NEW bold & highlight */}
+                  <tr className="align-top font-semibold bg-gray-50">
                     <td className="px-4 py-2 border">
                       {row.category}
                       {isAccommodation(row.category) && (
