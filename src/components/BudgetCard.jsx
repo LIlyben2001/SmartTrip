@@ -120,9 +120,11 @@ export default function BudgetCard({
   useEffect(() => {
     async function fetchRates() {
       try {
+        console.log("🌍 Fetching live exchange rates...");
         const res = await fetch("/api/exchange-rate"); // ✅ corrected path (singular)
         if (!res.ok) throw new Error("Failed to fetch rates");
         const data = await res.json();
+        console.log("✅ Live rates received:", data);
         if (data?.rates) {
           setRates({ ...RATES, ...data.rates }); // merge live with fallback
         }
