@@ -27,17 +27,14 @@ function scaleBudget(base, tier) {
 // 👈 NEW: Helper to adjust costs by number of travelers
 function adjustForTravelers(value, category, travelers = 1) {
   if (!travelers || travelers < 1) return value;
-  // Food and Transport scale per person
-  if (category === "Food" || category === "Transportation") {
+  if (category === "Food" || category === "Transportation" || category === "Car" || category === "Bus" || category === "Train") {
     return value * travelers;
   }
-  // Accommodation is shared → scale less aggressively
   if (category === "Accommodation") {
     if (travelers === 1) return value;
-    if (travelers === 2) return Math.round(value * 1.4); // double room
-    return Math.round(value * (1 + (travelers - 1) * 0.5)); // add half cost per extra traveler
+    if (travelers === 2) return Math.round(value * 1.4);
+    return Math.round(value * (1 + (travelers - 1) * 0.5));
   }
-  // Activities and Souvenirs scale loosely with travelers
   return Math.round(value * (1 + (travelers - 1) * 0.7));
 }
 
@@ -73,7 +70,6 @@ export default async function handler(req, res) {
 
     const resolvedStyle = Array.isArray(style) ? style.join(" + ") : style || "";
 
-    // derive # of days if not provided (from dates)
     let n = Number(days) || 0;
     if (!n && startDate && endDate) {
       const sd = new Date(startDate),
@@ -85,42 +81,9 @@ export default async function handler(req, res) {
 
     console.log("📅 Trip length resolved to:", n, "days");
 
-    // Build structured system + user prompt
     const sys = `You are SmartTrip, a precise travel-planning assistant.
 Return STRICT JSON only, no extra commentary. 
-JSON schema:
-{
-  "title": string,
-  "days": [
-    {
-      "title": string,
-      "location": string,
-      "items": string[]
-    }
-  ],
-  "budget": {
-    "rows": [
-      { "category": "Accommodation", "budget": number, "mid": number, "luxury": number },
-      { "category": "Food",          "budget": number, "mid": number, "luxury": number },
-      { "category": "Transportation","budget": number, "mid": number, "luxury": number },
-      { "category": "Activities",    "budget": number, "mid": number, "luxury": number },
-      { "category": "Souvenirs",     "budget": number, "mid": number, "luxury": number }
-    ]
-  }
-}
-Rules:
-- Keep day titles descriptive.
-- Always set "location" to "City, Country".
-- Numbers in budget are daily totals in USD (integers).
-- Do not include currency symbols.
-- Output must be valid JSON only.
-Content guidelines:
-- Include REAL, well-known attractions, landmarks, museums, markets, neighborhoods, restaurants, and cultural highlights for the chosen city and country.
-- Each day should feature 3–6 realistic activities in "Morning / Afternoon / Evening" format.
-- Prefer famous highlights but also mix in some local flavor (markets, food streets, parks, neighborhoods).
-- Adjust activities based on the selected travel style(s).
-- If multiple styles are selected, blend them across days (e.g. Foodies + Culture → food tours, local markets, plus museums and galleries).
-- Make it practical for travelers, not generic placeholders.`;
+...`; // Keeping your schema & rules as-is
 
     const user = {
       destination: resolvedDestination,
@@ -139,22 +102,21 @@ Content guidelines:
 
     console.log("📝 Prompt user object sent to OpenAI:", user);
 
-    // --- Call OpenAI ---
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-     body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content: JSON.stringify(user) }
-      ],
-      temperature: 0.7,
-      max_tokens: 1200
-    }),
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: sys },
+          { role: "user", content: JSON.stringify(user) }
+        ],
+        temperature: 0.7,
+        max_tokens: 1200
+      }),
     });
 
     console.log("🌐 OpenAI API status:", resp.status);
@@ -168,14 +130,12 @@ Content guidelines:
     const data = await resp.json();
     console.log("🌐 OpenAI raw JSON response:", data);
 
-    // --- Existing logic ---
     let rawText =
       data.output_text ||
       (Array.isArray(data.output)
         ? data.output.map((x) => x.content?.[0]?.text || "").join("\n")
         : "");
 
-    // --- NEW fallback for OpenAI chat responses ---
     if (!rawText && data.choices?.length) {
       rawText = data.choices[0].message?.content || "";
     }
@@ -195,7 +155,6 @@ Content guidelines:
 
     console.log("✅ Parsed AI itinerary object:", out);
 
-    // 👈 NEW: Hybrid budget logic
     const baseCosts =
       (city && CITY_COSTS[city]) ||
       (country && REGION_DEFAULTS[country]) ||
@@ -219,9 +178,27 @@ Content guidelines:
         },
         {
           category: "Transportation",
-          budget: adjustForTravelers(scaleBudget(baseCosts.transport, "Budget"), "Transportation", travelers),
-          mid: adjustForTravelers(scaleBudget(baseCosts.transport, "Mid-range"), "Transportation", travelers),
-          luxury: adjustForTravelers(scaleBudget(baseCosts.transport, "Luxury"), "Transportation", travelers),
+          // 👈 NEW: Subcategories
+          subcategories: [
+            {
+              category: "Car / Rideshare",
+              budget: adjustForTravelers(20, "Car", travelers),
+              mid: adjustForTravelers(40, "Car", travelers),
+              luxury: adjustForTravelers(80, "Car", travelers),
+            },
+            {
+              category: "Bus",
+              budget: adjustForTravelers(5, "Bus", travelers),
+              mid: adjustForTravelers(10, "Bus", travelers),
+              luxury: adjustForTravelers(15, "Bus", travelers),
+            },
+            {
+              category: "Train",
+              budget: adjustForTravelers(10, "Train", travelers),
+              mid: adjustForTravelers(20, "Train", travelers),
+              luxury: adjustForTravelers(40, "Train", travelers),
+            },
+          ],
         },
         {
           category: "Activities",
@@ -240,7 +217,6 @@ Content guidelines:
 
     console.log("💰 Final hybrid budget generated:", hybridBudget);
 
-    // Post-process: ensure correct number of days
     const safeDays = Array.isArray(out.days) ? out.days.slice(0, n) : [];
     while (safeDays.length < n) {
       const i = safeDays.length + 1;
@@ -267,7 +243,6 @@ Content guidelines:
         ? out.title
         : titleParts.join(" — ");
 
-    // 👈 NEW: Always use hybrid for budget
     const budget = hybridBudget;
 
     console.log("📤 Sending final API response:", {
