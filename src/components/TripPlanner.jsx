@@ -165,7 +165,10 @@ export default function TripPlanner() {
     setError("");
     setEmailStatus("");
 
+    console.log("🚀 handleGenerate fired with form:", form);
+
     if (!form.country || !form.city) {
+      console.warn("⚠️ Missing country or city", { country: form.country, city: form.city });
       setError("Please select both a country and a city.");
       return;
     }
@@ -176,9 +179,24 @@ export default function TripPlanner() {
       const endDate = addDaysISO(form.startDate, form.days);
       const resolvedBudgetLevel = form.budgetLevel || budgetLevelFromAmount(form.budgetUSD);
 
+      console.log("🔎 Preparing AI request payload:", {
+        destination,
+        country: form.country,
+        city: form.city,
+        startDate: form.startDate,
+        endDate,
+        days: form.days,
+        travelers: form.travelers,
+        style: form.style,
+        budgetLevel: resolvedBudgetLevel,
+        budgetUSD: form.budgetUSD,
+        pace: form.pace,
+      });
+
       // ✅ Try AI-powered generation first
       let data;
       try {
+        console.log("🌐 Sending fetch → /api/generate-itinerary-live");
         const resp = await fetch("/api/generate-itinerary-live", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -196,10 +214,15 @@ export default function TripPlanner() {
             pace: form.pace || undefined,
           }),
         });
+
+        console.log("🌐 API Response status:", resp.status);
+
         if (!resp.ok) throw new Error(`AI request failed: ${resp.status}`);
         data = await resp.json();
+
+        console.log("✅ API Data received:", data);
       } catch (aiErr) {
-        console.warn("AI itinerary failed, falling back to mock:", aiErr);
+        console.error("❌ AI itinerary failed, falling back to mock:", aiErr);
         data = generateMockItinerary({
           destination,
           startDate: form.startDate,
@@ -211,6 +234,8 @@ export default function TripPlanner() {
           pace: form.pace,
         });
       }
+
+      console.log("📦 Processed itinerary data (pre-state):", data);
 
       const days = (data?.days || []).map((d, i) => ({
         title: d.title || `Day ${i + 1}`,
@@ -239,10 +264,13 @@ export default function TripPlanner() {
         budgetUSD: form.budgetUSD ? Number(form.budgetUSD) : null,
       };
 
+      console.log("✅ Final itinerary object (pre-setState):", newItinerary);
+
       setItinerary(newItinerary);
 
       // ✅ Send email if provided
       if (form.email) {
+        console.log("📧 Sending itinerary email to:", form.email);
         const html = itineraryTextToHtml({
           tripTitle: newItinerary.tripTitle,
           days: newItinerary.days,
@@ -261,18 +289,20 @@ export default function TripPlanner() {
           });
           if (resp.ok) {
             const data = await resp.json();
-            console.log("✅ Email sent:", data?.id);
+            console.log("✅ Email sent successfully:", data);
             setEmailStatus("✅ Itinerary sent to your email!");
           } else {
+            console.error("❌ Failed to send itinerary via email. Status:", resp.status);
             setEmailStatus("❌ Failed to send itinerary via email.");
           }
-        } catch {
+        } catch (err) {
+          console.error("❌ Error during email send fetch:", err);
           setEmailStatus("❌ Error sending itinerary email.");
         }
       }
 
     } catch (err) {
-      console.error(err);
+      console.error("❌ Top-level error in handleGenerate:", err);
       setError(`Sorry—couldn't generate the itinerary. ${err.message || "Please try again."}`);
       setItinerary(null);
     } finally {
