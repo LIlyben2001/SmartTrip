@@ -31,7 +31,7 @@ function fmt(amount, code) {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: code,
-      maximumFractionDigits: code === "JPY" ? 0 : 0, // keep whole numbers for table
+      maximumFractionDigits: code === "JPY" ? 0 : 0,
     }).format(amount);
   } catch {
     return `${CURRENCY_LABELS[code] || code} ${Math.round(amount).toLocaleString()}`;
@@ -47,7 +47,6 @@ const DEFAULT_NIGHTLY_USD = {
 
 /** Choose nightly rates, optionally nudged by an overall budget tier or USD total */
 function deriveNightlyUSD(budgetTier, budgetUSD) {
-  // Start with defaults
   let rates = { ...DEFAULT_NIGHTLY_USD };
 
   if (typeof budgetTier === "string") {
@@ -75,19 +74,20 @@ function deriveNightlyUSD(budgetTier, budgetUSD) {
   return rates;
 }
 
-/** Fuzzy check whether a row is "Accommodation" */
 function isAccommodation(label = "") {
   const s = String(label).toLowerCase();
   return /(accom|hotel|lodg|stay)/i.test(s);
 }
 
-// 👇 NEW: Helper to check if row is Transportation subcategory
+// 👇 NEW: Helpers for transport grouping
+function isTransport(label = "") {
+  return String(label).toLowerCase() === "transportation";
+}
 function isTransportSub(label = "") {
   const s = String(label).toLowerCase();
   return ["car", "bus", "train"].includes(s);
 }
 
-/** Normalize your incoming rows to a consistent shape */
 function normalizeRows(rows = []) {
   return rows
     .map((r) => {
@@ -259,24 +259,45 @@ export default function BudgetCard({
               </tr>
             </thead>
             <tbody>
-              {convertedRows.map((row) => (
-                <Fragment key={row.category}>
-                  <tr className="align-top">
-                    <td className={`px-4 py-2 border font-medium ${isTransportSub(row.category) ? "pl-10 text-gray-600" : ""}`}>
-                      {row.category}
-                      {isAccommodation(row.category) && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {processedUSD.find((r) => isAccommodation(r.category))?.__note}
-                          {" • "}
-                          {nightlyNoteForCurrency()}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
-                    <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
-                    <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
-                    <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
-                  </tr>
+              {convertedRows.map((row, i) => (
+                <Fragment key={`${row.category}-${i}`}>
+                  {isTransport(row.category) ? (
+                    // Parent Transport row (bold)
+                    <tr className="font-semibold bg-gray-50">
+                      <td className="px-4 py-2 border">{row.category}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
+                    </tr>
+                  ) : isTransportSub(row.category) ? (
+                    // Sub-rows for Car/Bus/Train (indented)
+                    <tr className="text-gray-600">
+                      <td className="px-4 py-2 border pl-10">{row.category}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
+                    </tr>
+                  ) : (
+                    // Normal rows
+                    <tr className="align-top">
+                      <td className="px-4 py-2 border font-medium">
+                        {row.category}
+                        {isAccommodation(row.category) && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {processedUSD.find((r) => isAccommodation(r.category))?.__note}
+                            {" • "}
+                            {nightlyNoteForCurrency()}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.budget, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.mid, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.luxury, currency)}</td>
+                      <td className="px-4 py-2 border text-right">{fmt(row.budget + row.mid + row.luxury, currency)}</td>
+                    </tr>
+                  )}
                 </Fragment>
               ))}
               <tr className="font-bold bg-gray-50">
