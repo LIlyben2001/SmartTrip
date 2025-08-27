@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Head from "next/head"; // 👈 NEW
+import Head from "next/head"; // 👈 keep for Open Graph
 import { Card, CardContent } from "./components/ui/card";
 import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
@@ -64,7 +64,7 @@ export default function App() {
 
   return (
     <>
-      {/* 👇 NEW Head block for link previews */}
+      {/* 👇 Open Graph + Twitter preview tags */}
       <Head>
         <title>SmartTrip – AI Travel Planner</title>
         <meta property="og:title" content="SmartTrip – AI Travel Planner" />
@@ -75,6 +75,12 @@ export default function App() {
         <meta property="og:image" content="/og-image.png" />
         <meta property="og:url" content="https://getsmarttrip.com" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="SmartTrip – AI Travel Planner" />
+        <meta
+          name="twitter:description"
+          content="Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries."
+        />
+        <meta name="twitter:image" content="/og-image.png" />
       </Head>
 
       <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
