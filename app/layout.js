@@ -21,7 +21,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     url: "https://getsmarttrip.com",
-    title: "SmartTrip – AI Travel Planner",
+    title: "SmartTrip –Explore the World's Wonder",
     description:
       "Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries.",
     images: [
@@ -29,13 +29,13 @@ export const metadata = {
         url: "https://getsmarttrip.com/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "SmartTrip – AI Travel Planner",
+        alt: "SmartTrip –Explore the World's Wonder",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SmartTrip – AI Travel Planner",
+    title: "SmartTrip –Explore the World's Wonder",
     description:
       "Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries.",
     images: ["https://getsmarttrip.com/og-image.jpg"],
