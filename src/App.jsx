@@ -72,7 +72,7 @@ export default function App() {
           property="og:description"
           content="Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries."
         />
-        <meta property="og:image" content="/og-image.png" />
+        <meta property="og:image" content="/og-image.jpg" />
         <meta property="og:url" content="https://getsmarttrip.com" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="SmartTrip – AI Travel Planner" />
