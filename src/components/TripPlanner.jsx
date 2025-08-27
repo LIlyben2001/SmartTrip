@@ -341,36 +341,105 @@ export default function TripPlanner() {
         <CardContent className="p-6 md:p-8">
           <form onSubmit={handleGenerate} autoComplete="off" className="grid grid-cols-12 gap-4">
 
-            {/* Country */}
+            {/* Country - Fixed dropdown */}
             <div className="col-span-12 md:col-span-6">
-              <input
-                list="country-options"
-                name="country"
-                value={form.country}
-                onChange={onChange}
+              <Listbox 
+                value={form.country} 
+                onChange={(value) => setForm(f => {
+                  const map = countryCityMap || COUNTRY_CITIES_FALLBACK;
+                  const matchKey = Object.keys(map).find(
+                    (c) => c.toLowerCase() === value.toLowerCase()
+                  );
+                  const normalizedCountry = matchKey || value;
+                  const list = map[normalizedCountry] || [];
+                  const nextCity = list.includes(f.city) ? f.city : "";
+                  return { ...f, country: normalizedCountry, city: nextCity };
+                })}
                 disabled={loadingCountries}
-                placeholder="Select or type a country"
-                className="w-full rounded-lg border p-3"
-              />
-              <datalist id="country-options">
-                {countries.map((c) => <option key={c} value={c} />)}
-              </datalist>
+              >
+                <div className="relative">
+                  <Listbox.Button className="w-full rounded-lg border p-3 flex justify-between text-left">
+                    <span className={form.country ? "text-black" : "text-gray-500"}>
+                      {form.country || "Select or type a country"}
+                    </span>
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+                  </Listbox.Button>
+                  <Transition as={Fragment}>
+                    <Listbox.Options className="absolute z-20 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-auto border">
+                      {countries.map((country) => (
+                        <Listbox.Option 
+                          key={country} 
+                          value={country} 
+                          className={({ active }) =>
+                            `cursor-pointer select-none relative py-2 pl-3 pr-9 ${
+                              active ? 'bg-orange-100' : ''
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span className={selected ? "font-medium" : "font-normal"}>
+                                {country}
+                              </span>
+                              {selected && (
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                  <CheckIcon className="h-5 w-5 text-orange-600" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
 
-            {/* City */}
+            {/* City - Fixed dropdown */}
             <div className="col-span-12 md:col-span-6">
-              <input
-                list="city-options"
-                name="city"
-                value={form.city}
-                onChange={onChange}
+              <Listbox 
+                value={form.city} 
+                onChange={(value) => setForm(f => ({ ...f, city: value }))}
                 disabled={!form.country || loadingCities}
-                placeholder={!form.country ? "Select Country First" : "Type or pick a city"}
-                className="w-full rounded-lg border p-3"
-              />
-              <datalist id="city-options">
-                {cities.map((c) => <option key={c} value={c} />)}
-              </datalist>
+              >
+                <div className="relative">
+                  <Listbox.Button className="w-full rounded-lg border p-3 flex justify-between text-left">
+                    <span className={form.city ? "text-black" : "text-gray-500"}>
+                      {form.city || (!form.country ? "Select Country First" : "Type or pick a city")}
+                    </span>
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+                  </Listbox.Button>
+                  <Transition as={Fragment}>
+                    <Listbox.Options className="absolute z-20 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-auto border">
+                      {cities.map((city) => (
+                        <Listbox.Option 
+                          key={city} 
+                          value={city} 
+                          className={({ active }) =>
+                            `cursor-pointer select-none relative py-2 pl-3 pr-9 ${
+                              active ? 'bg-orange-100' : ''
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span className={selected ? "font-medium" : "font-normal"}>
+                                {city}
+                              </span>
+                              {selected && (
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                  <CheckIcon className="h-5 w-5 text-orange-600" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
 
             {/* Start Date */}
