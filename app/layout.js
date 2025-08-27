@@ -12,7 +12,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata = {
-  title: "SmartTrip – AI Travel Planner",
+  title: "SmartTrip – Explore the World's Wonders",
   description:
     "Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries.",
   icons: {
