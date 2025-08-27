@@ -1,34 +1,59 @@
+import { Inter, Roboto_Mono } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const robotoMono = Roboto_Mono({
+  variable: "--font-roboto-mono",
+  subsets: ["latin"],
+});
+
+export const metadata = {
+  title: "SmartTrip – AI Travel Planner",
+  description:
+    "Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries.",
+  icons: {
+    icon: "/favicon.ico", // ✅ from /public
+  },
+  openGraph: {
+    type: "website",
+    url: "https://getsmarttrip.com",
+    title: "SmartTrip – AI Travel Planner",
+    description:
+      "Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries.",
+    images: [
+      {
+        url: "https://getsmarttrip.com/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "SmartTrip – AI Travel Planner",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SmartTrip – AI Travel Planner",
+    description:
+      "Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries.",
+    images: ["https://getsmarttrip.com/og-image.jpg"],
+  },
+};
+
+export default function RootLayout({ children }) {
   return (
-    <>
-      {/* ✅ NEW META TAGS FOR PREVIEWS */}
-      <Head>
-        <title>SmartTrip – AI Travel Planner</title>
-
-        {/* Open Graph (for FB, iMessage, LinkedIn, etc.) */}
-        <meta property="og:title" content="SmartTrip – AI Travel Planner" />
-        <meta
-          property="og:description"
-          content="Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries."
-        />
-        <meta
-          property="og:image"
-          content="https://getsmarttrip.com/og-image.jpg"
-        />
-        <meta property="og:image:type" content="image/jpeg" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:url" content="https://getsmarttrip.com" />
-        <meta property="og:type" content="website" />
-
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="SmartTrip – AI Travel Planner" />
-        <meta
-          name="twitter:description"
-          content="Plan smarter, travel better. AI-powered trip planner with real-time budget and personalized itineraries."
-        />
-        <meta
-          name="twitter:image"
-          content="https://getsmarttrip.com/og-image.jpg"
-        />
-      </Head>
+    <html lang="en">
+      <head>
+        {/* Fallback favicon */}
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body
+        className={`${inter.variable} ${robotoMono.variable} antialiased bg-[#F9F9F9] text-[#333]`}
+      >
+        {children}
+      </body>
+    </html>
+  );
+}
