@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet"; // 👈 NEW
+import Head from "next/head"; // 👈 NEW
 import { Card, CardContent } from "./components/ui/card";
 import TripPlanner from "./components/TripPlanner";
 import Hero from "./components/Hero";
@@ -65,7 +65,7 @@ export default function App() {
   return (
     <div className="bg-[#F9F9F9] text-[#333333] min-h-screen">
       {/* 👇 NEW: Social Sharing Tags */}
-      <Helmet>
+      <Head>
         <title>SmartTrip – Plan Smarter, Travel Better</title>
         <meta property="og:title" content="SmartTrip – Plan Smarter, Travel Better" />
         <meta
@@ -84,7 +84,7 @@ export default function App() {
           content="AI-powered itineraries with real-time budgeting and smarter trip planning."
         />
         <meta name="twitter:image" content="/og-image.jpg" />
-      </Helmet>
+      </Head>
 
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center p-6 max-w-6xl mx-auto gap-4">
