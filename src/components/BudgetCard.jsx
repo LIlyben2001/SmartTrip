@@ -224,6 +224,16 @@ export default function BudgetCard({
     );
   }, [convertedRows]);
 
+  // 👇 NEW: Calculate grand totals (daily total × number of days)
+  const grandTotals = useMemo(() => {
+    const days = Math.max(1, Number(daysCount || 1));
+    return {
+      budget: totals.budget * days,
+      mid: totals.mid * days,
+      luxury: totals.luxury * days,
+    };
+  }, [totals, daysCount]);
+
   if (!rows.length) return null;
 
   const nightlyNoteForCurrency = () => {
@@ -286,7 +296,7 @@ export default function BudgetCard({
             <span className="bg-orange-100 text-orange-700 font-semibold px-1 rounded">
               per day for the total group
             </span>
-            . Use the “Per Person” checkbox above to view daily costs per traveler. Figures are in USD, converted to your currency using real-time exchange rates.
+            . Use the "Per Person" checkbox above to view daily costs per traveler. Figures are in USD, converted to your currency using real-time exchange rates.
           </p>
 
         <div className="overflow-x-auto">
@@ -356,7 +366,7 @@ export default function BudgetCard({
               ))}
               <tr className="font-bold bg-orange-100 text-lg border-t-2 border-orange-400">
                 <td className="px-4 py-2 border">
-                  Total{perPerson && travelers > 0 ? " (per person)" : ""}
+                  Daily Total{perPerson && travelers > 0 ? " (per person)" : ""}
                 </td>
                 <td className="px-4 py-2 border text-right">
                   {fmt(totals.budget, currency)}
@@ -366,6 +376,24 @@ export default function BudgetCard({
                 </td>
                 <td className="px-4 py-2 border text-right">
                   {fmt(totals.luxury, currency)}
+                </td>
+              </tr>
+              {/* 👇 NEW: Grand Total Row */}
+              <tr className="font-bold bg-blue-100 text-lg border-t-2 border-blue-500">
+                <td className="px-4 py-2 border">
+                  Trip Total{perPerson && travelers > 0 ? " (per person)" : ""} 
+                  <div className="text-xs text-gray-600 font-normal mt-1">
+                    {Math.max(1, Number(daysCount || 1))} day{Math.max(1, Number(daysCount || 1)) !== 1 ? "s" : ""}
+                  </div>
+                </td>
+                <td className="px-4 py-2 border text-right">
+                  {fmt(grandTotals.budget, currency)}
+                </td>
+                <td className="px-4 py-2 border text-right">
+                  {fmt(grandTotals.mid, currency)}
+                </td>
+                <td className="px-4 py-2 border text-right">
+                  {fmt(grandTotals.luxury, currency)}
                 </td>
               </tr>
             </tbody>
