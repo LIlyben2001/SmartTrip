@@ -378,13 +378,10 @@ export default function BudgetCard({
                   {fmt(totals.luxury, currency)}
                 </td>
               </tr>
-              {/* 👇 NEW: Grand Total Row */}
+             {/* 👇 NEW: Grand Total Row */}
               <tr className="font-bold bg-blue-100 text-lg border-t-2 border-blue-500">
                 <td className="px-4 py-2 border">
-                  Trip Total{perPerson && travelers > 0 ? " (per person)" : ""} 
-                  <div className="text-xs text-gray-600 font-normal mt-1">
-                    {Math.max(1, Number(daysCount || 1))} day{Math.max(1, Number(daysCount || 1)) !== 1 ? "s" : ""}
-                  </div>
+                  Trip Total ({Math.max(1, Number(daysCount || 1))} day{Math.max(1, Number(daysCount || 1)) !== 1 ? "s" : ""}){perPerson && travelers > 0 ? " (per person)" : ""}
                 </td>
                 <td className="px-4 py-2 border text-right">
                   {fmt(grandTotals.budget, currency)}
