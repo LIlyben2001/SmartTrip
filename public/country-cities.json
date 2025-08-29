@@ -1,5 +1,5 @@
 {
-  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami", "Texas", "Boston", "Alaska", "Colorado"],
+  "United States": ["Alaska", "Boston", "Chicago", "Colorado", "Hilo", "Honolulu", "Kona", "Maui", "Los Angeles", "Miami", "New York", "Portland", "San Francisco", "Seattle", "Texas", "Washington"],
   Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton", "Winnipeg", "Quebec City" ],
   "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York", "Birmingham", "Glasgow", "Liverpool", "Leeds", "Bristo", "Coventry", "Nottingham"],
   France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux", "Toulouse", "Nantes", "Montpellier", "Strasbourg", "Bordeaux", "Lille"],
