@@ -12,7 +12,7 @@ import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
 const COUNTRY_CITIES_FALLBACK = {
- "United States": ["Alaska", "Boston", "Chicago", "Colorado", "Hilo", "Honolulu", "Kona", "Maui", "Los Angeles", "Miami", "New York", "Portland", "San Francisco", "Seattle", "Texas", "Washington"],
+ "United States": ["Alaska", "Arizona", "Boston", "Chicago", "Colorado", "Hilo", "Honolulu", "Kona", "Maui", "Los Angeles", "Miami", "New Mexico", "New York", "San Francisco"],
   Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton", "Winnipeg", "Quebec City" ],
   "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York", "Birmingham", "Glasgow", "Liverpool", "Leeds", "Bristo", "Coventry", "Nottingham"],
   France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux", "Toulouse", "Nantes", "Montpellier", "Strasbourg", "Bordeaux", "Lille"],
