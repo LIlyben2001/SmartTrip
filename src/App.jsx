@@ -46,7 +46,7 @@ export default function App() {
     }
     try {
       setSubmitting(true);
-      const res = await fetch("/api/subscribe", {
+      const res = await fetch("/api/beta-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: subEmail }),
