@@ -12,7 +12,7 @@ import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 /* ---------- Static fallback (used if JSON not found) ---------- */
 const COUNTRY_CITIES_FALLBACK = {
-  "United States": ["New York", "Los Angeles", "San Francisco", "Chicago", "Miami", "Texas", "Boston", "Alaska", "Colorado"],
+ "United States": ["Alaska", "Boston", "Chicago", "Colorado", "Hilo", "Honolulu", "Kona", "Maui", "Los Angeles", "Miami", "New York", "Portland", "San Francisco", "Seattle", "Texas", "Washington"],
   Canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton", "Winnipeg", "Quebec City" ],
   "United Kingdom": ["London", "Edinburgh", "Manchester", "Bath", "York", "Birmingham", "Glasgow", "Liverpool", "Leeds", "Bristo", "Coventry", "Nottingham"],
   France: ["Paris", "Nice", "Lyon", "Marseille", "Bordeaux", "Toulouse", "Nantes", "Montpellier", "Strasbourg", "Bordeaux", "Lille"],
@@ -463,7 +463,7 @@ export default function TripPlanner() {
                     </Listbox.Button>
                     <Transition as={Fragment}>
                       <Listbox.Options className="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-auto border">
-                        {["Foodies", "Culture", "Nature", "Luxury", "Budget", "Family"].map((style) => (
+                        {["Foodies", "Culture", "Beach", "Nature", "National Parks", "Luxury", "Budget", "Family"].map((style) => (
                           <Listbox.Option key={style} value={style} className="cursor-pointer select-none relative py-2 pl-10 pr-4">
                             {({ selected }) => (
                               <>
